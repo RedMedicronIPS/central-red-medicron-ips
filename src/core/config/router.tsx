@@ -12,6 +12,7 @@ import ProveedoresRoutes from "../../apps/proveedores/routes";
 import { AuthGuard } from "./authGuard";
 import MainLayout from "../presentation/layouts/MainLayout";
 import Dashboard from "../../apps/dashboard/presentation/pages/Dashboard";
+import ProfilePage from "../../apps/auth/presentation/pages/ProfilePage";
 
 export default function AppRouter() {
   // Debes implementar isAuthenticated y roles en tu hook useAuth
@@ -41,7 +42,10 @@ export default function AppRouter() {
           <MainLayout />
         </AuthGuard>
       ),
-      children: [{ path: "dashboard", element: <Dashboard /> }],
+      children: [
+        { path: "dashboard", element: <Dashboard /> },
+        { path: "profile", element: <ProfilePage /> },
+      ],
     },
     {
       path: "*",
