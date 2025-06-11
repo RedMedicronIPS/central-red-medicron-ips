@@ -33,7 +33,7 @@ function Button({
       disabled={loading || disabled}
       {...props}
     >
-      {loading ? (
+      {loading && (
         <svg
           className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
           fill="none"
@@ -53,7 +53,7 @@ function Button({
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
           />
         </svg>
-      ) : null}
+      )}
       {children}
     </button>
   );

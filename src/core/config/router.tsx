@@ -1,22 +1,14 @@
 import { Navigate, useRoutes } from "react-router-dom";
-// Update the path below to the correct relative path if alias is not configured
 import { useAuth } from "../../apps/auth/presentation/hooks/useAuth";
-// If AuthRoutes is a default export, use:
 import AuthRoutes from "../../apps/auth/routes";
-// Or, if the export has a different name, adjust accordingly:
-// import { CorrectExportName } from "../../apps/auth/routes";
-// If ProveedoresRoutes is a default export:
 import ProveedoresRoutes from "../../apps/proveedores/routes";
-// Or, if the export has a different name, adjust accordingly:
-// import { CorrectExportName } from "../../apps/proveedores/routes";
 import { AuthGuard } from "./authGuard";
 import MainLayout from "../presentation/layouts/MainLayout";
 import Dashboard from "../../apps/dashboard/presentation/pages/Dashboard";
 import ProfilePage from "../../apps/auth/presentation/pages/ProfilePage";
 
 export default function AppRouter() {
-  // Debes implementar isAuthenticated y roles en tu hook useAuth
-  const { isAuthenticated, roles } = useAuth();
+  const { isAuthenticated, roles = [] } = useAuth(); // Proporcionamos un valor por defecto
 
   const routes = useRoutes([
     {
@@ -26,11 +18,11 @@ export default function AppRouter() {
     {
       path: "/proveedores/*",
       element: (
-        <AuthGuard isAuthenticated={isAuthenticated}>
-          {roles.includes("contabilidad") ? (
+        <AuthGuard isAuthenticated={isAuthenticated} redirectTo="/auth/login">
+          {roles.includes("contabilidad") || roles.includes("admin") ? (
             <ProveedoresRoutes />
           ) : (
-            <Navigate to="/auth/login" />
+            <Navigate to="/dashboard" replace />
           )}
         </AuthGuard>
       ),
@@ -38,18 +30,22 @@ export default function AppRouter() {
     {
       path: "/",
       element: (
-        <AuthGuard isAuthenticated={isAuthenticated}>
+        <AuthGuard isAuthenticated={isAuthenticated} redirectTo="/auth/login">
           <MainLayout />
         </AuthGuard>
       ),
       children: [
+        {
+          path: "/",
+          element: <Navigate to="/dashboard" replace />,
+        },
         { path: "dashboard", element: <Dashboard /> },
         { path: "profile", element: <ProfilePage /> },
       ],
     },
     {
       path: "*",
-      element: <Navigate to="/auth/login" />,
+      element: <Navigate to="/auth/login" replace />,
     },
   ]);
 

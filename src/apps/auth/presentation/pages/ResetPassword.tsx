@@ -1,89 +1,144 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { AuthService } from "../../../application/auth/services/AuthService";
-import { AuthRepository } from "../../../infrastructure/api/repositories/AuthRepository";
-import { TokenStorage } from "../../../infrastructure/persistence/localStorage/TokenStorage";
-
-const authRepository = new AuthRepository(new TokenStorage());
-const authService = new AuthService(authRepository);
+import Button from "../../../../shared/components/Button";
+import Input from "../../../../shared/components/Input";
+import axiosInstance from "../../../../core/infrastructure/http/axiosInstance";
 
 export default function ResetPassword() {
-  const { token } = useParams();
+  const [passwords, setPasswords] = useState({ password: "", confirmPassword: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const { userId, token } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    password: "",
-    confirmPassword: "",
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.password !== form.confirmPassword) {
-      return toast.error("Las contraseñas no coinciden");
+    setError("");
+    setLoading(true);
+
+    if (passwords.password !== passwords.confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      setLoading(false);
+      return;
     }
 
     try {
-      if (!token) {
-        throw new Error("Token no proporcionado");
-      }
-
-      await authService.confirmPasswordReset(token, form.password);
-      toast.success("Contraseña restablecida correctamente");
-      navigate("/login");
-    } catch (error) {
-      toast.error("Error al restablecer la contraseña");
+      await axiosInstance.post(`/users/password-reset-confirm/${userId}/${token}/`, {
+        new_password: passwords.password,
+        confirm_password: passwords.confirmPassword
+      });
+      
+      setSuccess(true);
+      // Redirigir después de 3 segundos
+      setTimeout(() => {
+        navigate("/auth/login", { 
+          state: { 
+            successMessage: "Tu contraseña ha sido actualizada exitosamente. Por favor, inicia sesión con tu nueva contraseña." 
+          }
+        });
+      }, 3000);
+    } catch (err: any) {
+      console.error('Reset password error:', err.response?.data);
+      setError(err.response?.data?.detail || "Error al restablecer la contraseña");
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-sm">
+          <div className="text-center">
+            {/* Ícono de éxito */}
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+              <svg 
+                className="h-6 w-6 text-green-600" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M5 13l4 4L19 7" 
+                />
+              </svg>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              ¡Contraseña actualizada!
+            </h2>
+            <p className="text-gray-600 mb-8">
+              Tu contraseña ha sido cambiada exitosamente.
+            </p>
+            
+            {/* Indicador de redirección */}
+            <div className="text-sm text-gray-500">
+              Serás redirigido al inicio de sesión en unos segundos...
+            </div>
+            
+            {/* Botón opcional para redirección manual */}
+            <button
+              onClick={() => navigate("/auth/login")}
+              className="mt-4 text-blue-600 hover:text-blue-800 font-medium text-sm"
+            >
+              Ir al inicio de sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-sm">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">
-            Restablecer contraseña
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900">Restablecer contraseña</h2>
           <p className="mt-2 text-gray-600">Ingresa tu nueva contraseña</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Nueva contraseña
-              </label>
-              <input
-                type="password"
-                required
-                value={form.password}
-                onChange={(e) =>
-                  setForm({ ...form, password: e.target.value })
-                }
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+              {error}
             </div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Confirmar contraseña
-              </label>
-              <input
-                type="password"
-                required
-                value={form.confirmPassword}
-                onChange={(e) =>
-                  setForm({ ...form, confirmPassword: e.target.value })
-                }
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+          <div className="space-y-4">
+            <Input
+              type="password"
+              label="Nueva contraseña"
+              value={passwords.password}
+              onChange={(e) => setPasswords({ ...passwords, password: e.target.value })}
+              required
+              minLength={8}
+              disabled={loading}
+            />
+
+            <Input
+              type="password"
+              label="Confirmar contraseña"
+              value={passwords.confirmPassword}
+              onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+              required
+              minLength={8}
+              disabled={loading}
+            />
           </div>
 
-          <button
+          <Button
             type="submit"
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            variant="primary"
+            fullWidth
+            className="py-2.5"
+            loading={loading}
           >
-            Restablecer contraseña
-          </button>
+            {loading ? "Cambiando contraseña..." : "Cambiar contraseña"}
+          </Button>
         </form>
       </div>
     </div>
