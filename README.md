@@ -1,3 +1,9 @@
+# para iniciar el proyecto se debe instalar dependencia 
+npm install
+
+# se corre el proyecto
+npm run dev
+
 src/
 ├── apps/                        # Cada app de negocio tiene su módulo
 │   ├── auth/                    # Autenticación y control de acceso

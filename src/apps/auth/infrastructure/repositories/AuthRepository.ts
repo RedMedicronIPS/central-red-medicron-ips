@@ -133,3 +133,16 @@ export const disable2FA = async () => {
     throw new Error(error.response?.data?.detail || 'Error al desactivar 2FA');
   }
 };
+
+export const getProfile = async () => {
+  const response = await axiosInstance.get("/users/me/");
+  // Actualiza localStorage para mantener sincronizado el usuario
+  localStorage.setItem("user", JSON.stringify(response.data));
+  return response.data;
+};
+
+export const updateProfile = async (data: { username: string; email: string; fullName?: string }) => {
+  const response = await axiosInstance.put("/users/me/", data);
+  localStorage.setItem("user", JSON.stringify(response.data));
+  return response.data;
+};

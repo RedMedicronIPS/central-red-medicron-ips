@@ -1,15 +1,16 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { HiHome, HiUser, HiCog, HiLogout } from "react-icons/hi";
+import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 
 export default function Sidebar() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user, logout, roles } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
 
   const navItems = [
     { to: "/dashboard", label: "Inicio", icon: <HiHome className="w-5 h-5" /> },
     { to: "/profile", label: "Mi perfil", icon: <HiUser className="w-5 h-5" /> },
-    ...(user?.role === "admin"
+    ...(roles.includes("admin")
       ? [{ to: "/admin", label: "Administración", icon: <HiCog className="w-5 h-5" /> }]
       : []),
   ];
@@ -66,7 +67,7 @@ export default function Sidebar() {
 
       <div className="p-4 border-t border-gray-200">
         <button
-          onClick={handleLogout}
+          onClick={logout}
           className="flex items-center gap-3 px-4 py-3 w-full text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"
         >
           <HiLogout className="w-5 h-5" />

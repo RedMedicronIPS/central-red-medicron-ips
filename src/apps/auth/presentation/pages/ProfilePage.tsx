@@ -2,23 +2,51 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../../../../shared/components/Button";
 import Input from "../../../../shared/components/Input";
-import { disable2FA } from "../../infrastructure/repositories/AuthRepository";
+import { disable2FA, getProfile, updateProfile } from "../../infrastructure/repositories/AuthRepository";
 import { notify } from '../../../../shared/utils/notifications';
+import { useAuthContext } from "../context/AuthContext";
 
 export default function ProfilePage() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user, setUser } = useAuthContext();
   const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [values, setValues] = useState({
-    username: user.username || "",
-    email: user.email || "",
-    fullName: user.fullName || "",
-    role: user.role || "",
+    username: user?.username || "",
+    email: user?.email || "",
+    first_name: user?.first_name || "",
+    last_name: user?.last_name || "",
+    role: typeof user?.role === "string" ? user.role : user?.role?.name || "",
   });
   const [is2FAEnabled, setIs2FAEnabled] = useState(user?.is_2fa_enabled || false);
   const [loading2FA, setLoading2FA] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const [error2FA, setError2FA] = useState("");
   const [success2FA, setSuccess2FA] = useState("");
+
+  // Traer datos frescos del perfil al montar
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoadingProfile(true);
+      try {
+        const profile = await getProfile();
+        setValues({
+          username: profile.username,
+          email: profile.email,
+          first_name: profile.first_name || "",
+          last_name: profile.last_name || "",
+          role: typeof profile.role === "string" ? profile.role : profile.role?.name || "",
+        });
+        setIs2FAEnabled(profile.is_2fa_enabled);
+        setUser(profile); // Actualiza el contexto y localStorage
+      } catch (err: any) {
+        notify.error("No se pudo cargar el perfil");
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    fetchProfile();
+    // eslint-disable-next-line
+  }, []);
 
   useEffect(() => {
     if (location.state?.is2FAEnabled !== undefined) {
@@ -28,20 +56,33 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí implementarías la lógica para actualizar el perfil
-    setIsEditing(false);
+    setLoadingProfile(true);
+    try {
+      const updated = await updateProfile({
+        username: values.username,
+        email: values.email,
+        first_name: values.first_name,
+        last_name: values.last_name,
+      });
+      setUser(updated);
+      setIsEditing(false);
+      notify.success("Perfil actualizado correctamente");
+    } catch (err: any) {
+      notify.error(err.message || "Error al actualizar el perfil");
+    } finally {
+      setLoadingProfile(false);
+    }
   };
 
   const handleDisable2FA = async () => {
     if (!window.confirm("¿Estás seguro de que deseas desactivar la autenticación de dos factores?")) {
       return;
     }
-
     setLoading2FA(true);
-
     try {
       await disable2FA();
       setIs2FAEnabled(false);
+      setUser({ ...user, is_2fa_enabled: false });
       notify.success("Autenticación de dos factores desactivada exitosamente");
     } catch (err: any) {
       notify.error(err.message || "Error al desactivar 2FA");
@@ -50,7 +91,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Modificar el useEffect para usar notify en lugar de toast
   useEffect(() => {
     if (location.state?.successMessage) {
       notify.success(location.state.successMessage);
@@ -65,6 +105,7 @@ export default function ProfilePage() {
           <Button
             variant={isEditing ? "secondary" : "primary"}
             onClick={() => setIsEditing(!isEditing)}
+            disabled={loadingProfile}
           >
             {isEditing ? "Cancelar" : "Editar Perfil"}
           </Button>
@@ -74,24 +115,32 @@ export default function ProfilePage() {
           <div className="md:w-1/3 flex flex-col items-center">
             <img
               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                user?.username || "U"
+                values.first_name + " " + values.last_name || values.username || "U"
               )}&background=1e40af&color=fff&size=200`}
               alt="avatar"
               className="w-48 h-48 rounded-full border-4 border-blue-100"
             />
             <p className="mt-4 text-sm text-gray-500">
-              Miembro desde: {user.joinDate || "No disponible"}
+              Miembro desde: {user?.joinDate || "No disponible"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="md:w-2/3 space-y-6">
             <Input
-              label="Nombre completo"
-              value={values.fullName}
+              label="Nombre"
+              value={values.first_name}
               onChange={(e) =>
-                setValues({ ...values, fullName: e.target.value })
+                setValues({ ...values, first_name: e.target.value })
               }
-              disabled={!isEditing}
+              disabled={!isEditing || loadingProfile}
+            />
+            <Input
+              label="Apellido"
+              value={values.last_name}
+              onChange={(e) =>
+                setValues({ ...values, last_name: e.target.value })
+              }
+              disabled={!isEditing || loadingProfile}
             />
             <Input
               label="Nombre de usuario"
@@ -99,26 +148,27 @@ export default function ProfilePage() {
               onChange={(e) =>
                 setValues({ ...values, username: e.target.value })
               }
-              disabled={!isEditing}
+              disabled={!isEditing || loadingProfile}
             />
             <Input
               label="Correo electrónico"
               type="email"
               value={values.email}
               onChange={(e) => setValues({ ...values, email: e.target.value })}
-              disabled={!isEditing}
+              disabled={!isEditing || loadingProfile}
             />
             <Input label="Rol" value={values.role} disabled={true} />
 
             {isEditing && (
               <div className="flex gap-4 pt-4">
-                <Button type="submit" variant="primary">
+                <Button type="submit" variant="primary" loading={loadingProfile}>
                   Guardar cambios
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={() => setIsEditing(false)}
+                  disabled={loadingProfile}
                 >
                   Cancelar
                 </Button>
@@ -133,13 +183,13 @@ export default function ProfilePage() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Seguridad
         </h2>
-        
+
         {success2FA && (
           <div className="mb-4 bg-green-50 text-green-700 p-3 rounded-lg text-sm">
             {success2FA}
           </div>
         )}
-        
+
         {error2FA && (
           <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm">
             {error2FA}
@@ -153,8 +203,8 @@ export default function ProfilePage() {
                 Autenticación de dos factores
               </h3>
               <p className="text-sm text-gray-600">
-                {is2FAEnabled 
-                  ? "La autenticación de dos factores está activada" 
+                {is2FAEnabled
+                  ? "La autenticación de dos factores está activada"
                   : "Añade una capa extra de seguridad a tu cuenta"}
               </p>
             </div>
@@ -195,18 +245,23 @@ export default function ProfilePage() {
                 type="password"
                 label="Contraseña actual"
                 placeholder="Ingresa tu contraseña actual"
+                disabled
               />
               <Input
                 type="password"
                 label="Nueva contraseña"
                 placeholder="Ingresa tu nueva contraseña"
+                disabled
               />
               <Input
                 type="password"
                 label="Confirmar contraseña"
                 placeholder="Confirma tu nueva contraseña"
+                disabled
               />
-              <Button variant="primary">Actualizar contraseña</Button>
+              <Button variant="primary" disabled>
+                Actualizar contraseña
+              </Button>
             </form>
           </div>
         </div>

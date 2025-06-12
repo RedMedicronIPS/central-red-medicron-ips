@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiChevronDown, HiLogout, HiUser } from "react-icons/hi";
+import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 
 export default function Topbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user, logout, roles } = useAuthContext();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -12,6 +13,8 @@ export default function Topbar() {
     localStorage.removeItem("user");
     navigate("/auth/login");
   };
+
+  //...(roles.includes("admin")
 
   return (
     <header className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
@@ -55,7 +58,7 @@ export default function Topbar() {
                   Mi Perfil
                 </button>
                 <button
-                  onClick={handleLogout}
+                  onClick={logout}
                   className="flex items-center gap-2 w-full px-4 py-2 text-red-600 hover:bg-red-50 text-left"
                 >
                   <HiLogout className="w-5 h-5" />

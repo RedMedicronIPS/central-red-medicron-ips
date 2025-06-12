@@ -1,7 +1,8 @@
 import { HiUsers, HiDocumentText, HiChartBar, HiClock } from "react-icons/hi";
+import { useAuthContext } from "../../../auth/presentation/context/AuthContext";
 
 export default function Dashboard() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user } = useAuthContext();
 
   const stats = [
     {

@@ -1,5 +1,5 @@
 import { Navigate, useRoutes } from "react-router-dom";
-import { useAuth } from "../../apps/auth/presentation/hooks/useAuth";
+import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 import AuthRoutes from "../../apps/auth/routes";
 import ProveedoresRoutes from "../../apps/proveedores/routes";
 import { AuthGuard } from "./authGuard";
@@ -8,7 +8,7 @@ import Dashboard from "../../apps/dashboard/presentation/pages/Dashboard";
 import ProfilePage from "../../apps/auth/presentation/pages/ProfilePage";
 
 export default function AppRouter() {
-  const { isAuthenticated, roles = [] } = useAuth(); // Proporcionamos un valor por defecto
+  const { isAuthenticated, roles } = useAuthContext();
 
   const routes = useRoutes([
     {
