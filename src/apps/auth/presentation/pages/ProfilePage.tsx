@@ -50,10 +50,10 @@ export default function ProfilePage() {
     }
   };
 
-  // Modificar el useEffect para mostrar mensajes de éxito usando toast
+  // Modificar el useEffect para usar notify en lugar de toast
   useEffect(() => {
     if (location.state?.successMessage) {
-      toast.success(location.state.successMessage);
+      notify.success(location.state.successMessage);
     }
   }, [location.state]);
 

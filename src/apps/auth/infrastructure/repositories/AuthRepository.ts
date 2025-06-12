@@ -2,38 +2,34 @@ import axiosInstance from "../../../../core/infrastructure/http/axiosInstance";
 
 export const login = async (username: string, password: string) => {
   try {
-    // Primera fase de autenticación
-    const response = await axiosInstance.post("/token/", {
+    const response = await axiosInstance.post("/users/login/", {
       username,
       password,
     });
 
     const data = response.data;
-    console.log('Login response:', data); // Para debug
+    console.log('Login response:', data);
 
-    // Si el usuario tiene 2FA activado
-    if (data.is_2fa_enabled) {
+    // Si requiere 2FA
+    if (data.require_2fa) {
       return {
         require_2fa: true,
         temp_token: data.temp_token,
-        username: username,
-        message: "Se requiere verificación 2FA"
+        message: data.message
       };
     }
 
-    // Si no tiene 2FA, procedemos con el login normal
+    // Si no requiere 2FA, guardamos los tokens y datos del usuario
     localStorage.setItem('access_token', data.access);
     localStorage.setItem('refresh_token', data.refresh);
-
-    const userResponse = await axiosInstance.get("/users/me/");
-    localStorage.setItem('user', JSON.stringify(userResponse.data));
+    localStorage.setItem('user', JSON.stringify(data.user));
     
     return {
-      user: userResponse.data,
+      user: data.user,
       token: data.access
     };
   } catch (error: any) {
-    console.error('Login error:', error.response?.data); // Para debug
+    console.error('Login error:', error.response?.data);
     throw new Error(error.response?.data?.detail || 'Error en el inicio de sesión');
   }
 };
@@ -90,26 +86,19 @@ export const enable2FA = async () => {
 export const verify2FA = async ({ code, temp_token }: { code: string, temp_token: string }) => {
   try {
     const response = await axiosInstance.post("/users/verify-otp/", {
-      temp_token: temp_token,
-      otp_code: code  // Cambiamos 'code' por 'otp_code' para coincidir con el backend
+      temp_token,
+      otp_code: code
     });
 
-    console.log('Verify 2FA response:', response.data);
+    const data = response.data;
+    console.log('Verify 2FA response:', data);
 
-    // Si la verificación es exitosa, guardamos los tokens y datos del usuario
-    if (response.data.access && response.data.refresh) {
-      localStorage.setItem('access_token', response.data.access);
-      localStorage.setItem('refresh_token', response.data.refresh);
-      
-      if (response.data.user) {
-        localStorage.setItem('user', JSON.stringify({
-          ...response.data.user,
-          is_2fa_enabled: true
-        }));
-      }
-    }
+    // Guardamos los tokens y datos del usuario después de verificación exitosa
+    localStorage.setItem('access_token', data.access);
+    localStorage.setItem('refresh_token', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
 
-    return response.data;
+    return data;
   } catch (error: any) {
     console.error('Verify 2FA error:', error.response?.data);
     throw new Error(error.response?.data?.error || 'Error en la verificación 2FA');
@@ -131,7 +120,7 @@ export const disable2FA = async () => {
       enable_2fa: false
     });
     
-    // Actualizar el estado del usuario en localStorage
+    // Actualizamos el estado del usuario en localStorage
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     localStorage.setItem('user', JSON.stringify({
       ...currentUser,
@@ -140,7 +129,7 @@ export const disable2FA = async () => {
 
     return response.data;
   } catch (error: any) {
-    console.error('Error al desactivar 2FA:', error.response?.data);
+    console.error('Disable 2FA error:', error.response?.data);
     throw new Error(error.response?.data?.detail || 'Error al desactivar 2FA');
   }
 };

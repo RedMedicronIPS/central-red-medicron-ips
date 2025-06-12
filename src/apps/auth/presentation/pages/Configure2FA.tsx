@@ -1,10 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from 'react-toastify';
 import { QRCodeCanvas } from "qrcode.react";
 import Button from "../../../../shared/components/Button";
-import Input from "../../../../shared/components/Input";
-import { enable2FA, verify2FA } from "../../infrastructure/repositories/AuthRepository";
+import { enable2FA, disable2FA } from "../../infrastructure/repositories/AuthRepository";
 import { notify } from '../../../../shared/utils/notifications';
 
 interface TwoFactorResponse {
@@ -17,72 +15,76 @@ interface TwoFactorResponse {
 export default function Configure2FA() {
   const [otpUri, setOtpUri] = useState<string>("");
   const [secret, setSecret] = useState<string>("");
-  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [step, setStep] = useState<"initial" | "verify">("initial");
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [is2FAEnabled, setIs2FAEnabled] = useState(user?.is_2fa_enabled || false);
+
+  // Cargar la configuración 2FA al montar el componente
+  useEffect(() => {
+    if (!user.is_2fa_enabled) {
+      handleEnable2FA();
+    }
+  }, []);
 
   const handleEnable2FA = async () => {
     setLoading(true);
+    setError("");
+
     try {
       const response = await enable2FA();
       const data = response as TwoFactorResponse;
+      
       if (data.otp_uri && data.secret) {
         setOtpUri(data.otp_uri);
         setSecret(data.secret);
-        setStep("verify");
-        toast.info("Escanea el código QR con tu aplicación de autenticación");
+        notify.success("2FA configurado exitosamente. Escanea el código QR con tu aplicación de autenticación");
+        notify.info("Se ha enviado un correo con la información de respaldo y los pasos de configuración");
       } else {
         throw new Error('No se recibió la información necesaria del servidor');
       }
     } catch (err: any) {
-      toast.error(err.message || "Error al activar 2FA");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerify2FA = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!otp || !secret) {  // Cambiamos la validación para usar secret
-      notify.error("Se requiere el código de verificación");
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      const response = await verify2FA({ 
-        code: otp,
-        temp_token: secret  // Usamos el secret como temp_token
-      });
-
-      notify.success("Autenticación de dos factores activada exitosamente");
-      navigate("/profile", { 
-        state: { 
-          is2FAEnabled: true,
-          successMessage: "2FA activado correctamente"
-        }
-      });
-    } catch (err: any) {
-      const errorMessage = err.message || "Error al verificar el código";
-      notify.error(errorMessage);
+      const errorMessage = err.message || "Error al configurar 2FA";
       setError(errorMessage);
+      notify.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDisable2FA = async () => {
+    if (!window.confirm("¿Estás seguro de que deseas desactivar la autenticación de dos factores?")) {
+      return;
+    }
+
+    setLoading(true);
+
     try {
       await disable2FA();
       setIs2FAEnabled(false);
       notify.success("Autenticación de dos factores desactivada exitosamente");
+      navigate("/profile", { 
+        state: { 
+          is2FAEnabled: false,
+          successMessage: "2FA desactivado correctamente" 
+        }
+      });
     } catch (err: any) {
       notify.error(err.message || "Error al desactivar 2FA");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleFinish = () => {
+    notify.info("Recuerda usar el código de tu aplicación de autenticación en tu próximo inicio de sesión");
+    navigate("/profile", { 
+      state: { 
+        is2FAEnabled: true,
+        successMessage: "2FA configurado correctamente" 
+      }
+    });
   };
 
   return (
@@ -93,7 +95,9 @@ export default function Configure2FA() {
             Configuración de Autenticación de Dos Factores
           </h1>
           <p className="text-gray-600">
-            Mejora la seguridad de tu cuenta activando la autenticación de dos factores
+            {is2FAEnabled 
+              ? "Gestiona tu configuración de autenticación de dos factores" 
+              : "Mejora la seguridad de tu cuenta configurando la autenticación de dos factores"}
           </p>
         </div>
 
@@ -103,99 +107,96 @@ export default function Configure2FA() {
           </div>
         )}
 
-        {step === "initial" ? (
-          <div className="space-y-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-medium text-blue-800 mb-2">
-                ¿Cómo funciona?
-              </h3>
-              <ol className="list-decimal list-inside text-blue-700 space-y-2">
-                <li>Descarga una aplicación de autenticación (Google Authenticator, Authy, etc.)</li>
-                <li>Activa la autenticación de dos factores</li>
-                <li>Escanea el código QR con tu aplicación</li>
-                <li>Ingresa el código de verificación para confirmar</li>
-              </ol>
-            </div>
-
-            <Button
-              onClick={handleEnable2FA}
-              variant="primary"
-              fullWidth
-              loading={loading}
-            >
-              {loading ? "Activando..." : "Activar autenticación de dos factores"}
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {otpUri && (
-              <div className="flex flex-col items-center space-y-4">
-                <div className="p-4 bg-white border rounded-lg">
-                  <QRCodeCanvas 
-                    value={otpUri}
-                    size={200}
-                    level="H"
-                    includeMargin={true}
-                  />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Escanea este código QR con tu aplicación de autenticación
-                  </p>
-                  {secret && (
-                    <p className="text-xs text-gray-500">
-                      O ingresa esta clave manualmente: <br />
-                      <span className="font-mono bg-gray-100 px-2 py-1 rounded">
-                        {secret}
-                      </span>
-                    </p>
-                  )}
-                </div>
+        <div className="space-y-6">
+          {is2FAEnabled ? (
+            <div className="flex flex-col items-center gap-4">
+              <div className="bg-yellow-50 p-4 rounded-lg text-yellow-800">
+                <p className="font-medium">2FA está actualmente activado</p>
+                <p className="text-sm mt-1">Puedes desactivarlo o reconfigurarlo si lo necesitas</p>
               </div>
-            )}
-
-            <form onSubmit={handleVerify2FA} className="space-y-4">
-              <Input
-                type="text"
-                label="Código de verificación"
-                value={otp}
-                onChange={(e) => {
-                  // Solo permitir dígitos
-                  const value = e.target.value.replace(/\D/g, '');
-                  if (value.length <= 6) {
-                    setOtp(value);
-                  }
-                }}
-                placeholder="Ingresa el código de 6 dígitos"
-                required
-                pattern="\d{6}"
-                maxLength={6}
-                disabled={loading}
-                className="text-center tracking-wider font-mono"
-              />
-
               <div className="flex gap-4">
                 <Button
-                  type="submit"
-                  variant="primary"
-                  fullWidth
+                  variant="danger"
+                  onClick={handleDisable2FA}
                   loading={loading}
                 >
-                  {loading ? "Verificando..." : "Verificar y activar"}
+                  {loading ? "Desactivando..." : "Desactivar 2FA"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={handleEnable2FA}
+                  disabled={loading}
+                >
+                  Reconfigurar 2FA
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-medium text-blue-800 mb-2">
+                  Pasos a seguir:
+                </h3>
+                <ol className="list-decimal list-inside text-blue-700 space-y-2">
+                  <li>Descarga una aplicación de autenticación como Google Authenticator, Microsoft Authenticator, Authy u otra de tu preferencia</li>
+                  <li>Abre la aplicación y selecciona añadir una nueva cuenta</li>
+                  <li>Escanea el código QR que aparece abajo o introduce manualmente la clave secreta</li>
+                  <li>Guarda la clave secreta en un lugar seguro como respaldo</li>
+                  <li>Se te ha enviado un correo con esta información y los pasos detallados</li>
+                </ol>
+              </div>
+
+              {otpUri && (
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="p-4 bg-white border rounded-lg">
+                    <QRCodeCanvas 
+                      value={otpUri}
+                      size={200}
+                      level="H"
+                      includeMargin={true}
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Escanea este código QR con tu aplicación de autenticación
+                    </p>
+                    {secret && (
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-gray-700">Clave de respaldo:</p>
+                        <p className="font-mono bg-gray-100 px-4 py-2 rounded mt-1 text-sm">
+                          {secret}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Guarda esta clave en un lugar seguro. La necesitarás si pierdes acceso a tu aplicación de autenticación.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-4 justify-center">
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleFinish}
+                  disabled={loading || !otpUri}
+                >
+                  He configurado la autenticación
                 </Button>
                 
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => setStep("initial")}
+                  onClick={() => navigate("/profile")}
                   disabled={loading}
                 >
                   Cancelar
                 </Button>
               </div>
-            </form>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

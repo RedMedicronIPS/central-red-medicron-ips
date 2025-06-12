@@ -8,7 +8,6 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Get user data from localStorage
   const userData = localStorage.getItem("user");
   const user = userData ? JSON.parse(userData) : null;
 
@@ -18,20 +17,19 @@ export const useAuth = () => {
     
     try {
       const response = await login(username, password);
-      console.log('Login response in useAuth:', response);
       
       // Si requiere 2FA
       if (response.require_2fa) {
         navigate("/auth/verify-2fa", { 
           state: { 
             tempToken: response.temp_token,
-            username: response.username
+            username
           }
         });
         return;
       }
 
-      // Si no requiere 2FA
+      // Si el login es exitoso y no requiere 2FA
       notify.success("Inicio de sesión exitoso");
       navigate("/dashboard");
     } catch (err: any) {
@@ -43,18 +41,11 @@ export const useAuth = () => {
     }
   };
 
-  const logoutUser = () => {
-    logout();
-    navigate("/auth/login");
-  };
-
   return {
     loginUser,
-    logoutUser,
     error,
     loading,
     isAuthenticated: !!localStorage.getItem('access_token'),
-    roles: user?.roles || [],
     user
   };
 };
