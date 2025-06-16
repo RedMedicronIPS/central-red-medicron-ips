@@ -141,8 +141,12 @@ export const getProfile = async () => {
   return response.data;
 };
 
-export const updateProfile = async (data: { username: string; email: string; fullName?: string }) => {
-  const response = await axiosInstance.put("/users/me/", data);
+export const updateProfile = async (data: any, isMultipart = false) => {
+  const config = isMultipart
+    ? { headers: { "Content-Type": "multipart/form-data" } }
+    : {};
+  // Cambia put por patch aquí:
+  const response = await axiosInstance.patch("/users/me/", data, config);
   localStorage.setItem("user", JSON.stringify(response.data));
   return response.data;
 };

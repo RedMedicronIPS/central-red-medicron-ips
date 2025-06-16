@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { ChangeEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../../../../shared/components/Button";
 import Input from "../../../../shared/components/Input";
@@ -16,7 +17,10 @@ export default function ProfilePage() {
     first_name: user?.first_name || "",
     last_name: user?.last_name || "",
     role: typeof user?.role === "string" ? user.role : user?.role?.name || "",
+    profile_picture: user?.profile_picture || null,
   });
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(user?.profile_picture || null);
+  const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
   const [is2FAEnabled, setIs2FAEnabled] = useState(user?.is_2fa_enabled || false);
   const [loading2FA, setLoading2FA] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -35,7 +39,9 @@ export default function ProfilePage() {
           first_name: profile.first_name || "",
           last_name: profile.last_name || "",
           role: typeof profile.role === "string" ? profile.role : profile.role?.name || "",
+          profile_picture: profile.profile_picture || null,
         });
+        setProfilePicPreview(profile.profile_picture || null);
         setIs2FAEnabled(profile.is_2fa_enabled);
         setUser(profile); // Actualiza el contexto y localStorage
       } catch (err: any) {
@@ -54,17 +60,36 @@ export default function ProfilePage() {
     }
   }, [location.state]);
 
+  // Manejar cambio de imagen de perfil
+  const handleProfilePicChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfilePicFile(file);
+      setProfilePicPreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoadingProfile(true);
     try {
-      const updated = await updateProfile({
-        username: values.username,
-        email: values.email,
-        first_name: values.first_name,
-        last_name: values.last_name,
-      });
+      // Usar FormData para enviar imagen y datos
+      const formData = new FormData();
+      formData.append("username", values.username);
+      formData.append("email", values.email);
+      formData.append("first_name", values.first_name);
+      formData.append("last_name", values.last_name);
+      if (profilePicFile) {
+        formData.append("profile_picture", profilePicFile);
+      }
+
+      const updated = await updateProfile(formData, true); // true = multipart
       setUser(updated);
+      setValues({
+        ...values,
+        profile_picture: updated.profile_picture,
+      });
+      setProfilePicPreview(updated.profile_picture || null);
       setIsEditing(false);
       notify.success("Perfil actualizado correctamente");
     } catch (err: any) {
@@ -82,7 +107,7 @@ export default function ProfilePage() {
     try {
       await disable2FA();
       setIs2FAEnabled(false);
-      setUser({ ...user, is_2fa_enabled: false });
+      setUser({ ...(user as any), is_2fa_enabled: false, id: user!.id });
       notify.success("Autenticación de dos factores desactivada exitosamente");
     } catch (err: any) {
       notify.error(err.message || "Error al desactivar 2FA");
@@ -114,14 +139,40 @@ export default function ProfilePage() {
         <div className="flex flex-col md:flex-row gap-6">
           <div className="md:w-1/3 flex flex-col items-center">
             <img
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                values.first_name + " " + values.last_name || values.username || "U"
-              )}&background=1e40af&color=fff&size=200`}
+              src={
+                profilePicPreview
+                  ? profilePicPreview
+                  : values.profile_picture
+                  ? values.profile_picture.startsWith("http")
+                    ? values.profile_picture
+                    : `http://localhost:8000${values.profile_picture}`
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      values.first_name + " " + values.last_name || values.username || "U"
+                    )}&background=1e40af&color=fff&size=200`
+              }
               alt="avatar"
-              className="w-48 h-48 rounded-full border-4 border-blue-100"
+              className="w-48 h-48 rounded-full border-4 border-blue-100 object-cover"
             />
+            {isEditing && (
+              <div className="mt-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePicChange}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"
+                />
+              </div>
+            )}
             <p className="mt-4 text-sm text-gray-500">
-              Miembro desde: {user?.joinDate || "No disponible"}
+              Miembro desde:{" "}
+              {user?.date_joined
+                ? new Date(user.date_joined).toLocaleDateString()
+                : "No disponible"}
             </p>
           </div>
 
