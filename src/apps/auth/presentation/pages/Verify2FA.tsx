@@ -4,6 +4,7 @@ import Button from "../../../../shared/components/Button";
 import Input from "../../../../shared/components/Input";
 import { verify2FA } from "../../infrastructure/repositories/AuthRepository";
 import { notify } from "../../../../shared/utils/notifications";
+import { useAuthContext } from "../context/AuthContext"; // <-- IMPORTA EL CONTEXTO
 
 export default function Verify2FA() {
   const [otp, setOtp] = useState("");
@@ -13,6 +14,7 @@ export default function Verify2FA() {
   const location = useLocation();
   const tempToken = location.state?.tempToken;
   const username = location.state?.username;
+  const { setUser } = useAuthContext(); // <-- OBTÉN setUser DEL CONTEXTO
 
   useEffect(() => {
     if (!tempToken) {
@@ -32,10 +34,12 @@ export default function Verify2FA() {
     setError("");
 
     try {
-      await verify2FA({ 
+      const data = await verify2FA({ 
         code: otp,
         temp_token: tempToken
       });
+
+      setUser(data.user); // <-- ACTUALIZA EL CONTEXTO CON EL USUARIO AUTENTICADO
 
       notify.success("Verificación exitosa");
       navigate("/dashboard");
