@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
-import type { ChangeEvent } from "react";
+import { useState, useEffect, useMemo, ChangeEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../../../../shared/components/Button";
 import Input from "../../../../shared/components/Input";
@@ -7,7 +6,6 @@ import UserAvatar from "../../../../shared/components/UserAvatar";
 import { disable2FA, getProfile, updateProfile, changePassword } from "../../infrastructure/repositories/AuthRepository";
 import { notify } from '../../../../shared/utils/notifications';
 import { useAuthContext } from "../context/AuthContext";
-import { getProfilePicUrl } from "../../../../shared/utils/profile";
 import { validateNewPassword } from "../../../../shared/utils/passwordValidation";
 
 // Helper para requisitos individuales
@@ -220,216 +218,149 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
-          <Button
-            variant={isEditing ? "secondary" : "primary"}
-            onClick={isEditing ? handleCancelEdit : handleEditClick}
-            disabled={loadingProfile}
-          >
-            {isEditing ? "Cancelar" : "Editar Perfil"}
-          </Button>
+    <div className="max-w-4xl mx-auto py-10 px-2 space-y-10">
+      {/* CABECERA */}
+      <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col md:flex-row gap-8 items-center relative">
+        <div className="flex flex-col items-center md:w-1/3">
+          <UserAvatar
+            src={profilePicPreview || values.profile_picture}
+            name={`${values.first_name} ${values.last_name}`.trim() || values.username}
+            size={128}
+            className="mb-4"
+          />
+          <p className="text-xs text-gray-500 mb-2">
+            Miembro desde: {user?.date_joined ? new Date(user.date_joined).toLocaleDateString() : "No disponible"}
+          </p>
+          {isEditing && (
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePicChange}
+              className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          )}
         </div>
-
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="md:w-1/3 flex flex-col items-center">
-            <UserAvatar
-              src={profilePicPreview || values.profile_picture}
-              name={`${values.first_name} ${values.last_name}`.trim() || values.username}
-              size={192}
-            />
-            {isEditing && (
-              <div className="mt-4">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProfilePicChange}
-                  className="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-blue-50 file:text-blue-700
-                    hover:file:bg-blue-100"
-                />
-              </div>
-            )}
-            <p className="mt-4 text-sm text-gray-500">
-              Miembro desde:{" "}
-              {user?.date_joined
-                ? new Date(user.date_joined).toLocaleDateString()
-                : "No disponible"}
-            </p>
+        <div className="flex-1 w-full">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
+            <Button
+              variant={isEditing ? "secondary" : "primary"}
+              onClick={isEditing ? handleCancelEdit : handleEditClick}
+              disabled={loadingProfile}
+            >
+              {isEditing ? "Cancelar" : "Editar Perfil"}
+            </Button>
           </div>
-
-          <form onSubmit={handleSubmit} className="md:w-2/3 space-y-6">
-            <Input
-              label="Nombre"
-              value={values.first_name}
-              onChange={(e) =>
-                setValues({ ...values, first_name: e.target.value })
-              }
-              disabled={!isEditing || loadingProfile}
-            />
-            <Input
-              label="Apellido"
-              value={values.last_name}
-              onChange={(e) =>
-                setValues({ ...values, last_name: e.target.value })
-              }
-              disabled={!isEditing || loadingProfile}
-            />
-            <Input
-              label="Nombre de usuario"
-              value={values.username}
-              onChange={(e) =>
-                setValues({ ...values, username: e.target.value })
-              }
-              disabled={!isEditing || loadingProfile}
-            />
-            <Input
-              label="Correo electrónico"
-              type="email"
-              value={values.email}
-              onChange={(e) => setValues({ ...values, email: e.target.value })}
-              disabled={!isEditing || loadingProfile}
-            />
-            <Input label="Rol" value={values.role} disabled={true} />
-
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input label="Nombre" value={values.first_name} onChange={e => setValues({ ...values, first_name: e.target.value })} disabled={!isEditing || loadingProfile} />
+              <Input label="Apellido" value={values.last_name} onChange={e => setValues({ ...values, last_name: e.target.value })} disabled={!isEditing || loadingProfile} />
+              <Input label="Nombre de usuario" value={values.username} onChange={e => setValues({ ...values, username: e.target.value })} disabled={!isEditing || loadingProfile} />
+              <Input label="Correo electrónico" type="email" value={values.email} onChange={e => setValues({ ...values, email: e.target.value })} disabled={!isEditing || loadingProfile} />
+              <Input label="Rol" value={values.role} disabled />
+            </div>
             {isEditing && (
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" variant="primary" loading={loadingProfile}>
-                  Guardar cambios
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCancelEdit} // <-- Usa la función que restaura los valores originales
-                  disabled={loadingProfile}
-                >
-                  Cancelar
-                </Button>
+              <div className="flex gap-4 pt-2">
+                <Button type="submit" variant="primary" loading={loadingProfile}>Guardar cambios</Button>
+                <Button type="button" variant="secondary" onClick={handleCancelEdit} disabled={loadingProfile}>Cancelar</Button>
               </div>
             )}
           </form>
         </div>
       </div>
 
-      {/* Nueva sección de seguridad */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Seguridad
-        </h2>
+      {/* SECCIÓN DE SEGURIDAD */}
+      <div className="bg-white rounded-2xl shadow-lg p-8 space-y-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Seguridad</h2>
 
-        {success2FA && (
-          <div className="mb-4 bg-green-50 text-green-700 p-3 rounded-lg text-sm">
-            {success2FA}
+        {/* 2FA */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h3 className="font-medium text-gray-900">Autenticación de dos factores</h3>
+            <p className="text-sm text-gray-600">
+              {is2FAEnabled
+                ? "La autenticación de dos factores está activada"
+                : "Añade una capa extra de seguridad a tu cuenta"}
+            </p>
           </div>
-        )}
-
-        {error2FA && (
-          <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-            {error2FA}
-          </div>
-        )}
-
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-gray-900">
-                Autenticación de dos factores
-              </h3>
-              <p className="text-sm text-gray-600">
-                {is2FAEnabled
-                  ? "La autenticación de dos factores está activada"
-                  : "Añade una capa extra de seguridad a tu cuenta"}
-              </p>
-            </div>
-            {is2FAEnabled ? (
-              <div className="flex gap-3">
-                <Button
-                  variant="danger"
-                  onClick={handleDisable2FA}
-                  loading={loading2FA}
-                >
-                  {loading2FA ? "Desactivando..." : "Desactivar 2FA"}
-                </Button>
-                <Link
-                  to="/auth/configure-2fa"
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                >
-                  Reconfigurar 2FA
-                </Link>
-              </div>
-            ) : (
+          {is2FAEnabled ? (
+            <div className="flex gap-3">
+              <Button variant="danger" onClick={handleDisable2FA} loading={loading2FA}>
+                {loading2FA ? "Desactivando..." : "Desactivar 2FA"}
+              </Button>
               <Link
                 to="/auth/configure-2fa"
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
               >
-                Configurar 2FA
+                Reconfigurar 2FA
               </Link>
-            )}
-          </div>
+            </div>
+          ) : (
+            <Link
+              to="/auth/configure-2fa"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Configurar 2FA
+            </Link>
+          )}
+        </div>
 
-          {/* Separador */}
-          <div className="border-t border-gray-200" />
+        <div className="border-t border-gray-200 my-6" />
 
-          {/* Sección de cambio de contraseña */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Cambiar contraseña</h3>
-            <form className="space-y-4 max-w-md" onSubmit={handlePasswordChange}>
-              <Input
-                type="password"
-                label="Contraseña actual"
-                placeholder="Ingresa tu contraseña actual"
-                value={passwords.current}
-                onChange={e => setPasswords({ ...passwords, current: e.target.value })}
-                required
-                disabled={passwordLoading}
-                showPasswordToggle
-              />
-              <Input
-                type="password"
-                label="Nueva contraseña"
-                placeholder="Ingresa tu nueva contraseña"
-                value={passwords.new}
-                onChange={e => setPasswords({ ...passwords, new: e.target.value })}
-                required
-                disabled={passwordLoading}
-                showPasswordToggle
-              />
-              {/* Validación dinámica */}
-              <ul className="mb-2 space-y-1 text-sm">
-                {passwordRequirements.map((req, i) => (
-                  <li key={req.label} className="flex items-center gap-2">
-                    {passwordChecks[i] ? (
-                      <span className="inline-block w-4 h-4 rounded-full bg-green-500 text-white flex items-center justify-center text-xs">&#10003;</span>
-                    ) : (
-                      <span className="inline-block w-4 h-4 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center text-xs">–</span>
-                    )}
-                    <span className={passwordChecks[i] ? "text-green-600" : "text-gray-600"}>
-                      {req.label}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Input
-                type="password"
-                label="Confirmar contraseña"
-                placeholder="Confirma tu nueva contraseña"
-                value={passwords.confirm}
-                onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
-                required
-                disabled={passwordLoading}
-                showPasswordToggle
-              />
-              {passwordError && <div className="text-red-600 text-sm">{passwordError}</div>}
-              <Button variant="primary" type="submit" loading={passwordLoading}>
-                Actualizar contraseña
-              </Button>
-            </form>
-          </div>
+        {/* CAMBIO DE CONTRASEÑA */}
+        <div>
+          <h3 className="font-medium text-gray-900 mb-2">Cambiar contraseña</h3>
+          <form className="space-y-4 max-w-md" onSubmit={handlePasswordChange}>
+            <Input
+              type="password"
+              label="Contraseña actual"
+              placeholder="Ingresa tu contraseña actual"
+              value={passwords.current}
+              onChange={e => setPasswords({ ...passwords, current: e.target.value })}
+              required
+              disabled={passwordLoading}
+              showPasswordToggle
+            />
+            <Input
+              type="password"
+              label="Nueva contraseña"
+              placeholder="Ingresa tu nueva contraseña"
+              value={passwords.new}
+              onChange={e => setPasswords({ ...passwords, new: e.target.value })}
+              required
+              disabled={passwordLoading}
+              showPasswordToggle
+            />
+            {/* Validación dinámica */}
+            <ul className="mb-2 space-y-1 text-sm">
+              {passwordRequirements.map((req, i) => (
+                <li key={req.label} className="flex items-center gap-2">
+                  {passwordChecks[i] ? (
+                    <span className="inline-block w-4 h-4 rounded-full bg-green-500 text-white flex items-center justify-center text-xs">&#10003;</span>
+                  ) : (
+                    <span className="inline-block w-4 h-4 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center text-xs">–</span>
+                  )}
+                  <span className={passwordChecks[i] ? "text-green-600" : "text-gray-600"}>
+                    {req.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <Input
+              type="password"
+              label="Confirmar contraseña"
+              placeholder="Confirma tu nueva contraseña"
+              value={passwords.confirm}
+              onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
+              required
+              disabled={passwordLoading}
+              showPasswordToggle
+            />
+            {passwordError && <div className="text-red-600 text-sm">{passwordError}</div>}
+            <Button variant="primary" type="submit" loading={passwordLoading}>
+              Actualizar contraseña
+            </Button>
+          </form>
         </div>
       </div>
     </div>
