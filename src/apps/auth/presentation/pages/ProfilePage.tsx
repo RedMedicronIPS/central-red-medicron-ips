@@ -32,6 +32,11 @@ const passwordRequirements = [
     label: "Un carácter especial",
     test: (pw: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pw),
   },
+  {
+    label: "Las contraseñas coinciden",
+    test: (_pw: string, confirm: string) => _pw.length > 0 && _pw === confirm,
+    isMatch: true, // Para identificarlo si quieres mostrarlo diferente
+  },
 ];
 
 export default function ProfilePage() {
@@ -193,8 +198,13 @@ export default function ProfilePage() {
   };
 
   const passwordChecks = useMemo(
-    () => passwordRequirements.map(req => req.test(passwords.new)),
-    [passwords.new]
+    () =>
+      passwordRequirements.map(req =>
+        req.isMatch
+          ? req.test(passwords.new, passwords.confirm)
+          : req.test(passwords.new)
+      ),
+    [passwords.new, passwords.confirm]
   );
 
   useEffect(() => {
