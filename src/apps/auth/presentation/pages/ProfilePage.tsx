@@ -115,25 +115,15 @@ export default function ProfilePage() {
     e.preventDefault();
     setLoadingProfile(true);
     try {
-      // Si hay imagen nueva, usa FormData, si no, solo JSON
-      let updated;
+      const formData = new FormData();
+      formData.append("username", values.username);
+      formData.append("email", values.email);
+      formData.append("first_name", values.first_name);
+      formData.append("last_name", values.last_name);
       if (profilePicFile) {
-        const formData = new FormData();
-        formData.append("username", values.username);
-        formData.append("email", values.email);
-        formData.append("first_name", values.first_name);
-        formData.append("last_name", values.last_name);
-        formData.append("profile_picture", profilePicFile); // Solo el archivo, nunca la URL
-        updated = await updateProfile(formData, true); // true = multipart
-      } else {
-        // Solo texto, no envíes profile_picture
-        updated = await updateProfile({
-          username: values.username,
-          email: values.email,
-          first_name: values.first_name,
-          last_name: values.last_name,
-        });
+        formData.append("profile_picture", profilePicFile);
       }
+      const updated = await updateProfile(formData, true); // true = multipart
       setUser(updated);
       setValues({
         ...values,
@@ -141,7 +131,7 @@ export default function ProfilePage() {
       });
       setProfilePicPreview(updated.profile_picture || null);
       setIsEditing(false);
-      setProfilePicFile(null); // Limpia el archivo temporal
+      setProfilePicFile(null);
       notify.success("Perfil actualizado correctamente");
     } catch (err: any) {
       notify.error(err.message || "Error al actualizar el perfil");
