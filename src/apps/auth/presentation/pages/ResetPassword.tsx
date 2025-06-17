@@ -39,7 +39,7 @@ export default function ResetPassword() {
         });
       }, 3000);
     } catch (err: any) {
-      console.error('Reset password error:', err.response?.data);
+      //console.error('Reset password error:', err.response?.data);
       setError(err.response?.data?.detail || "Error al restablecer la contraseña");
     } finally {
       setLoading(false);

@@ -23,10 +23,10 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log('Form values:', values); // Para ver qué se está enviando
+      //console.log('Form values:', values); // Para ver qué se está enviando
       await loginUser(values.username, values.password);
     } catch (err) {
-      console.error('Submit error:', err);
+      //console.error('Submit error:', err);
     }
   };
 

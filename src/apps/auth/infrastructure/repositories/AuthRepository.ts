@@ -8,7 +8,7 @@ export const login = async (username: string, password: string) => {
     });
 
     const data = response.data;
-    console.log('Login response:', data);
+    //console.log('Login response:', data);
 
     // Si requiere 2FA
     if (data.require_2fa) {
@@ -29,7 +29,7 @@ export const login = async (username: string, password: string) => {
       token: data.access
     };
   } catch (error: any) {
-    console.error('Login error:', error.response?.data);
+    //console.error('Login error:', error.response?.data);
     throw new Error(error.response?.data?.detail || 'Error en el inicio de sesión');
   }
 };
@@ -69,7 +69,7 @@ export const enable2FA = async () => {
       enable_2fa: true
     });
     
-    console.log('Enable 2FA response:', response.data);
+    //console.log('Enable 2FA response:', response.data);
     
     // Guardamos el estado temporal
     if (response.data.temp_token) {
@@ -78,7 +78,7 @@ export const enable2FA = async () => {
     
     return response.data;
   } catch (error: any) {
-    console.error('Enable 2FA error:', error.response?.data);
+    //console.error('Enable 2FA error:', error.response?.data);
     throw new Error(error.response?.data?.detail || 'Error al activar 2FA');
   }
 };
@@ -91,7 +91,7 @@ export const verify2FA = async ({ code, temp_token }: { code: string, temp_token
     });
 
     const data = response.data;
-    console.log('Verify 2FA response:', data);
+    //console.log('Verify 2FA response:', data);
 
     // Guardamos los tokens y datos del usuario después de verificación exitosa
     localStorage.setItem('access_token', data.access);
@@ -100,7 +100,7 @@ export const verify2FA = async ({ code, temp_token }: { code: string, temp_token
 
     return data;
   } catch (error: any) {
-    console.error('Verify 2FA error:', error.response?.data);
+    //console.error('Verify 2FA error:', error.response?.data);
     throw new Error(error.response?.data?.error || 'Error en la verificación 2FA');
   }
 };
@@ -129,7 +129,7 @@ export const disable2FA = async () => {
 
     return response.data;
   } catch (error: any) {
-    console.error('Disable 2FA error:', error.response?.data);
+    //console.error('Disable 2FA error:', error.response?.data);
     throw new Error(error.response?.data?.detail || 'Error al desactivar 2FA');
   }
 };
