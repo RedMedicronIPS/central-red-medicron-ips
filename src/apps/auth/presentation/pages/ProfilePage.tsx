@@ -67,6 +67,8 @@ export default function ProfilePage() {
   const [passwordError, setPasswordError] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+  const [originalValues, setOriginalValues] = useState(values);
+
   // Traer datos frescos del perfil al montar
   useEffect(() => {
     const fetchProfile = async () => {
@@ -189,7 +191,7 @@ export default function ProfilePage() {
         new_password: passwords.new,
       });
       notify.success("Contraseña actualizada correctamente");
-      setPasswords({ current: "", new: "", confirm: "" });
+      setPasswords({ current: "", new: "", confirm: "" }); // Limpia todos los campos
     } catch (err: any) {
       setPasswordError(err.message || "Error al cambiar la contraseña");
     } finally {
@@ -213,6 +215,20 @@ export default function ProfilePage() {
     }
   }, [location.state]);
 
+  // Cuando entras en edición, guarda los valores originales
+  const handleEditClick = () => {
+    setOriginalValues(values);
+    setIsEditing(true);
+  };
+
+  // Cuando cancelas, restaura los valores originales
+  const handleCancelEdit = () => {
+    setValues(originalValues);
+    setProfilePicPreview(originalValues.profile_picture || null);
+    setProfilePicFile(null);
+    setIsEditing(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-white rounded-xl shadow-sm p-6">
@@ -220,7 +236,7 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
           <Button
             variant={isEditing ? "secondary" : "primary"}
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={isEditing ? handleCancelEdit : handleEditClick}
             disabled={loadingProfile}
           >
             {isEditing ? "Cancelar" : "Editar Perfil"}
@@ -299,7 +315,7 @@ export default function ProfilePage() {
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => setIsEditing(false)}
+                  onClick={handleCancelEdit} // <-- Usa la función que restaura los valores originales
                   disabled={loadingProfile}
                 >
                   Cancelar
@@ -381,6 +397,7 @@ export default function ProfilePage() {
                 onChange={e => setPasswords({ ...passwords, current: e.target.value })}
                 required
                 disabled={passwordLoading}
+                showPasswordToggle
               />
               <Input
                 type="password"
@@ -390,6 +407,7 @@ export default function ProfilePage() {
                 onChange={e => setPasswords({ ...passwords, new: e.target.value })}
                 required
                 disabled={passwordLoading}
+                showPasswordToggle
               />
               {/* Validación dinámica */}
               <ul className="mb-2 space-y-1 text-sm">
@@ -414,6 +432,7 @@ export default function ProfilePage() {
                 onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
                 required
                 disabled={passwordLoading}
+                showPasswordToggle
               />
               {passwordError && <div className="text-red-600 text-sm">{passwordError}</div>}
               <Button variant="primary" type="submit" loading={passwordLoading}>
