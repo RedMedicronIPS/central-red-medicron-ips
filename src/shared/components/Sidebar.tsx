@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { HiHome, HiUser, HiCog, HiLogout } from "react-icons/hi";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
+import { getProfilePicUrl } from "../utils/profile"; // Ajusta el path si es necesario
 
 export default function Sidebar() {
   const { user, logout, roles } = useAuthContext();
@@ -23,7 +24,6 @@ export default function Sidebar() {
 
   const username = typeof user?.username === "string" ? user.username : "Usuario";
   const role = typeof user?.role === "string" ? user.role : "usuario";
-  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0369a1&color=ffffff`;
 
   return (
     <div className="h-full bg-white border-r border-gray-200 flex flex-col">
@@ -34,9 +34,13 @@ export default function Sidebar() {
       <div className="px-4 py-6 border-y border-gray-200">
         <div className="flex items-center gap-4">
           <img
-            src={avatarUrl}
+            src={
+              user?.profile_picture
+                ? getProfilePicUrl(user.profile_picture) ?? undefined
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0369a1&color=ffffff`
+            }
             alt="avatar"
-            className="w-10 h-10 rounded-full"
+            className="w-10 h-10 rounded-full object-cover"
           />
           <div>
             <p className="font-medium text-gray-900">{username}</p>

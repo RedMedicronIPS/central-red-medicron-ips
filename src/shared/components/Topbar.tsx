@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiChevronDown, HiLogout, HiUser } from "react-icons/hi";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
+import { getProfilePicUrl } from "../utils/profile"; // Ajusta el path si es necesario
 
 export default function Topbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,11 +34,15 @@ export default function Topbar() {
               className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded-lg"
             >
               <img
-                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  user?.username || "U"
-                )}&background=1e40af&color=fff`}
+                src={
+                  user?.profile_picture
+                    ? getProfilePicUrl(user.profile_picture) || undefined
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user?.username || "U"
+                      )}&background=1e40af&color=fff`
+                }
                 alt="avatar"
-                className="w-8 h-8 rounded-full"
+                className="w-8 h-8 rounded-full object-cover"
               />
               <span className="hidden md:block font-medium text-gray-700">
                 {user?.username}

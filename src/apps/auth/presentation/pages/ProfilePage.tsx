@@ -1,11 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { ChangeEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../../../../shared/components/Button";
 import Input from "../../../../shared/components/Input";
-import { disable2FA, getProfile, updateProfile } from "../../infrastructure/repositories/AuthRepository";
+import UserAvatar from "../../../../shared/components/UserAvatar";
+import { disable2FA, getProfile, updateProfile, changePassword } from "../../infrastructure/repositories/AuthRepository";
 import { notify } from '../../../../shared/utils/notifications';
 import { useAuthContext } from "../context/AuthContext";
+import { getProfilePicUrl } from "../../../../shared/utils/profile";
+import { validateNewPassword } from "../../../../shared/utils/passwordValidation";
+
+// Helper para requisitos individuales
+const passwordRequirements = [
+  {
+    label: "Al menos 8 caracteres",
+    test: (pw: string) => pw.length >= 8,
+  },
+  {
+    label: "Una letra mayúscula",
+    test: (pw: string) => /[A-Z]/.test(pw),
+  },
+  {
+    label: "Una letra minúscula",
+    test: (pw: string) => /[a-z]/.test(pw),
+  },
+  {
+    label: "Un número",
+    test: (pw: string) => /[0-9]/.test(pw),
+  },
+  {
+    label: "Un carácter especial",
+    test: (pw: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pw),
+  },
+];
 
 export default function ProfilePage() {
   const { user, setUser } = useAuthContext();
@@ -26,6 +53,14 @@ export default function ProfilePage() {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [error2FA, setError2FA] = useState("");
   const [success2FA, setSuccess2FA] = useState("");
+
+  const [passwords, setPasswords] = useState({
+    current: "",
+    new: "",
+    confirm: ""
+  });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   // Traer datos frescos del perfil al montar
   useEffect(() => {
@@ -73,17 +108,25 @@ export default function ProfilePage() {
     e.preventDefault();
     setLoadingProfile(true);
     try {
-      // Usar FormData para enviar imagen y datos
-      const formData = new FormData();
-      formData.append("username", values.username);
-      formData.append("email", values.email);
-      formData.append("first_name", values.first_name);
-      formData.append("last_name", values.last_name);
+      // Si hay imagen nueva, usa FormData, si no, solo JSON
+      let updated;
       if (profilePicFile) {
-        formData.append("profile_picture", profilePicFile);
+        const formData = new FormData();
+        formData.append("username", values.username);
+        formData.append("email", values.email);
+        formData.append("first_name", values.first_name);
+        formData.append("last_name", values.last_name);
+        formData.append("profile_picture", profilePicFile); // Solo el archivo, nunca la URL
+        updated = await updateProfile(formData, true); // true = multipart
+      } else {
+        // Solo texto, no envíes profile_picture
+        updated = await updateProfile({
+          username: values.username,
+          email: values.email,
+          first_name: values.first_name,
+          last_name: values.last_name,
+        });
       }
-
-      const updated = await updateProfile(formData, true); // true = multipart
       setUser(updated);
       setValues({
         ...values,
@@ -91,6 +134,7 @@ export default function ProfilePage() {
       });
       setProfilePicPreview(updated.profile_picture || null);
       setIsEditing(false);
+      setProfilePicFile(null); // Limpia el archivo temporal
       notify.success("Perfil actualizado correctamente");
     } catch (err: any) {
       notify.error(err.message || "Error al actualizar el perfil");
@@ -116,6 +160,43 @@ export default function ProfilePage() {
     }
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordLoading(true);
+
+    const validationError = validateNewPassword(passwords.new);
+    if (validationError) {
+      setPasswordError(validationError);
+      setPasswordLoading(false);
+      return;
+    }
+
+    if (passwords.new !== passwords.confirm) {
+      setPasswordError("Las contraseñas no coinciden");
+      setPasswordLoading(false);
+      return;
+    }
+
+    try {
+      await changePassword({
+        current_password: passwords.current,
+        new_password: passwords.new,
+      });
+      notify.success("Contraseña actualizada correctamente");
+      setPasswords({ current: "", new: "", confirm: "" });
+    } catch (err: any) {
+      setPasswordError(err.message || "Error al cambiar la contraseña");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const passwordChecks = useMemo(
+    () => passwordRequirements.map(req => req.test(passwords.new)),
+    [passwords.new]
+  );
+
   useEffect(() => {
     if (location.state?.successMessage) {
       notify.success(location.state.successMessage);
@@ -138,20 +219,10 @@ export default function ProfilePage() {
 
         <div className="flex flex-col md:flex-row gap-6">
           <div className="md:w-1/3 flex flex-col items-center">
-            <img
-              src={
-                profilePicPreview
-                  ? profilePicPreview
-                  : values.profile_picture
-                  ? values.profile_picture.startsWith("http")
-                    ? values.profile_picture
-                    : `http://localhost:8000${values.profile_picture}`
-                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      values.first_name + " " + values.last_name || values.username || "U"
-                    )}&background=1e40af&color=fff&size=200`
-              }
-              alt="avatar"
-              className="w-48 h-48 rounded-full border-4 border-blue-100 object-cover"
+            <UserAvatar
+              src={profilePicPreview || values.profile_picture}
+              name={`${values.first_name} ${values.last_name}`.trim() || values.username}
+              size={192}
             />
             {isEditing && (
               <div className="mt-4">
@@ -291,26 +362,51 @@ export default function ProfilePage() {
           {/* Sección de cambio de contraseña */}
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Cambiar contraseña</h3>
-            <form className="space-y-4 max-w-md">
+            <form className="space-y-4 max-w-md" onSubmit={handlePasswordChange}>
               <Input
                 type="password"
                 label="Contraseña actual"
                 placeholder="Ingresa tu contraseña actual"
-                disabled
+                value={passwords.current}
+                onChange={e => setPasswords({ ...passwords, current: e.target.value })}
+                required
+                disabled={passwordLoading}
               />
               <Input
                 type="password"
                 label="Nueva contraseña"
                 placeholder="Ingresa tu nueva contraseña"
-                disabled
+                value={passwords.new}
+                onChange={e => setPasswords({ ...passwords, new: e.target.value })}
+                required
+                disabled={passwordLoading}
               />
+              {/* Validación dinámica */}
+              <ul className="mb-2 space-y-1 text-sm">
+                {passwordRequirements.map((req, i) => (
+                  <li key={req.label} className="flex items-center gap-2">
+                    {passwordChecks[i] ? (
+                      <span className="inline-block w-4 h-4 rounded-full bg-green-500 text-white flex items-center justify-center text-xs">&#10003;</span>
+                    ) : (
+                      <span className="inline-block w-4 h-4 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center text-xs">–</span>
+                    )}
+                    <span className={passwordChecks[i] ? "text-green-600" : "text-gray-600"}>
+                      {req.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
               <Input
                 type="password"
                 label="Confirmar contraseña"
                 placeholder="Confirma tu nueva contraseña"
-                disabled
+                value={passwords.confirm}
+                onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
+                required
+                disabled={passwordLoading}
               />
-              <Button variant="primary" disabled>
+              {passwordError && <div className="text-red-600 text-sm">{passwordError}</div>}
+              <Button variant="primary" type="submit" loading={passwordLoading}>
                 Actualizar contraseña
               </Button>
             </form>

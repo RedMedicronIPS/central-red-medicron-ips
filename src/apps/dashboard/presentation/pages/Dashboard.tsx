@@ -1,5 +1,6 @@
 import { HiUsers, HiDocumentText, HiChartBar, HiClock } from "react-icons/hi";
 import { useAuthContext } from "../../../auth/presentation/context/AuthContext";
+import { getProfilePicUrl } from "../../../../shared/utils/profile"; // Asegúrate de importar el helper
 
 export default function Dashboard() {
   const { user } = useAuthContext();
@@ -51,11 +52,15 @@ export default function Dashboard() {
             </p>
           </div>
           <img
-            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-              user?.username || "Usuario"
-            )}&background=2563eb&color=fff&size=120`}
+            src={
+              user?.profile_picture
+                ? getProfilePicUrl(user.profile_picture) ?? undefined
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user?.username || "Usuario"
+                  )}&background=2563eb&color=fff&size=120`
+            }
             alt="avatar"
-            className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-4 border-white/30 shadow-lg"
+            className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-4 border-white/30 shadow-lg object-cover"
           />
         </div>
       </div>

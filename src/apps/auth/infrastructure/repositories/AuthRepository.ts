@@ -150,3 +150,25 @@ export const updateProfile = async (data: any, isMultipart = false) => {
   localStorage.setItem("user", JSON.stringify(response.data));
   return response.data;
 };
+
+export const changePassword = async ({
+  current_password,
+  new_password,
+}: {
+  current_password: string;
+  new_password: string;
+}) => {
+  try {
+    const response = await axiosInstance.post("/users/change-password/", {
+      current_password,
+      new_password,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.detail ||
+        error.response?.data?.error ||
+        "Error al cambiar la contraseña"
+    );
+  }
+};
