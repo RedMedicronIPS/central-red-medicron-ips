@@ -88,115 +88,113 @@ export default function Configure2FA() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Configuración de Autenticación de Dos Factores
-          </h1>
-          <p className="text-gray-600">
-            {is2FAEnabled 
-              ? "Gestiona tu configuración de autenticación de dos factores" 
-              : "Mejora la seguridad de tu cuenta configurando la autenticación de dos factores"}
-          </p>
+    <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-900 p-8 rounded-xl shadow-sm">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          Configuración de Autenticación de Dos Factores
+        </h1>
+        <p className="text-gray-600">
+          {is2FAEnabled 
+            ? "Gestiona tu configuración de autenticación de dos factores" 
+            : "Mejora la seguridad de tu cuenta configurando la autenticación de dos factores"}
+        </p>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
+          {error}
         </div>
+      )}
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-6">
-          {is2FAEnabled ? (
-            <div className="flex flex-col items-center gap-4">
-              <div className="bg-yellow-50 p-4 rounded-lg text-yellow-800">
-                <p className="font-medium">2FA está actualmente activado</p>
-                <p className="text-sm mt-1">Puedes desactivarlo o reconfigurarlo si lo necesitas</p>
-              </div>
-              <div className="flex gap-4">
-                <Button
-                  variant="danger"
-                  onClick={handleDisable2FA}
-                  loading={loading}
-                >
-                  {loading ? "Desactivando..." : "Desactivar 2FA"}
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={handleEnable2FA}
-                  disabled={loading}
-                >
-                  Reconfigurar 2FA
-                </Button>
-              </div>
+      <div className="space-y-6">
+        {is2FAEnabled ? (
+          <div className="flex flex-col items-center gap-4">
+            <div className="bg-yellow-50 p-4 rounded-lg text-yellow-800">
+              <p className="font-medium">2FA está actualmente activado</p>
+              <p className="text-sm mt-1">Puedes desactivarlo o reconfigurarlo si lo necesitas</p>
             </div>
-          ) : (
-            <>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-medium text-blue-800 mb-2">
-                  Pasos a seguir:
-                </h3>
-                <ol className="list-decimal list-inside text-blue-700 space-y-2">
-                  <li>Descarga una aplicación de autenticación como Google Authenticator, Microsoft Authenticator, Authy u otra de tu preferencia</li>
-                  <li>Abre la aplicación y selecciona añadir una nueva cuenta</li>
-                  <li>Escanea el código QR que aparece abajo o introduce manualmente la clave secreta</li>
-                  <li>Guarda la clave secreta en un lugar seguro como respaldo</li>
-                  <li>Se te ha enviado un correo con esta información y los pasos detallados</li>
-                </ol>
-              </div>
+            <div className="flex gap-4">
+              <Button
+                variant="danger"
+                onClick={handleDisable2FA}
+                loading={loading}
+              >
+                {loading ? "Desactivando..." : "Desactivar 2FA"}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleEnable2FA}
+                disabled={loading}
+              >
+                Reconfigurar 2FA
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-medium text-blue-800 mb-2">
+                Pasos a seguir:
+              </h3>
+              <ol className="list-decimal list-inside text-blue-700 space-y-2">
+                <li>Descarga una aplicación de autenticación como Google Authenticator, Microsoft Authenticator, Authy u otra de tu preferencia</li>
+                <li>Abre la aplicación y selecciona añadir una nueva cuenta</li>
+                <li>Escanea el código QR que aparece abajo o introduce manualmente la clave secreta</li>
+                <li>Guarda la clave secreta en un lugar seguro como respaldo</li>
+                <li>Se te ha enviado un correo con esta información y los pasos detallados</li>
+              </ol>
+            </div>
 
-              {otpUri && (
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="p-4 bg-white border rounded-lg">
-                    <QRCodeCanvas 
-                      value={otpUri}
-                      size={200}
-                      level="H"
-                      includeMargin={true}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600 mb-2">
-                      Escanea este código QR con tu aplicación de autenticación
-                    </p>
-                    {secret && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-gray-700">Clave de respaldo:</p>
-                        <p className="font-mono bg-gray-100 px-4 py-2 rounded mt-1 text-sm">
-                          {secret}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Guarda esta clave en un lugar seguro. La necesitarás si pierdes acceso a tu aplicación de autenticación.
-                        </p>
-                      </div>
-                    )}
-                  </div>
+            {otpUri && (
+              <div className="flex flex-col items-center space-y-4">
+                <div className="p-4 bg-white border rounded-lg">
+                  <QRCodeCanvas 
+                    value={otpUri}
+                    size={200}
+                    level="H"
+                    includeMargin={true}
+                  />
                 </div>
-              )}
-
-              <div className="flex gap-4 justify-center">
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={handleFinish}
-                  disabled={loading || !otpUri}
-                >
-                  He configurado la autenticación
-                </Button>
-                
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => navigate("/profile")}
-                  disabled={loading}
-                >
-                  Cancelar
-                </Button>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Escanea este código QR con tu aplicación de autenticación
+                  </p>
+                  {secret && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-gray-700">Clave de respaldo:</p>
+                      <p className="font-mono bg-gray-100 px-4 py-2 rounded mt-1 text-sm">
+                        {secret}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Guarda esta clave en un lugar seguro. La necesitarás si pierdes acceso a tu aplicación de autenticación.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </>
-          )}
-        </div>
+            )}
+
+            <div className="flex gap-4 justify-center">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleFinish}
+                disabled={loading || !otpUri}
+              >
+                He configurado la autenticación
+              </Button>
+              
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => navigate("/profile")}
+                disabled={loading}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

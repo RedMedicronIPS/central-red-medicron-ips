@@ -26,7 +26,7 @@ export default function Sidebar() {
   const role = typeof user?.role === "string" ? user.role : "usuario";
 
   return (
-    <div className="h-full bg-white border-r border-gray-200 flex flex-col">
+    <div className="h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
       <div className="p-4">
         <h1 className="text-xl font-bold text-primary-600">Red Medicron IPS</h1>
       </div>

@@ -21,7 +21,7 @@ const Input: React.FC<InputProps> = ({ label, type, showPasswordToggle, id, ...p
           id={id}
           {...props}
           type={isPassword ? (show ? "text" : "password") : type}
-          className="w-full border rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         />
         {isPassword && (
           <button

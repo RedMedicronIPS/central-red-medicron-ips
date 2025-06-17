@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { HiChevronDown, HiLogout, HiUser } from "react-icons/hi";
+import { HiChevronDown, HiLogout, HiUser, HiMoon, HiSun } from "react-icons/hi";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 import { getProfilePicUrl } from "../utils/profile"; // Ajusta el path si es necesario
+import { useDarkMode } from "../hooks/useDarkMode";
 
 export default function Topbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout, roles } = useAuthContext();
+  const [darkMode, setDarkMode] = useDarkMode();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -18,7 +20,7 @@ export default function Topbar() {
   //...(roles.includes("admin")
 
   return (
-    <header className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
+    <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800">
       <div className="flex items-center justify-between h-16 px-4">
         <div className="flex items-center">
           {/* Botón de menú móvil aquí si lo necesitas */}
@@ -72,6 +74,18 @@ export default function Topbar() {
               </div>
             )}
           </div>
+
+          <button
+            onClick={() => setDarkMode((v) => !v)}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Cambiar modo oscuro"
+          >
+            {darkMode ? (
+              <HiSun className="w-5 h-5 text-yellow-400" />
+            ) : (
+              <HiMoon className="w-5 h-5 text-gray-700" />
+            )}
+          </button>
         </div>
       </div>
     </header>

@@ -221,7 +221,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <div className="w-full max-w-6xl mx-auto py-10 px-2 lg:px-16 xl:px-32 space-y-10">
         {/* CABECERA */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col md:flex-row gap-8 items-center md:items-start w-full">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 flex flex-col md:flex-row gap-8 items-center md:items-start w-full">
           <div className="flex flex-col items-center md:w-1/3">
             <UserAvatar
               src={profilePicPreview || values.profile_picture}
@@ -271,7 +271,7 @@ export default function ProfilePage() {
         </div>
 
         {/* SECCIÓN DE SEGURIDAD */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 space-y-8">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 space-y-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Seguridad</h2>
 
           {/* 2FA */}
