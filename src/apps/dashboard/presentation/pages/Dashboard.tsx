@@ -41,7 +41,6 @@ export default function Dashboard() {
       <NoticiasComunicados />
       <CalendarioEventos />
       <EstructuraOrganizacional />
-      <DirectorioFuncionarios funcionarios={DIRECTORIO} />
       <DocumentosRecursosRapidos />
       <ReconocimientosCumpleanios />
       <SoporteContacto />
