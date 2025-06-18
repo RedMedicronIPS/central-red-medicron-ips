@@ -80,19 +80,19 @@ export default function Dashboard() {
                 {stat.trend}
               </span>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
               {stat.value}
             </h3>
-            <p className="text-sm text-gray-600">{stat.label}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
           </div>
         ))}
       </div>
 
       {/* Additional Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        <div className="bg-white rounded-xl shadow-sm">
-          <div className="p-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Actividad reciente
             </h2>
           </div>
@@ -103,9 +103,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm">
-          <div className="p-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Tareas pendientes
             </h2>
           </div>

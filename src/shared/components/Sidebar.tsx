@@ -28,10 +28,10 @@ export default function Sidebar() {
   return (
     <div className="h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
       <div className="p-4">
-        <h1 className="text-xl font-bold text-primary-600">Red Medicron IPS</h1>
+        <h1 className="text-xl font-bold text-primary-600 dark:text-primary-400">Red Medicron IPS</h1>
       </div>
 
-      <div className="px-4 py-6 border-y border-gray-200">
+      <div className="px-4 py-6 border-y border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-4">
           <img
             src={
@@ -43,8 +43,8 @@ export default function Sidebar() {
             className="w-10 h-10 rounded-full object-cover"
           />
           <div>
-            <p className="font-medium text-gray-900">{username}</p>
-            <p className="text-sm text-gray-500 capitalize">{role}</p>
+            <p className="font-medium text-gray-900 dark:text-gray-100">{username}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{role}</p>
           </div>
         </div>
       </div>
@@ -57,8 +57,8 @@ export default function Sidebar() {
                 to={item.to}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   location.pathname === item.to
-                    ? "bg-primary-50 text-primary-600"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-primary-50 dark:bg-primary-900 text-primary-600 dark:text-primary-200"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 }`}
               >
                 {item.icon}
@@ -69,10 +69,10 @@ export default function Sidebar() {
         </ul>
       </nav>
 
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-800">
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-4 py-3 w-full text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="flex items-center gap-3 px-4 py-3 w-full text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
         >
           <HiLogout className="w-5 h-5" />
           <span>Cerrar sesión</span>

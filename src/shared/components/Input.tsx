@@ -12,7 +12,7 @@ const Input: React.FC<InputProps> = ({ label, type, showPasswordToggle, id, ...p
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium mb-1">
+        <label htmlFor={id} className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-100">
           {label}
         </label>
       )}

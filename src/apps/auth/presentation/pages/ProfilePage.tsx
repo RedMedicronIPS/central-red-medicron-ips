@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, ChangeEvent } from "react";
+import { useState, useEffect, useMemo } from "react";
+import type { ChangeEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../../../../shared/components/Button";
 import Input from "../../../../shared/components/Input";
@@ -192,7 +193,7 @@ export default function ProfilePage() {
       passwordRequirements.map(req =>
         req.isMatch
           ? req.test(passwords.new, passwords.confirm)
-          : req.test(passwords.new)
+          : req.test(passwords.new, passwords.confirm)
       ),
     [passwords.new, passwords.confirm]
   );
@@ -218,7 +219,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-500">
       <div className="w-full max-w-6xl mx-auto py-10 px-2 lg:px-16 xl:px-32 space-y-10">
         {/* CABECERA */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 flex flex-col md:flex-row gap-8 items-center md:items-start w-full">
@@ -229,7 +230,7 @@ export default function ProfilePage() {
               size={128}
               className="mb-4"
             />
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
               Miembro desde: {user?.date_joined ? new Date(user.date_joined).toLocaleDateString() : "No disponible"}
             </p>
             {isEditing && (
@@ -243,7 +244,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex-1 w-full">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Mi Perfil</h1>
               <Button
                 variant={isEditing ? "secondary" : "primary"}
                 onClick={isEditing ? handleCancelEdit : handleEditClick}
@@ -252,8 +253,8 @@ export default function ProfilePage() {
                 {isEditing ? "Cancelar" : "Editar Perfil"}
               </Button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-6 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="space-y-6 w-full ">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
                 <Input label="Nombre" value={values.first_name} onChange={e => setValues({ ...values, first_name: e.target.value })} disabled={!isEditing || loadingProfile} />
                 <Input label="Apellido" value={values.last_name} onChange={e => setValues({ ...values, last_name: e.target.value })} disabled={!isEditing || loadingProfile} />
                 <Input label="Nombre de usuario" value={values.username} onChange={e => setValues({ ...values, username: e.target.value })} disabled={!isEditing || loadingProfile} />
@@ -272,12 +273,12 @@ export default function ProfilePage() {
 
         {/* SECCIÓN DE SEGURIDAD */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 space-y-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Seguridad</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Seguridad</h2>
 
           {/* 2FA */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h3 className="font-medium text-gray-900">Autenticación de dos factores</h3>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100">Autenticación de dos factores</h3>
               <p className="text-sm text-gray-600">
                 {is2FAEnabled
                   ? "La autenticación de dos factores está activada"
@@ -310,7 +311,7 @@ export default function ProfilePage() {
 
           {/* CAMBIO DE CONTRASEÑA */}
           <div>
-            <h3 className="font-medium text-gray-900 mb-2">Cambiar contraseña</h3>
+            <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Cambiar contraseña</h3>
             <form className="space-y-4 max-w-md" onSubmit={handlePasswordChange}>
               <Input
                 type="password"
