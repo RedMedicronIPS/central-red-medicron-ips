@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { HiHome, HiUser, HiCog, HiLogout } from "react-icons/hi";
+import { HiHome, HiUser, HiCog, HiLogout, HiClipboardList, HiChartBar, HiDocumentText, HiOfficeBuilding } from "react-icons/hi";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
-import { getProfilePicUrl } from "../utils/profile"; // Ajusta el path si es necesario
+import { getProfilePicUrl } from "../utils/profile";
 
 export default function Sidebar() {
   const { user, logout, roles } = useAuthContext();
@@ -10,6 +10,10 @@ export default function Sidebar() {
 
   const navItems = [
     { to: "/dashboard", label: "Inicio", icon: <HiHome className="w-5 h-5" /> },
+    { to: "/auditorias", label: "Auditorías", icon: <HiClipboardList className="w-5 h-5" /> },
+    { to: "/indicadores", label: "Indicadores", icon: <HiChartBar className="w-5 h-5" /> },
+    { to: "/procesos", label: "Procesos", icon: <HiDocumentText className="w-5 h-5" /> },
+    { to: "/proveedores", label: "Proveedores", icon: <HiOfficeBuilding className="w-5 h-5" /> },
     { to: "/profile", label: "Mi perfil", icon: <HiUser className="w-5 h-5" /> },
     ...(roles.includes("admin")
       ? [{ to: "/admin", label: "Administración", icon: <HiCog className="w-5 h-5" /> }]
@@ -23,7 +27,7 @@ export default function Sidebar() {
   };
 
   const username = typeof user?.username === "string" ? user.username : "Usuario";
-  const role = typeof user?.role === "string" ? user.role : "usuario";
+  const role = typeof user?.role === "string" ? user.role : user?.role?.name || "usuario";
 
   return (
     <div className="h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
@@ -56,7 +60,7 @@ export default function Sidebar() {
               <Link
                 to={item.to}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  location.pathname === item.to
+                  location.pathname.startsWith(item.to)
                     ? "bg-primary-50 dark:bg-primary-900 text-primary-600 dark:text-primary-200"
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 }`}
