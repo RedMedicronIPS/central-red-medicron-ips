@@ -1,5 +1,6 @@
 import { HiOutlineCog, HiOutlineExclamation } from "react-icons/hi";
-export default function ProveedoresPage() {
+
+export default function AdministracionPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
       <div className="flex items-center mb-4">

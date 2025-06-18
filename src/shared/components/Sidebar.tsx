@@ -16,7 +16,7 @@ export default function Sidebar() {
     { to: "/proveedores", label: "Proveedores", icon: <HiOfficeBuilding className="w-5 h-5" /> },
     { to: "/profile", label: "Mi perfil", icon: <HiUser className="w-5 h-5" /> },
     ...(roles.includes("admin")
-      ? [{ to: "/admin", label: "Administración", icon: <HiCog className="w-5 h-5" /> }]
+      ? [{ to: "/administracion", label: "Administración", icon: <HiCog className="w-5 h-5" /> }]
       : []),
   ];
 

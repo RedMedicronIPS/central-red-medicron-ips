@@ -6,6 +6,11 @@ import { AuthGuard } from "./authGuard";
 import MainLayout from "../presentation/layouts/MainLayout";
 import Dashboard from "../../apps/dashboard/presentation/pages/Dashboard";
 import ProfilePage from "../../apps/auth/presentation/pages/ProfilePage";
+import AuditoriasPage from "../../apps/auditorias/presentation/pages/AuditoriasPage";
+import IndicadoresPage from "../../apps/indicadores/presentation/pages/IndicadoresPage";
+import ProcesosPage from "../../apps/procesos/presentation/pages/ProcesosPage";
+import ProveedoresPage from "../../apps/proveedores/presentation/pages/ProveedoresPage";
+import AdministracionPage from "../../apps/administracion/presentation/pages/AdministracionPage";
 
 export default function AppRouter() {
   const { isAuthenticated, roles } = useAuthContext();
@@ -41,6 +46,11 @@ export default function AppRouter() {
         },
         { path: "dashboard", element: <Dashboard /> },
         { path: "profile", element: <ProfilePage /> },
+        { path: "auditorias", element: <AuditoriasPage /> },
+        { path: "indicadores", element: <IndicadoresPage /> },
+        { path: "procesos", element: <ProcesosPage /> },
+        { path: "proveedores", element: <ProveedoresPage /> },
+        { path: "administracion", element: <AdministracionPage /> },
       ],
     },
     {
