@@ -32,7 +32,11 @@ export default function Sidebar() {
   return (
     <div className="h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
       <div className="p-4">
-        <h1 className="text-xl font-bold text-primary-600 dark:text-primary-400">Red Medicron IPS</h1>
+        <img
+          src="/logo.png"
+          alt="Red Medicron IPS"
+          className="h-12 sm:h-14 w-auto"
+        />
       </div>
 
       <div className="px-4 py-6 border-y border-gray-200 dark:border-gray-800">
@@ -59,11 +63,10 @@ export default function Sidebar() {
             <li key={item.to}>
               <Link
                 to={item.to}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  location.pathname.startsWith(item.to)
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location.pathname.startsWith(item.to)
                     ? "bg-primary-50 dark:bg-primary-900 text-primary-600 dark:text-primary-200"
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                }`}
+                  }`}
               >
                 {item.icon}
                 <span>{item.label}</span>

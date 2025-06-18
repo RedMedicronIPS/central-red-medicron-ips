@@ -11,6 +11,8 @@ import IndicadoresPage from "../../apps/indicadores/presentation/pages/Indicador
 import ProcesosPage from "../../apps/procesos/presentation/pages/ProcesosPage";
 import ProveedoresPage from "../../apps/proveedores/presentation/pages/ProveedoresPage";
 import AdministracionPage from "../../apps/administracion/presentation/pages/AdministracionPage";
+import NoticiasPage from "../../apps/dashboard/presentation/pages/NoticiasPage";
+import EventosPage from "../../apps/dashboard/presentation/pages/EventosPage";
 
 export default function AppRouter() {
   const { isAuthenticated, roles } = useAuthContext();
@@ -51,6 +53,8 @@ export default function AppRouter() {
         { path: "procesos", element: <ProcesosPage /> },
         { path: "proveedores", element: <ProveedoresPage /> },
         { path: "administracion", element: <AdministracionPage /> },
+        { path: "noticias", element: <NoticiasPage /> },
+        { path: "eventos", element: <EventosPage /> },
       ],
     },
     {

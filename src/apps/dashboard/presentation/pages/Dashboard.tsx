@@ -2,6 +2,7 @@ import { useAuthContext } from "../../../auth/presentation/context/AuthContext";
 import { getProfilePicUrl } from "../../../../shared/utils/profile";
 import Bienvenida from "../components/Bienvenida";
 import MisionVisionValores from "../components/MisionVisionValores";
+import AccesosRapidos from "../components/AccesosRapidos";
 import IndicadoresKPI from "../components/IndicadoresKPI";
 import NoticiasComunicados from "../components/NoticiasComunicados";
 import CalendarioEventos from "../components/CalendarioEventos";
@@ -36,7 +37,7 @@ export default function Dashboard() {
     <div className="space-y-8 w-full h-full">
       <Bienvenida />
       <MisionVisionValores />
-      <IndicadoresKPI />
+      <AccesosRapidos />
       <NoticiasComunicados />
       <CalendarioEventos />
       <EstructuraOrganizacional />
