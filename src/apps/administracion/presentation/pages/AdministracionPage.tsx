@@ -1,31 +1,45 @@
-import { HiOutlineCog, HiOutlineExclamation } from "react-icons/hi";
+import { useState } from "react";
+import InformacionEmpresa from "../components/InformacionEmpresa";
+import SedesEmpresa from "../components/SedesEmpresa";
+import AreasEmpresa from "../components/AreasEmpresa";
+// Puedes agregar más componentes en el futuro
+
+const TABS = [
+  { label: "Empresa", value: "empresa" },
+  { label: "Sedes", value: "sedes" },
+  { label: "Áreas", value: "areas" },
+  // { label: "Usuarios", value: "usuarios" }, // Ejemplo para futuro
+];
 
 export default function AdministracionPage() {
+  const [tab, setTab] = useState("empresa");
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <div className="flex items-center mb-4">
-        <HiOutlineCog className="w-16 h-16 text-blue-500 animate-spin-slow" />
-        <HiOutlineExclamation className="w-10 h-10 text-yellow-400 ml-[-20px]" />
-      </div>
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-        ¡En construcción!
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 min-h-[60vh]">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+        Administración General
       </h1>
-      <p className="text-gray-600 dark:text-gray-300 text-lg text-center max-w-md mb-4">
-        Estamos trabajando para traerte esta funcionalidad muy pronto.<br />
-        ¡Gracias por tu paciencia!
-      </p>
-      <span className="text-xs text-gray-400 dark:text-gray-500">Red Medicron IPS</span>
-      <style>
-        {`
-          .animate-spin-slow {
-            animation: spin 2.5s linear infinite;
-          }
-          @keyframes spin {
-            0% { transform: rotate(0deg);}
-            100% { transform: rotate(360deg);}
-          }
-        `}
-      </style>
+      <div className="flex gap-4 mb-8 border-b border-gray-200 dark:border-gray-700">
+        {TABS.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => setTab(t.value)}
+            className={`px-4 py-2 font-semibold border-b-2 transition ${
+              tab === t.value
+                ? "border-blue-600 text-blue-600 dark:text-blue-300"
+                : "border-transparent text-gray-600 dark:text-gray-300 hover:text-blue-600"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div>
+        {tab === "empresa" && <InformacionEmpresa />}
+        {tab === "sedes" && <SedesEmpresa />}
+        {tab === "areas" && <AreasEmpresa />}
+        {/* {tab === "usuarios" && <UsuariosGlobales />} */}
+      </div>
     </div>
   );
 }

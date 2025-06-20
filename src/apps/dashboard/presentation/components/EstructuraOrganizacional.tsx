@@ -3,38 +3,85 @@ import { Tree, TreeNode } from "react-organizational-chart";
 import { HiUserCircle, HiOutlineMap, HiOutlinePhone } from "react-icons/hi2";
 
 const estructura = {
-  nombre: "Gerente General",
-  persona: "Dra. Ana Martínez",
-  area: "Dirección General",
-  foto: "/fotos/ana.jpg",
-  email: "ana@redmedicronips.com.co",
+  nombre: "Asamblea General de Asociados",
+  persona: "Asamblea General de Asociados",
+  area: "Asamblea general de Asociados",
+  foto: "/fotos/asambleaGeneralAsociados.jpg",
+  email: "asambleageneral@redmedicronips.com.co",
   tel: "301 123 4567",
   hijos: [
     {
-      nombre: "Director Médico",
-      persona: "Dr. Juan Pérez",
-      area: "Dirección Médica",
-      foto: "/fotos/juan.jpg",
-      email: "juan@redmedicronips.com.co",
+      nombre: "Revisor Fiscal",
+      persona: "Dr. Edgar Ojeda",
+      area: "Revisoria Fiscal",
+      foto: "/fotos/EdgarOjeda.jpg",
+      email: "revisoriaFiscal@redmedicronips.com.co",
       tel: "302 234 5678",
       hijos: [
         {
-          nombre: "Jefe de Enfermería",
-          persona: "Enf. Laura Gómez",
-          area: "Enfermería",
-          foto: "/fotos/laura.jpg",
-          email: "laura@redmedicronips.com.co",
+          nombre: "Profesional Revisoria Fiscal",
+          persona: "Dr. Nelly Cordoba",
+          area: "Revisoria Fiscal",
+          foto: "/fotos/NellyCordoba.jpg",
+          email: "profesionalrevisoriafiscal@redmedicronips.com.co",
           tel: "303 345 6789",
         },
       ],
     },
     {
-      nombre: "Director Administrativo",
-      persona: "Carlos Ruiz",
-      area: "Administración",
-      foto: "/fotos/carlos.jpg",
-      email: "carlos@redmedicronips.com.co",
+      nombre: "Consejo de Administracion",
+      persona: "Consejo de Administracion",
+      area: "Consejo de Administracion",
+      foto: "/fotos/consejoAdminstracion.jpg",
+      email: "consejoAdminstracion@redmedicronips.com.co",
       tel: "304 456 7890",
+      hijos: [
+        {
+          nombre: "Control Interno",
+          persona: "Dr. Nelly Cordoba",
+          area: "Revisoria Fiscal",
+          foto: "/fotos/NellyCordoba.jpg",
+          email: "profesionalrevisoriafiscal@redmedicronips.com.co",
+          tel: "303 345 6789",
+          hijos: [
+            {
+              nombre: "Profesional Revisoria Fiscal",
+              persona: "Dr. Nelly Cordoba",
+              area: "Revisoria Fiscal",
+              foto: "/fotos/NellyCordoba.jpg",
+              email: "profesionalrevisoriafiscal@redmedicronips.com.co",
+              tel: "303 345 6789",
+            },
+          ],
+        },
+        {
+          nombre: "Oficial de Cumplimiento",
+          persona: "Dr. David Jaramillo",
+          area: "Oficial de Cumplimiento",
+          foto: "/fotos/DavidJaramillo.jpg",
+          email: "oficialdecumpliento@redmedicronips.com.co",
+          tel: "303 345 6789",
+          
+        },
+        {
+          nombre: "Comite Contraloria Interna",
+          persona: "Comite Contraloria Interna",
+          area: "Comite Contraloria Interna",
+          foto: "/fotos/ComiteContraloriaInterna.jpg",
+          email: "Comitecontraloriainterna@redmedicronips.com.co",
+          tel: "303 345 6789",
+          
+        },
+        {
+          nombre: "Director Ejecutivo",
+          persona: "Dr. Maurico Enriquez",
+          area: "Direccion Ejecutiva",
+          foto: "/fotos/MauricioEnriquez.jpg",
+          email: "direccionejecutiva@redmedicronips.com.co",
+          tel: "303 345 6789",
+          
+        },
+      ],
     },
   ],
 };
@@ -107,7 +154,12 @@ function renderNodo(nodo: any) {
       }
     >
       {nodo.hijos &&
-        nodo.hijos.map((hijo: any, idx: number) => renderNodo(hijo))}
+        nodo.hijos.map((hijo: any, idx: number) => (
+          // Agrega una key única aquí
+          <React.Fragment key={hijo.nombre + "-" + idx}>
+            {renderNodo(hijo)}
+          </React.Fragment>
+        ))}
     </TreeNode>
   );
 }

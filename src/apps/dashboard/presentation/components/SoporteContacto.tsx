@@ -10,9 +10,9 @@ const SOPORTE = [
   },
   {
     canal: "WhatsApp",
-    valor: "+57 301 123 4567",
+    valor: "+57 317 498 0971",
     icono: <HiOutlineChatBubbleLeftRight className="w-8 h-8 text-green-600" />,
-    link: "https://wa.me/573011234567",
+    link: "https://wa.me/573174980971",
     color: "from-green-50/80 to-green-100/60 dark:from-green-900/60 dark:to-green-800/40"
   },
   {

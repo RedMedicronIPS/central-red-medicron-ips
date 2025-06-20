@@ -11,7 +11,7 @@ const RECONOCIMIENTOS = [
   {
     tipo: "cumpleaños",
     nombre: "Pedro Martínez",
-    fecha: "2024-06-10",
+    fecha: "2024-07-10",
     mensaje: "¡Feliz cumpleaños! Eres parte fundamental de nuestro equipo.",
     foto: "",
   },
