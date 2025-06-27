@@ -67,7 +67,7 @@ export default function Procesos() {
 
         const fetchProcessTypes = async () => {
             try {
-                const response = await axiosInstance.get("/process-types/");
+                const response = await axiosInstance.get("/process_types/");
                 setProcessTypes(response.data);
             } catch (err: any) {
                 setError("No se pudieron cargar los tipos de proceso");
