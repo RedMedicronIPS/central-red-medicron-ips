@@ -44,7 +44,7 @@ export default function TiposProceso() {
     useEffect(() => {
         const fetchProcessTypes = async () => {
             try {
-                const response = await axiosInstance.get("/process_types/");
+                const response = await axiosInstance.get("/companies/process_types/");
                 setProcessTypes(response.data);
                 setLoading(false);
             } catch (err: any) {
@@ -55,7 +55,7 @@ export default function TiposProceso() {
 
         const fetchCompanies = async () => {
             try {
-                const response = await axiosInstance.get("/companies/");
+                const response = await axiosInstance.get("/companies/companies/");
                 setCompanies(response.data);
             } catch (err: any) {
                 setError("No se pudieron cargar las empresas");
@@ -93,13 +93,13 @@ export default function TiposProceso() {
 
         try {
             if (isEditing && form.id) {
-                const response = await axiosInstance.put(`/process_types/${form.id}/`, form);
+                const response = await axiosInstance.put(`/companies/process_types/${form.id}/`, form);
                 setProcessTypes((prev) =>
                     prev.map((processType) => (processType.id === response.data.id ? response.data : processType))
                 );
                 setMensaje("Tipo de proceso actualizado exitosamente");
             } else {
-                const response = await axiosInstance.post("/process_types/", form);
+                const response = await axiosInstance.post("/companies/process_types/", form);
                 setProcessTypes((prev) => [...prev, response.data]);
                 setMensaje("Tipo de proceso creado exitosamente");
             }
@@ -129,7 +129,7 @@ export default function TiposProceso() {
     const confirmDelete = async () => {
         if (!processTypeIdToDelete) return;
         try {
-            await axiosInstance.delete(`/process_types/${processTypeIdToDelete}/`);
+            await axiosInstance.delete(`/companies/process_types/${processTypeIdToDelete}/`);
             setProcessTypes((prev) => prev.filter((processType) => processType.id !== processTypeIdToDelete));
             setMensaje("Tipo de proceso eliminado exitosamente");
         } catch {
@@ -148,7 +148,7 @@ export default function TiposProceso() {
     const confirmToggleStatus = async () => {
         if (!processTypeToToggle) return;
         try {
-            const response = await axiosInstance.patch(`/process_types/${processTypeToToggle.id}/`, {
+            const response = await axiosInstance.patch(`/companies/process_types/${processTypeToToggle.id}/`, {
                 status: !processTypeToToggle.currentStatus,
             });
             setProcessTypes((prev) =>

@@ -43,7 +43,7 @@ export default function AreasEmpresa() {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await axiosInstance.get("/departments/");
+        const response = await axiosInstance.get("/companies/departments/");
         setDepartments(response.data);
         setLoading(false);
       } catch (err: any) {
@@ -54,7 +54,7 @@ export default function AreasEmpresa() {
 
     const fetchCompanies = async () => {
       try {
-        const response = await axiosInstance.get("/companies/");
+        const response = await axiosInstance.get("/companies/companies/");
         setCompanies(response.data);
       } catch (err: any) {
         setError("No se pudieron cargar las empresas");
@@ -92,13 +92,13 @@ export default function AreasEmpresa() {
 
     try {
       if (isEditing && form.id) {
-        const response = await axiosInstance.put(`/departments/${form.id}/`, form);
+        const response = await axiosInstance.put(`/companies/departments/${form.id}/`, form);
         setDepartments((prev) =>
           prev.map((department) => (department.id === response.data.id ? response.data : department))
         );
         setMensaje("Área actualizada exitosamente");
       } else {
-        const response = await axiosInstance.post("/departments/", form);
+        const response = await axiosInstance.post("/companies/departments/", form);
         setDepartments((prev) => [...prev, response.data]);
         setMensaje("Área creada exitosamente");
       }
@@ -128,7 +128,7 @@ export default function AreasEmpresa() {
   const confirmDelete = async () => {
     if (!departmentIdToDelete) return;
     try {
-      await axiosInstance.delete(`/departments/${departmentIdToDelete}/`);
+      await axiosInstance.delete(`/companies/departments/${departmentIdToDelete}/`);
       setDepartments((prev) => prev.filter((department) => department.id !== departmentIdToDelete));
       setMensaje("Área eliminada exitosamente");
     } catch {
@@ -147,7 +147,7 @@ export default function AreasEmpresa() {
   const confirmToggleStatus = async () => {
     if (!departmentToToggle) return;
     try {
-      const response = await axiosInstance.patch(`/departments/${departmentToToggle.id}/`, {
+      const response = await axiosInstance.patch(`/companies/departments/${departmentToToggle.id}/`, {
         status: !departmentToToggle.currentStatus,
       });
       setDepartments((prev) =>

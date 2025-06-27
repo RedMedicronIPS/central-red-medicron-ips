@@ -33,7 +33,7 @@ export default function InformacionEmpresa() {
 
     useEffect(() => {
         setLoading(true);
-        axiosInstance.get("/companies/1")
+        axiosInstance.get("/companies/companies/1")
             .then((res) => {
                 setEmpresa(res.data);
                 setForm(res.data);
@@ -70,7 +70,7 @@ export default function InformacionEmpresa() {
         setMensaje("");
         if (!validateForm()) return;
         setSaving(true);
-        axiosInstance.put(`/companies/${form.id}/`, form)
+        axiosInstance.put(`/companies/companies/${form.id}/`, form)
             .then((res) => {
                 setEmpresa(res.data);
                 setForm(res.data);

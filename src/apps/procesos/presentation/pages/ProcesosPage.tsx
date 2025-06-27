@@ -98,7 +98,7 @@ export default function ProcesosPage() {
 
   const fetchProcesses = async () => {
     try {
-      const response = await axiosInstance.get("/processes/");
+      const response = await axiosInstance.get("/companies/processes/");
       setProcesses(response.data);
     } catch (err) {
       console.error("Error al cargar procesos:", err);

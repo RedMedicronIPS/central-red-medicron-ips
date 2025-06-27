@@ -56,7 +56,7 @@ export default function Procesos() {
     useEffect(() => {
         const fetchProcesses = async () => {
             try {
-                const response = await axiosInstance.get("/processes/");
+                const response = await axiosInstance.get("/companies/processes/");
                 setProcesses(response.data);
                 setLoading(false);
             } catch (err: any) {
@@ -67,7 +67,7 @@ export default function Procesos() {
 
         const fetchProcessTypes = async () => {
             try {
-                const response = await axiosInstance.get("/process_types/");
+                const response = await axiosInstance.get("/companies/process_types/");
                 setProcessTypes(response.data);
             } catch (err: any) {
                 setError("No se pudieron cargar los tipos de proceso");
@@ -76,7 +76,7 @@ export default function Procesos() {
 
         const fetchDepartments = async () => {
             try {
-                const response = await axiosInstance.get("/departments/");
+                const response = await axiosInstance.get("/companies/departments/");
                 setDepartments(response.data);
             } catch (err: any) {
                 setError("No se pudieron cargar las áreas");
@@ -115,13 +115,13 @@ export default function Procesos() {
 
         try {
             if (isEditing && form.id) {
-                const response = await axiosInstance.put(`/processes/${form.id}/`, form);
+                const response = await axiosInstance.put(`/companies/processes/${form.id}/`, form);
                 setProcesses((prev) =>
                     prev.map((process) => (process.id === response.data.id ? response.data : process))
                 );
                 setMensaje("Proceso actualizado exitosamente");
             } else {
-                const response = await axiosInstance.post("/processes/", form);
+                const response = await axiosInstance.post("/companies/processes/", form);
                 setProcesses((prev) => [...prev, response.data]);
                 setMensaje("Proceso creado exitosamente");
             }
@@ -151,7 +151,7 @@ export default function Procesos() {
     const confirmDelete = async () => {
         if (!processIdToDelete) return;
         try {
-            await axiosInstance.delete(`/processes/${processIdToDelete}/`);
+            await axiosInstance.delete(`/companies/processes/${processIdToDelete}/`);
             setProcesses((prev) => prev.filter((process) => process.id !== processIdToDelete));
             setMensaje("Proceso eliminado exitosamente");
         } catch {
@@ -170,7 +170,7 @@ export default function Procesos() {
     const confirmToggleStatus = async () => {
         if (!processToToggle) return;
         try {
-            const response = await axiosInstance.patch(`/processes/${processToToggle.id}/`, {
+            const response = await axiosInstance.patch(`/companies/processes/${processToToggle.id}/`, {
                 status: !processToToggle.currentStatus,
             });
             setProcesses((prev) =>

@@ -50,7 +50,7 @@ export default function SedesEmpresa() {
   useEffect(() => {
     const fetchHeadquarters = async () => {
       try {
-        const response = await axiosInstance.get("/headquarters/");
+        const response = await axiosInstance.get("/companies/headquarters/");
         setHeadquarters(response.data);
         setLoading(false);
       } catch (err: any) {
@@ -99,13 +99,13 @@ export default function SedesEmpresa() {
 
     try {
       if (isEditing && form.id) {
-        const response = await axiosInstance.put(`/headquarters/${form.id}/`, form);
+        const response = await axiosInstance.put(`/companies/headquarters/${form.id}/`, form);
         setHeadquarters((prev) =>
           prev.map((headquarter) => (headquarter.id === response.data.id ? response.data : headquarter))
         );
         setMensaje("Sede actualizada exitosamente");
       } else {
-        const response = await axiosInstance.post("/headquarters/", form);
+        const response = await axiosInstance.post("/companies/headquarters/", form);
         setHeadquarters((prev) => [...prev, response.data]);
         setMensaje("Sede creada exitosamente");
       }
@@ -135,7 +135,7 @@ export default function SedesEmpresa() {
   const confirmDelete = async () => {
     if (!headquarterIdToDelete) return;
     try {
-      await axiosInstance.delete(`/headquarters/${headquarterIdToDelete}/`);
+      await axiosInstance.delete(`/companies/headquarters/${headquarterIdToDelete}/`);
       setHeadquarters((prev) => prev.filter((headquarter) => headquarter.id !== headquarterIdToDelete));
       setMensaje("Sede eliminada exitosamente");
     } catch {
@@ -154,7 +154,7 @@ export default function SedesEmpresa() {
   const confirmToggleStatus = async () => {
     if (!headquarterToToggle) return;
     try {
-      const response = await axiosInstance.patch(`/headquarters/${headquarterToToggle.id}/`, {
+      const response = await axiosInstance.patch(`/companies/headquarters/${headquarterToToggle.id}/`, {
         status: !headquarterToToggle.currentStatus,
       });
       setHeadquarters((prev) =>
