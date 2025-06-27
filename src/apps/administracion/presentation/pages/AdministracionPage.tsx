@@ -2,12 +2,15 @@ import { useState } from "react";
 import InformacionEmpresa from "../components/InformacionEmpresa";
 import SedesEmpresa from "../components/SedesEmpresa";
 import AreasEmpresa from "../components/AreasEmpresa";
-// Puedes agregar más componentes en el futuro
+import TiposProceso from "../components/TiposProceso";
+import Procesos from "../components/Procesos";
 
 const TABS = [
   { label: "Empresa", value: "empresa" },
   { label: "Sedes", value: "sedes" },
   { label: "Áreas", value: "areas" },
+  { label: "Tipos de Proceso", value: "tipos-proceso" },
+  { label: "Procesos", value: "procesos" },
   // { label: "Usuarios", value: "usuarios" }, // Ejemplo para futuro
 ];
 
@@ -38,6 +41,8 @@ export default function AdministracionPage() {
         {tab === "empresa" && <InformacionEmpresa />}
         {tab === "sedes" && <SedesEmpresa />}
         {tab === "areas" && <AreasEmpresa />}
+        {tab === "tipos-proceso" && <TiposProceso />}
+        {tab === "procesos" && <Procesos />}
         {/* {tab === "usuarios" && <UsuariosGlobales />} */}
       </div>
     </div>
