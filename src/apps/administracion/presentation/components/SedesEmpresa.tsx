@@ -61,10 +61,21 @@ export default function SedesEmpresa() {
 
     const fetchCompanies = async () => {
       try {
-        const response = await axiosInstance.get("/companies/");
-        setCompanies(response.data);
+        // Verificar la URL correcta del endpoint
+        const response = await axiosInstance.get("/companies/companies/"); // O la URL correcta
+        console.log("Companies response:", response.data); // Para debuggear
+        
+        // Verificar que response.data sea un array
+        if (Array.isArray(response.data)) {
+          setCompanies(response.data);
+        } else {
+          console.error("Companies response is not an array:", response.data);
+          setCompanies([]); // Establecer array vacío como fallback
+        }
       } catch (err: any) {
+        console.error("Error fetching companies:", err);
         setError("No se pudieron cargar las empresas");
+        setCompanies([]); // Importante: establecer array vacío en caso de error
       }
     };
 
@@ -240,16 +251,15 @@ export default function SedesEmpresa() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Empresa</label>
                   <select
                     name="company"
-                    value={form.company || 0}
+                    value={form.company || ""}
                     onChange={handleChange}
                     className="mt-1 p-3 block w-full border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     required
                   >
-                    <option value="">Seleccione Empresa</option>
-                    {companies.map((company) => (
-                      <option key={company.id} value={company.id}>
-                        {company.name}
-                      </option>
+                    <option value="">Seleccione una empresa</option>
+                    {/* Verificación doble para evitar errores */}
+                    {Array.isArray(companies) && companies.map(company => (
+                      <option key={company.id} value={company.id}>{company.name}</option>
                     ))}
                   </select>
                 </div>
