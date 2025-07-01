@@ -167,27 +167,62 @@ export default function ProcesosPage() {
 
     try {
       const formData = new FormData();
-      Object.keys(form).forEach(key => {
-        const value = form[key as keyof Documento];
-        if (value !== undefined && value !== null && value !== "") {
-          formData.append(key, value.toString());
-        }
-      });
-
-      if (files.archivo_oficial) {
-        formData.append('archivo_oficial', files.archivo_oficial);
-      }
-      if (files.archivo_editable) {
-        formData.append('archivo_editable', files.archivo_editable);
-      }
-
+      
+      // Solo agregar campos que han cambiado en modo edición
       if (isEditModalOpen && editingDocument) {
-        const response = await axiosInstance.put(`/processes/documentos/${editingDocument.id}/`, formData, {
+        // Crear un objeto con solo los campos modificados
+        const changedFields: Partial<Record<keyof Documento, string | number | boolean | null>> = {};
+        
+        Object.keys(form).forEach(key => {
+          const formValue = form[key as keyof Documento];
+          const originalValue = editingDocument[key as keyof Documento];
+          
+          // Solo incluir si el valor ha cambiado
+          if (formValue !== originalValue && formValue !== undefined && formValue !== null && formValue !== "") {
+            changedFields[key as keyof Documento] = formValue as string | number | boolean | null;
+          }
+        });
+
+        // Agregar solo campos modificados al FormData
+        Object.keys(changedFields).forEach(key => {
+          const value = changedFields[key as keyof Documento];
+          if (value !== undefined && value !== null) {
+            formData.append(key, value.toString());
+          }
+        });
+
+        // Agregar archivos solo si se seleccionaron nuevos
+        if (files.archivo_oficial) {
+          formData.append('archivo_oficial', files.archivo_oficial);
+        }
+        if (files.archivo_editable) {
+          formData.append('archivo_editable', files.archivo_editable);
+        }
+
+        // Usar PATCH en lugar de PUT
+        const response = await axiosInstance.patch(`/processes/documentos/${editingDocument.id}/`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
+        
         setDocumentos(prev => prev.map(doc => doc.id === editingDocument.id ? response.data : doc));
         setMensaje("Documento actualizado exitosamente");
+        
       } else {
+        // Para creación, agregar todos los campos (mantener lógica actual)
+        Object.keys(form).forEach(key => {
+          const value = form[key as keyof Documento];
+          if (value !== undefined && value !== null && value !== "") {
+            formData.append(key, value.toString());
+          }
+        });
+
+        if (files.archivo_oficial) {
+          formData.append('archivo_oficial', files.archivo_oficial);
+        }
+        if (files.archivo_editable) {
+          formData.append('archivo_editable', files.archivo_editable);
+        }
+
         const response = await axiosInstance.post("/processes/documentos/", formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
@@ -341,14 +376,24 @@ const handleViewDocument = (url: string) => {
     document.body.removeChild(link);
   };
 
+  // Actualiza la función filteredDocumentos para incluir filtrado por rol y estado
   const filteredDocumentos = documentos.filter(doc => {
-    return (
+    // Filtro básico por búsqueda, tipo y proceso
+    const matchesBasicFilters = (
       doc.nombre_documento.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.codigo_documento.toLowerCase().includes(searchTerm.toLowerCase())
     ) &&
     (selectedTipo === "" || doc.tipo_documento === selectedTipo) &&
-    (selectedEstado === "" || doc.estado === selectedEstado) &&
     (selectedProceso === "" || doc.proceso.toString() === selectedProceso);
+
+    // Filtro por estado según el rol
+    if (!isAdmin) {
+      // Usuarios no admin solo ven documentos vigentes
+      return matchesBasicFilters && doc.estado === 'VIG';
+    } else {
+      // Admin puede ver todos los estados (aplicar filtro de estado seleccionado)
+      return matchesBasicFilters && (selectedEstado === "" || doc.estado === selectedEstado);
+    }
   });
 
   if (loading) {
@@ -407,7 +452,7 @@ const handleViewDocument = (url: string) => {
 
       {/* Filtros */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
           <div className="relative">
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
@@ -428,16 +473,21 @@ const handleViewDocument = (url: string) => {
               <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
             ))}
           </select>
-          <select
-            value={selectedEstado}
-            onChange={(e) => setSelectedEstado(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          >
-            <option value="">Todos los estados</option>
-            {ESTADOS.map(estado => (
-              <option key={estado.value} value={estado.value}>{estado.label}</option>
-            ))}
-          </select>
+          
+          {/* Filtro de estado solo para admin */}
+          {isAdmin && (
+            <select
+              value={selectedEstado}
+              onChange={(e) => setSelectedEstado(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">Todos los estados</option>
+              {ESTADOS.map(estado => (
+                <option key={estado.value} value={estado.value}>{estado.label}</option>
+              ))}
+            </select>
+          )}
+          
           <select
             value={selectedProceso}
             onChange={(e) => setSelectedProceso(e.target.value)}
@@ -452,7 +502,7 @@ const handleViewDocument = (url: string) => {
             onClick={() => {
               setSearchTerm("");
               setSelectedTipo("");
-              setSelectedEstado("");
+              if (isAdmin) setSelectedEstado(""); // Solo limpiar estado si es admin
               setSelectedProceso("");
             }}
             className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
@@ -469,37 +519,65 @@ const handleViewDocument = (url: string) => {
           <div className="flex items-center">
             <HiOutlineCollection className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-3" />
             <div>
-              <p className="text-sm text-blue-600 dark:text-blue-400">Total Documentos</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400">
+                {isAdmin ? 'Total Documentos' : 'Documentos Vigentes'}
+              </p>
               <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{filteredDocumentos.length}</p>
             </div>
           </div>
         </div>
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mr-3">
-              <div className="w-3 h-3 bg-green-600 dark:bg-green-400 rounded-full"></div>
+        
+        {/* Solo mostrar estadísticas de vigentes/obsoletos si es admin */}
+        {isAdmin && (
+          <>
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mr-3">
+                  <div className="w-3 h-3 bg-green-600 dark:bg-green-400 rounded-full"></div>
+                </div>
+                <div>
+                  <p className="text-sm text-green-600 dark:text-green-400">Vigentes</p>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                    {filteredDocumentos.filter(d => d.estado === 'VIG').length}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-green-600 dark:text-green-400">Vigentes</p>
-              <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                {filteredDocumentos.filter(d => d.estado === 'VIG').length}
-              </p>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center mr-3">
+                  <div className="w-3 h-3 bg-red-600 dark:bg-red-400 rounded-full"></div>
+                </div>
+                <div>
+                  <p className="text-sm text-red-600 dark:text-red-400">Obsoletos</p>
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                    {filteredDocumentos.filter(d => d.estado === 'OBS').length}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center mr-3">
-              <div className="w-3 h-3 bg-red-600 dark:bg-red-400 rounded-full"></div>
+          </>
+        )}
+        
+        {/* Para usuarios no admin, mostrar estadísticas alternativas */}
+        {!isAdmin && (
+          <>
+            
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center mr-3">
+                  <div className="w-3 h-3 bg-purple-600 dark:bg-purple-400 rounded-full"></div>
+                </div>
+                <div>
+                  <p className="text-sm text-purple-600 dark:text-purple-400">Procesos</p>
+                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                    {processes.length}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-red-600 dark:text-red-400">Obsoletos</p>
-              <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                {filteredDocumentos.filter(d => d.estado === 'OBS').length}
-              </p>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Tabla de documentos */}
@@ -566,7 +644,8 @@ const handleViewDocument = (url: string) => {
                         {getFileIcon(documento.archivo_oficial)}
                         <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">Oficial</span>
                       </div>
-                      {documento.archivo_editable && (
+                      {/* Solo mostrar archivo editable si el usuario es admin */}
+                      {isAdmin && documento.archivo_editable && (
                         <div className="flex items-center">
                           {getFileIcon(documento.archivo_editable)}
                           <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">Editable</span>
@@ -593,8 +672,8 @@ const handleViewDocument = (url: string) => {
                         <FaFileAlt size={16} />
                       </button>
                       
-                      {/* Ver documento editable (solo si existe) */}
-                      {documento.archivo_editable && (
+                      {/* Ver documento editable (solo admin y solo si existe) */}
+                      {isAdmin && documento.archivo_editable && (
                         <button
                           onClick={() => handleViewDocument(documento.archivo_editable!)}
                           className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
@@ -604,7 +683,7 @@ const handleViewDocument = (url: string) => {
                         </button>
                       )}
                       
-                      {/* Descargar - solo admin */}
+                      {/* Descargar y demás acciones - solo admin */}
                       {isAdmin && (
                         <>
                           <button
@@ -854,12 +933,15 @@ const handleViewDocument = (url: string) => {
                 <span className="font-medium text-gray-700 dark:text-gray-300">Versión:</span>
                 <span className="text-gray-900 dark:text-gray-100">v{viewResult.version}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Documento Padre:</span>
-                <span className="text-gray-900 dark:text-gray-100 text-right max-w-xs">
-                  {getDocumentPadreName(viewResult.documento_padre)}
-                </span>
-              </div>
+              {/* Solo mostrar documento padre si es admin */}
+              {isAdmin && (
+                <div className="flex justify-between">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Documento Padre:</span>
+                  <span className="text-gray-900 dark:text-gray-100 text-right max-w-xs">
+                    {getDocumentPadreName(viewResult.documento_padre)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="font-medium text-gray-700 dark:text-gray-300">Estado:</span>
                 <span className={`px-2 py-1 rounded text-xs ${getEstadoStyle(viewResult.estado)}`}>
