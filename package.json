@@ -18,11 +18,13 @@
     "react-organizational-chart": "^2.2.1",
     "react-pdf": "^10.0.1",
     "react-router-dom": "^6.20.0",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
+    "@types/xlsx": "^0.0.35",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.31",

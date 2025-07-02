@@ -6,3 +6,37 @@
 html {
   transition: background 0.3s;
 }
+
+/* Mejoras para el visor Excel en modo oscuro */
+.excel-table-container {
+  /* Scroll personalizado para modo oscuro */
+  scrollbar-width: thin;
+  scrollbar-color: #6B7280 #1F2937;
+}
+
+.excel-table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.excel-table-container::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-700 rounded;
+}
+
+.excel-table-container::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 dark:bg-gray-500 rounded hover:bg-gray-500 dark:hover:bg-gray-400;
+}
+
+.excel-table-container::-webkit-scrollbar-corner {
+  @apply bg-gray-100 dark:bg-gray-700;
+}
+
+/* Mejoras para modales en modo oscuro */
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+}
+
+/* Transiciones suaves para elementos interactivos */
+.dark-mode-transition {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}

@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-//import { Document, Page, pdfjs } from 'react-pdf';
+import * as XLSX from 'xlsx'; // Agregar import para Excel
 import axiosInstance from "../../../../core/infrastructure/http/axiosInstance";
-import { 
-  FaEye, 
-  FaDownload, 
-  FaUpload, 
-  FaTrash, 
-  FaEdit, 
-  FaFileAlt, 
-  FaFilePdf, 
-  FaFileExcel, 
+import {
+  FaEye,
+  FaDownload,
+  FaUpload,
+  FaTrash,
+  FaEdit,
+  FaFileAlt,
+  FaFilePdf,
+  FaFileExcel,
   FaFileWord,
   FaSearch,
   FaFilter,
@@ -60,7 +60,7 @@ const ESTADOS = [
 export default function ProcesosPage() {
   const { user, roles } = useAuthContext();
   const isAdmin = roles.includes("admin");
-  
+
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,18 +69,19 @@ export default function ProcesosPage() {
   const [selectedTipo, setSelectedTipo] = useState("");
   const [selectedEstado, setSelectedEstado] = useState("");
   const [selectedProceso, setSelectedProceso] = useState("");
-  
+
   // Estados para modales
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDocumentViewerOpen, setIsDocumentViewerOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
-  
+
   const [viewResult, setViewResult] = useState<Documento | null>(null);
   const [editingDocument, setEditingDocument] = useState<Documento | null>(null);
   const [documentToDelete, setDocumentToDelete] = useState<Documento | null>(null);
   const [currentDocumentUrl, setCurrentDocumentUrl] = useState<string>("");
+  const [currentDocumentTitle, setCurrentDocumentTitle] = useState<string>("");
   const [mensaje, setMensaje] = useState("");
   const [formError, setFormError] = useState("");
 
@@ -103,6 +104,13 @@ export default function ProcesosPage() {
     archivo_oficial: null,
     archivo_editable: null,
   });
+
+  // Nuevos estados para vista previa de Excel
+  const [isExcelViewerOpen, setIsExcelViewerOpen] = useState(false);
+  const [excelData, setExcelData] = useState<{ [key: string]: any[][] }>({});
+  const [excelSheets, setExcelSheets] = useState<string[]>([]);
+  const [currentSheet, setCurrentSheet] = useState<string>("");
+  const [loadingExcel, setLoadingExcel] = useState(false);
 
   useEffect(() => {
     fetchDocumentos();
@@ -167,16 +175,16 @@ export default function ProcesosPage() {
 
     try {
       const formData = new FormData();
-      
+
       // Solo agregar campos que han cambiado en modo edición
       if (isEditModalOpen && editingDocument) {
         // Crear un objeto con solo los campos modificados
         const changedFields: Partial<Record<keyof Documento, string | number | boolean | null>> = {};
-        
+
         Object.keys(form).forEach(key => {
           const formValue = form[key as keyof Documento];
           const originalValue = editingDocument[key as keyof Documento];
-          
+
           // Solo incluir si el valor ha cambiado
           if (formValue !== originalValue && formValue !== undefined && formValue !== null && formValue !== "") {
             changedFields[key as keyof Documento] = formValue as string | number | boolean | null;
@@ -203,10 +211,10 @@ export default function ProcesosPage() {
         const response = await axiosInstance.patch(`/processes/documentos/${editingDocument.id}/`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        
+
         setDocumentos(prev => prev.map(doc => doc.id === editingDocument.id ? response.data : doc));
         setMensaje("Documento actualizado exitosamente");
-        
+
       } else {
         // Para creación, agregar todos los campos (mantener lógica actual)
         Object.keys(form).forEach(key => {
@@ -229,7 +237,7 @@ export default function ProcesosPage() {
         setDocumentos(prev => [...prev, response.data]);
         setMensaje("Documento creado exitosamente");
       }
-      
+
       resetForm();
       setIsModalOpen(false);
       setIsEditModalOpen(false);
@@ -326,8 +334,8 @@ export default function ProcesosPage() {
   const getDocumentosDisponiblesComoPadre = () => {
     if (isEditModalOpen && editingDocument) {
       // Excluir el documento actual y sus versiones relacionadas
-      return documentos.filter(doc => 
-        doc.id !== editingDocument.id && 
+      return documentos.filter(doc =>
+        doc.id !== editingDocument.id &&
         doc.codigo_documento !== editingDocument.codigo_documento
       );
     }
@@ -339,33 +347,189 @@ export default function ProcesosPage() {
     setIsViewModalOpen(true);
   };
 
-  // Reemplaza el enfoque del iframe con abrir en una nueva pestaña
-const handleViewDocument = (url: string) => {
-  const fullUrl = url.startsWith('http') ? url : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${url}`;
-  window.open(fullUrl, '_blank', 'noopener,noreferrer');
-};
+  // Función actualizada para manejar mejor los archivos Word
+  const handleViewDocument = (documento: Documento, tipoArchivo: 'oficial' | 'editable' = 'oficial') => {
+    const archivoUrl = tipoArchivo === 'oficial' ? documento.archivo_oficial : documento.archivo_editable;
+    if (!archivoUrl) {
+      setMensaje("No hay archivo disponible para visualizar");
+      return;
+    }
 
+    const fileName = archivoUrl.toLowerCase();
+    const token = localStorage.getItem('access_token');
 
-// Configurar el worker con protocolo HTTPS
-//pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+    // Usar el endpoint de preview SIN token en query params
+    const previewUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/processes/documentos/${documento.id}/preview/?tipo=${tipoArchivo}`;
 
-//const handleViewDocument = (url: string) => {
-//  const fullUrl = url.startsWith('http') ? url : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${url}`;
-  
-//  if (url.toLowerCase().endsWith('.pdf')) {
-//    setCurrentDocumentUrl(fullUrl);
-//    setIsDocumentViewerOpen(true);
-//  } else {
-//    window.open(fullUrl, '_blank', 'noopener,noreferrer');
-//  }
-//};
+    if (fileName.endsWith('.pdf')) {
+      // Para PDFs, usar el visor integrado
+      handleViewPDF(previewUrl, documento, tipoArchivo);
+    } else if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
+      // Para Excel, usar el visor personalizado
+      handleViewExcel(previewUrl, documento);
+    } else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+      // Para Word, abrir en nueva pestaña con descarga automática
+      handleViewWord(previewUrl, documento, tipoArchivo);
+    } else {
+      // Para otros tipos de archivo
+      handleViewOtherFile(previewUrl, fileName);
+    }
+  };
+
+  // Función para visualizar archivos Word (abre en nueva pestaña)
+  const handleViewWord = async (previewUrl: string, documento: Documento, tipoArchivo: string) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(previewUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/octet-stream'
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al cargar el archivo Word');
+
+      const blob = await response.blob();
+      const wordUrl = URL.createObjectURL(blob);
+
+      // Crear link de descarga automática
+      const link = document.createElement('a');
+      link.href = wordUrl;
+      link.download = `${documento.codigo_documento}_v${documento.version}_${tipoArchivo}.${previewUrl.toLowerCase().includes('.docx') ? 'docx' : 'doc'}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Limpiar URL después de un tiempo
+      setTimeout(() => URL.revokeObjectURL(wordUrl), 1000);
+
+      setMensaje(`Archivo Word descargado: ${link.download}`);
+
+    } catch (error) {
+      console.error('Error al cargar archivo Word:', error);
+      setFormError('Error al cargar el archivo Word');
+    }
+  };
+
+  // Función alternativa para intentar visualizar Word en línea
+  const handleViewWordOnline = async (previewUrl: string, documento: Documento, tipoArchivo: string) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(previewUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al cargar el archivo');
+
+      const blob = await response.blob();
+      const fileUrl = URL.createObjectURL(blob);
+
+      // Intentar usar Google Docs Viewer
+      const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+
+      setCurrentDocumentUrl(googleViewerUrl);
+      setCurrentDocumentTitle(`${documento.codigo_documento} v${documento.version} - ${documento.nombre_documento} (${tipoArchivo})`);
+      setIsDocumentViewerOpen(true);
+
+    } catch (error) {
+      console.error('Error al cargar Word:', error);
+      // Fallback a descarga directa
+      handleViewWord(previewUrl, documento, tipoArchivo);
+    }
+  };
+
+  // Función para visualizar archivos Excel
+  const handleViewExcel = async (previewUrl: string, documento: Documento) => {
+    setLoadingExcel(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(previewUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+      if (!response.ok) throw new Error('Error al cargar el archivo Excel');
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheets: string[] = workbook.SheetNames;
+      const data: { [key: string]: any[][] } = {};
+      sheets.forEach(sheetName => {
+        const worksheet = workbook.Sheets[sheetName];
+        data[sheetName] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      });
+      setExcelData(data);
+      setExcelSheets(sheets);
+      setCurrentSheet(sheets[0]);
+      setIsExcelViewerOpen(true);
+    } catch (error) {
+      console.error('Error al cargar Excel:', error);
+      setFormError('Error al cargar el archivo Excel');
+    } finally {
+      setLoadingExcel(false);
+    }
+  };
+
+  // Nueva función para manejar PDFs correctamente
+  const handleViewPDF = async (previewUrl: string, documento: Documento, tipoArchivo: string) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(previewUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/pdf'
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al cargar el PDF');
+
+      const blob = await response.blob();
+      const pdfUrl = URL.createObjectURL(blob);
+
+      setCurrentDocumentUrl(pdfUrl);
+      setCurrentDocumentTitle(`${documento.codigo_documento} v${documento.version} - ${documento.nombre_documento} (${tipoArchivo})`);
+      setIsDocumentViewerOpen(true);
+    } catch (error) {
+      console.error('Error al cargar PDF:', error);
+      setFormError('Error al cargar el archivo PDF');
+    }
+  };
+
+  // Función para visualizar otros tipos de archivos (Word, etc.)
+  const handleViewOtherFile = async (previewUrl: string, fileName: string) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(previewUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al cargar el archivo');
+
+      const blob = await response.blob();
+      const fileUrl = URL.createObjectURL(blob);
+
+      // Para archivos Word, abrir en nueva pestaña ya que no se pueden previsualizar en iframe
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
+
+      // Opcional: mostrar mensaje informativo
+      setMensaje("Archivo abierto en nueva pestaña. Nota: Los archivos Word se descargan automáticamente para su visualización.");
+
+    } catch (error) {
+      console.error('Error al cargar archivo:', error);
+      setFormError('Error al cargar el archivo');
+    }
+  };
 
   const handleDownload = (url: string, nombre: string) => {
     if (!isAdmin) {
       setFormError("Solo los administradores pueden descargar documentos.");
       return;
     }
-    
+
     const fullUrl = url.startsWith('http') ? url : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${url}`;
     const link = document.createElement('a');
     link.href = fullUrl;
@@ -376,6 +540,7 @@ const handleViewDocument = (url: string) => {
     document.body.removeChild(link);
   };
 
+
   // Actualiza la función filteredDocumentos para incluir filtrado por rol y estado
   const filteredDocumentos = documentos.filter(doc => {
     // Filtro básico por búsqueda, tipo y proceso
@@ -383,8 +548,8 @@ const handleViewDocument = (url: string) => {
       doc.nombre_documento.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.codigo_documento.toLowerCase().includes(searchTerm.toLowerCase())
     ) &&
-    (selectedTipo === "" || doc.tipo_documento === selectedTipo) &&
-    (selectedProceso === "" || doc.proceso.toString() === selectedProceso);
+      (selectedTipo === "" || doc.tipo_documento === selectedTipo) &&
+      (selectedProceso === "" || doc.proceso.toString() === selectedProceso);
 
     // Filtro por estado según el rol
     if (!isAdmin) {
@@ -450,36 +615,36 @@ const handleViewDocument = (url: string) => {
         </div>
       )}
 
-      {/* Filtros */}
+      {/* Filtros mejorados */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Buscar documentos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
             />
           </div>
           <select
             value={selectedTipo}
             onChange={(e) => setSelectedTipo(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
           >
             <option value="">Todos los tipos</option>
             {TIPOS_DOCUMENTO.map(tipo => (
               <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
             ))}
           </select>
-          
+
           {/* Filtro de estado solo para admin */}
           {isAdmin && (
             <select
               value={selectedEstado}
               onChange={(e) => setSelectedEstado(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
             >
               <option value="">Todos los estados</option>
               {ESTADOS.map(estado => (
@@ -487,11 +652,11 @@ const handleViewDocument = (url: string) => {
               ))}
             </select>
           )}
-          
+
           <select
             value={selectedProceso}
             onChange={(e) => setSelectedProceso(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
           >
             <option value="">Todos los procesos</option>
             {processes.map(proceso => (
@@ -502,10 +667,10 @@ const handleViewDocument = (url: string) => {
             onClick={() => {
               setSearchTerm("");
               setSelectedTipo("");
-              if (isAdmin) setSelectedEstado(""); // Solo limpiar estado si es admin
+              if (isAdmin) setSelectedEstado("");
               setSelectedProceso("");
             }}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 justify-center"
           >
             <FaTimes size={14} />
             Limpiar
@@ -513,43 +678,43 @@ const handleViewDocument = (url: string) => {
         </div>
       </div>
 
-      {/* Estadísticas */}
+      {/* Estadísticas mejoradas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 transition-colors">
           <div className="flex items-center">
             <HiOutlineCollection className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-3" />
             <div>
-              <p className="text-sm text-blue-600 dark:text-blue-400">
+              <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
                 {isAdmin ? 'Total Documentos' : 'Documentos Vigentes'}
               </p>
               <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{filteredDocumentos.length}</p>
             </div>
           </div>
         </div>
-        
+
         {/* Solo mostrar estadísticas de vigentes/obsoletos si es admin */}
         {isAdmin && (
           <>
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 transition-colors">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mr-3">
                   <div className="w-3 h-3 bg-green-600 dark:bg-green-400 rounded-full"></div>
                 </div>
                 <div>
-                  <p className="text-sm text-green-600 dark:text-green-400">Vigentes</p>
+                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">Vigentes</p>
                   <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                     {filteredDocumentos.filter(d => d.estado === 'VIG').length}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 transition-colors">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center mr-3">
                   <div className="w-3 h-3 bg-red-600 dark:bg-red-400 rounded-full"></div>
                 </div>
                 <div>
-                  <p className="text-sm text-red-600 dark:text-red-400">Obsoletos</p>
+                  <p className="text-sm text-red-600 dark:text-red-400 font-medium">Obsoletos</p>
                   <p className="text-2xl font-bold text-red-700 dark:text-red-300">
                     {filteredDocumentos.filter(d => d.estado === 'OBS').length}
                   </p>
@@ -558,18 +723,37 @@ const handleViewDocument = (url: string) => {
             </div>
           </>
         )}
-        
+
         {/* Para usuarios no admin, mostrar estadísticas alternativas */}
         {!isAdmin && (
           <>
-            
-            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 transition-colors">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-orange-100 dark:bg-orange-800 rounded-full flex items-center justify-center mr-3">
+                  <FaFileAlt className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Actualizados (30 días)</p>
+                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
+                    {filteredDocumentos.filter(d => {
+                      const thirtyDaysAgo = new Date();
+                      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                      return new Date(d.fecha_actualizacion) > thirtyDaysAgo;
+                    }).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 transition-colors">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center mr-3">
                   <div className="w-3 h-3 bg-purple-600 dark:bg-purple-400 rounded-full"></div>
                 </div>
                 <div>
-                  <p className="text-sm text-purple-600 dark:text-purple-400">Procesos</p>
+                  <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Procesos</p>
                   <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                     {processes.length}
                   </p>
@@ -580,8 +764,8 @@ const handleViewDocument = (url: string) => {
         )}
       </div>
 
-      {/* Tabla de documentos */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      {/* Tabla de documentos mejorada */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
@@ -611,7 +795,7 @@ const handleViewDocument = (url: string) => {
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredDocumentos.map((documento) => (
-                <tr key={documento.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr key={documento.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -642,7 +826,13 @@ const handleViewDocument = (url: string) => {
                     <div className="flex space-x-2">
                       <div className="flex items-center">
                         {getFileIcon(documento.archivo_oficial)}
-                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">Oficial</span>
+                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
+                          Oficial
+                          {(documento.archivo_oficial.toLowerCase().endsWith('.doc') ||
+                            documento.archivo_oficial.toLowerCase().endsWith('.docx')) &&
+                            <span className="block text-xs text-blue-500">(Descarga)</span>
+                          }
+                        </span>
                       </div>
                       {/* Solo mostrar archivo editable si el usuario es admin */}
                       {isAdmin && documento.archivo_editable && (
@@ -662,27 +852,38 @@ const handleViewDocument = (url: string) => {
                       >
                         <FaEye size={16} />
                       </button>
-                      
-                      {/* Ver documento oficial */}
+
+                      {/* Ver documento oficial con vista previa mejorada */}
                       <button
-                        onClick={() => handleViewDocument(documento.archivo_oficial)}
+                        onClick={() => handleViewDocument(documento, 'oficial')}
                         className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
                         title="Ver documento oficial"
+                        disabled={loadingExcel}
                       >
-                        <FaFileAlt size={16} />
+                        {loadingExcel ? (
+                          <div className="animate-spin w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full"></div>
+                        ) : (
+                          <FaFileAlt size={16} />
+                        )}
                       </button>
-                      
+
                       {/* Ver documento editable (solo admin y solo si existe) */}
                       {isAdmin && documento.archivo_editable && (
                         <button
-                          onClick={() => handleViewDocument(documento.archivo_editable!)}
+                          onClick={() => handleViewDocument(documento, 'editable')}
                           className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
                           title="Ver documento editable"
+                          disabled={loadingExcel}
                         >
-                          <FaEdit size={16} />
+                          {loadingExcel ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full"></div>
+                          ) : (
+                            <FaEdit size={16} />
+                          )}
                         </button>
+                        
                       )}
-                      
+
                       {/* Descargar y demás acciones - solo admin */}
                       {isAdmin && (
                         <>
@@ -693,7 +894,8 @@ const handleViewDocument = (url: string) => {
                           >
                             <FaDownload size={16} />
                           </button>
-                          
+                      
+
                           {/* Descargar archivo editable (solo si existe) */}
                           {documento.archivo_editable && (
                             <button
@@ -704,7 +906,7 @@ const handleViewDocument = (url: string) => {
                               <FaDownload size={16} />
                             </button>
                           )}
-                          
+
                           <button
                             onClick={() => handleEdit(documento)}
                             className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
@@ -712,7 +914,7 @@ const handleViewDocument = (url: string) => {
                           >
                             <FaEdit size={16} />
                           </button>
-                          
+
                           <button
                             onClick={() => handleDelete(documento)}
                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
@@ -730,8 +932,10 @@ const handleViewDocument = (url: string) => {
           </table>
         </div>
         {filteredDocumentos.length === 0 && (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            No se encontraron documentos que coincidan con los filtros aplicados.
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800">
+            <FaFileAlt className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <p className="text-lg font-medium">No se encontraron documentos</p>
+            <p className="text-sm">Intenta ajustar los filtros de búsqueda</p>
           </div>
         )}
       </div>
@@ -745,7 +949,7 @@ const handleViewDocument = (url: string) => {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               {formError && <div className="text-red-600 dark:text-red-400">{formError}</div>}
-              
+
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Código del Documento</label>
@@ -870,7 +1074,7 @@ const handleViewDocument = (url: string) => {
                   <p className="text-xs text-gray-500 mt-1">Formatos permitidos: Word, Excel</p>
                 </div>
               </div>
-              
+
               <div className="flex justify-end space-x-4 mt-8">
                 <button
                   type="button"
@@ -895,68 +1099,72 @@ const handleViewDocument = (url: string) => {
         </div>
       )}
 
-      {/* Modal de visualización de detalles */}
+      {/* Modal de visualización de detalles - Mejorado */}
       {isViewModalOpen && viewResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-xl w-full max-w-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 modal-backdrop">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-xl w-full max-w-lg border border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                <FaFileAlt className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
                 Detalles del Documento
               </h3>
               <button
                 onClick={() => setIsViewModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <FaTimes size={20} />
               </button>
             </div>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
+              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                 <span className="font-medium text-gray-700 dark:text-gray-300">Código:</span>
-                <span className="text-gray-900 dark:text-gray-100">{viewResult.codigo_documento}</span>
+                <span className="text-gray-900 dark:text-gray-100 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  {viewResult.codigo_documento}
+                </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                 <span className="font-medium text-gray-700 dark:text-gray-300">Nombre:</span>
                 <span className="text-gray-900 dark:text-gray-100 text-right max-w-xs">
                   {viewResult.nombre_documento}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                 <span className="font-medium text-gray-700 dark:text-gray-300">Proceso:</span>
                 <span className="text-gray-900 dark:text-gray-100">{getProcessName(viewResult.proceso)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                 <span className="font-medium text-gray-700 dark:text-gray-300">Tipo:</span>
                 <span className="text-gray-900 dark:text-gray-100">{getTipoLabel(viewResult.tipo_documento)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                 <span className="font-medium text-gray-700 dark:text-gray-300">Versión:</span>
-                <span className="text-gray-900 dark:text-gray-100">v{viewResult.version}</span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  v{viewResult.version}
+                </span>
               </div>
-              {/* Solo mostrar documento padre si es admin */}
               {isAdmin && (
-                <div className="flex justify-between">
+                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                   <span className="font-medium text-gray-700 dark:text-gray-300">Documento Padre:</span>
                   <span className="text-gray-900 dark:text-gray-100 text-right max-w-xs">
                     {getDocumentPadreName(viewResult.documento_padre)}
                   </span>
                 </div>
               )}
-              <div className="flex justify-between">
+              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                 <span className="font-medium text-gray-700 dark:text-gray-300">Estado:</span>
-                <span className={`px-2 py-1 rounded text-xs ${getEstadoStyle(viewResult.estado)}`}>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${getEstadoStyle(viewResult.estado)}`}>
                   {ESTADOS.find(e => e.value === viewResult.estado)?.label}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                 <span className="font-medium text-gray-700 dark:text-gray-300">Fecha de creación:</span>
-                <span className="text-gray-900 dark:text-gray-100">
+                <span className="text-gray-900 dark:text-gray-100 font-mono text-xs">
                   {new Date(viewResult.fecha_creacion).toLocaleDateString("es-CO")}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between py-2">
                 <span className="font-medium text-gray-700 dark:text-gray-300">Última actualización:</span>
-                <span className="text-gray-900 dark:text-gray-100">
+                <span className="text-gray-900 dark:text-gray-100 font-mono text-xs">
                   {new Date(viewResult.fecha_actualizacion).toLocaleDateString("es-CO")}
                 </span>
               </div>
@@ -964,7 +1172,7 @@ const handleViewDocument = (url: string) => {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setIsViewModalOpen(false)}
-                className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600"
+                className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
               >
                 Cerrar
               </button>
@@ -973,46 +1181,44 @@ const handleViewDocument = (url: string) => {
         </div>
       )}
 
-      {/* Modal de visualización de documentos */}
+      {/* MANTENER SOLO ESTE MODAL - Modal de visualización de documentos */}
       {isDocumentViewerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
             <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Visor de Documento
+                {currentDocumentTitle || "Vista previa del documento"}
               </h3>
-              <button
-                onClick={() => setIsDocumentViewerOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <FaTimes size={24} />
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => window.open(currentDocumentUrl, '_blank', 'noopener,noreferrer')}
+                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                >
+                  Abrir en nueva pestaña
+                </button>
+                <button
+                  onClick={() => {
+                    // Limpiar blob URL si existe
+                    if (currentDocumentUrl.startsWith('blob:')) {
+                      URL.revokeObjectURL(currentDocumentUrl);
+                    }
+                    setIsDocumentViewerOpen(false);
+                    setCurrentDocumentUrl("");
+                    setCurrentDocumentTitle("");
+                  }}
+                  className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100"
+                >
+                  <FaTimes size={24} />
+                </button>
+              </div>
             </div>
             <div className="flex-1 p-4">
-              {currentDocumentUrl.toLowerCase().endsWith('.pdf') ? (
-                <iframe
-                  src={currentDocumentUrl}
-                  className="w-full h-full border-0 rounded"
-                  title="Documento PDF"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <div className="text-center mb-4">
-                    <FaFileAlt className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Este tipo de archivo no se puede visualizar en línea.
-                    </p>
-                    {isAdmin && (
-                      <button
-                        onClick={() => window.open(currentDocumentUrl, '_blank')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Abrir archivo
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
+              <iframe
+                src={currentDocumentUrl}
+                className="w-full h-full border-0 rounded"
+                title={currentDocumentTitle}
+                style={{ height: 'calc(100% - 60px)' }}
+              />
             </div>
           </div>
         </div>
@@ -1024,7 +1230,7 @@ const handleViewDocument = (url: string) => {
           <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-xl w-full max-w-md mx-auto">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Confirmar Eliminación</h3>
             <p className="mb-6 text-gray-700 dark:text-gray-200">
-              ¿Estás seguro de que deseas eliminar el documento "{documentToDelete.nombre_documento}"? 
+              ¿Estás seguro de que deseas eliminar el documento "{documentToDelete.nombre_documento}"?
               Esta acción no se puede deshacer.
             </p>
             <div className="flex justify-end gap-4">
@@ -1043,6 +1249,161 @@ const handleViewDocument = (url: string) => {
               >
                 Eliminar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de visualización de Excel - Versión mejorada para modo oscuro */}
+      {isExcelViewerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-7xl h-[90vh] flex flex-col border border-gray-200 dark:border-gray-700">
+            {/* Header mejorado */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <FaFileExcel className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Vista Previa Excel
+                  </h3>
+                </div>
+                {excelSheets.length > 1 && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Hoja:</span>
+                    <select
+                      value={currentSheet}
+                      onChange={(e) => setCurrentSheet(e.target.value)}
+                      className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
+                    >
+                      {excelSheets.map(sheet => (
+                        <option key={sheet} value={sheet}>{sheet}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setIsExcelViewerOpen(false);
+                  setExcelData({});
+                  setExcelSheets([]);
+                  setCurrentSheet("");
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <FaTimes size={24} />
+              </button>
+            </div>
+
+            {/* Contenido de la tabla mejorado */}
+            <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
+              {excelData[currentSheet] && excelData[currentSheet].length > 0 ? (
+                <div className="overflow-auto border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                  {/* Contenedor con scroll personalizado */}
+                  <div className="excel-table-container max-h-[calc(90vh-200px)] overflow-auto">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {excelData[currentSheet].slice(0, 100).map((row, rowIndex) => (
+                          <tr
+                            key={rowIndex}
+                            className={`transition-colors ${rowIndex === 0
+                                ? 'bg-blue-50 dark:bg-blue-900/30 font-semibold sticky top-0 z-10'
+                                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                              }`}
+                          >
+                            {row.map((cell, colIndex) => (
+                              <td
+                                key={colIndex}
+                                className={`px-4 py-3 text-sm border-r border-gray-200 dark:border-gray-600 max-w-xs ${rowIndex === 0
+                                    ? 'text-blue-900 dark:text-blue-100 font-semibold bg-blue-50 dark:bg-blue-900/30'
+                                    : 'text-gray-900 dark:text-gray-100'
+                                  }`}
+                                title={String(cell || '')}
+                              >
+                                <div className="truncate max-w-[200px]">
+                                  {cell !== undefined && cell !== null ? String(cell) : ""}
+                                </div>
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mensaje de limitación mejorado */}
+                  {excelData[currentSheet].length > 100 && (
+                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5">
+                          ⚠️
+                        </div>
+                        <div>
+                          <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+                            <strong>Vista limitada:</strong> Se muestran las primeras 100 filas de {excelData[currentSheet].length} total.
+                          </p>
+                          <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                            Para ver el contenido completo, descarga el archivo.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                  <FaFileExcel className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
+                    No se pudo cargar el contenido
+                  </p>
+                  <p className="text-gray-500 dark:text-gray-500 text-sm mt-1">
+                    El archivo Excel no contiene datos válidos
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer mejorado */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-4 text-sm">
+                  {excelData[currentSheet] && (
+                    <>
+                      <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400">
+                        <span className="font-medium">Filas:</span>
+                        <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md font-mono">
+                          {excelData[currentSheet].length}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400">
+                        <span className="font-medium">Columnas:</span>
+                        <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded-md font-mono">
+                          {excelData[currentSheet][0]?.length || 0}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400">
+                        <span className="font-medium">Hoja:</span>
+                        <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-md font-mono">
+                          {currentSheet}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      setIsExcelViewerOpen(false);
+                      setExcelData({});
+                      setExcelSheets([]);
+                      setCurrentSheet("");
+                    }}
+                    className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
