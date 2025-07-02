@@ -524,20 +524,42 @@ export default function ProcesosPage() {
     }
   };
 
-  const handleDownload = (url: string, nombre: string) => {
-    if (!isAdmin) {
-      setFormError("Solo los administradores pueden descargar documentos.");
+  // Función corregida para descarga con headers - permitir descarga oficial para todos
+  const handleDownload = async (documento: Documento, tipoArchivo: 'oficial' | 'editable', nombre: string) => {
+    // Solo restringir descarga de archivos editables para no admin
+    if (tipoArchivo === 'editable' && !isAdmin) {
+      setFormError("Solo los administradores pueden descargar archivos editables.");
       return;
     }
-
-    const fullUrl = url.startsWith('http') ? url : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${url}`;
-    const link = document.createElement('a');
-    link.href = fullUrl;
-    link.download = nombre;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    try {
+      const token = localStorage.getItem('access_token');
+      const downloadUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/processes/documentos/${documento.id}/download/?tipo=${tipoArchivo}`;
+      
+      const response = await fetch(downloadUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Error al descargar el archivo');
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = nombre;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Limpiar el objeto URL
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error al descargar:', error);
+      setFormError('Error al descargar el archivo');
+    }
   };
 
 
@@ -867,6 +889,15 @@ export default function ProcesosPage() {
                         )}
                       </button>
 
+                      {/* Descargar documento oficial - DISPONIBLE PARA TODOS */}
+                      <button
+                        onClick={() => handleDownload(documento, 'oficial', `${documento.codigo_documento}_oficial`)}
+                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        title="Descargar archivo oficial"
+                      >
+                        <FaDownload size={16} />
+                      </button>
+
                       {/* Ver documento editable (solo admin y solo si existe) */}
                       {isAdmin && documento.archivo_editable && (
                         <button
@@ -881,25 +912,15 @@ export default function ProcesosPage() {
                             <FaEdit size={16} />
                           )}
                         </button>
-                        
                       )}
 
-                      {/* Descargar y demás acciones - solo admin */}
+                      {/* Acciones solo para admin */}
                       {isAdmin && (
                         <>
-                          <button
-                            onClick={() => handleDownload(documento.archivo_oficial, `${documento.codigo_documento}_oficial`)}
-                            className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                            title="Descargar archivo oficial"
-                          >
-                            <FaDownload size={16} />
-                          </button>
-                      
-
                           {/* Descargar archivo editable (solo si existe) */}
                           {documento.archivo_editable && (
                             <button
-                              onClick={() => handleDownload(documento.archivo_editable!, `${documento.codigo_documento}_editable`)}
+                              onClick={() => handleDownload(documento, 'editable', `${documento.codigo_documento}_editable`)}
                               className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
                               title="Descargar archivo editable"
                             >
