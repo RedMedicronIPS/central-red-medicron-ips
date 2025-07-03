@@ -57,9 +57,36 @@ const ESTADOS = [
   { value: 'OBS', label: 'Obsoleto', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
 ];
 
+// Agregar constantes para mensajes
+const ROLE_MESSAGES = {
+  user: {
+    noPermission: "No tienes permisos para realizar esta acción. Contacta al gestor o administrador.",
+    description: "Consulta de documentos del sistema de calidad",
+    emptyState: "No hay documentos disponibles para consulta"
+  },
+  gestor: {
+    noPermission: "No tienes permisos para gestionar documentos. Contacta al administrador.",
+    description: "Consulta y descarga de documentos del sistema de calidad",
+    emptyState: "No hay documentos disponibles para consulta y descarga"
+  },
+  admin: {
+    description: "Gestión completa de documentos del sistema de calidad",
+    emptyState: "Intenta ajustar los filtros de búsqueda"
+  }
+};
+
 export default function ProcesosPage() {
   const { user, roles } = useAuthContext();
+
+  // Definir los roles y permisos
   const isAdmin = roles.includes("admin");
+  const isGestor = roles.includes("gestor");
+  const isUser = roles.includes("user");
+
+  // Permisos específicos
+  const canViewDocuments = isAdmin || isGestor || isUser; // Todos pueden ver
+  const canDownload = isAdmin || isGestor || isUser; // Solo admin y gestor pueden descargar
+  const canManage = isAdmin; // Solo admin puede crear/editar/eliminar
 
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
@@ -111,6 +138,13 @@ export default function ProcesosPage() {
   const [excelSheets, setExcelSheets] = useState<string[]>([]);
   const [currentSheet, setCurrentSheet] = useState<string>("");
   const [loadingExcel, setLoadingExcel] = useState(false);
+  const [currentExcelDocument, setCurrentExcelDocument] = useState<Documento | null>(null);
+  const [currentExcelType, setCurrentExcelType] = useState<'oficial' | 'editable' | null>(null);
+
+  // Agregar estos nuevos estados al inicio del componente
+  const [isWordViewerOpen, setIsWordViewerOpen] = useState(false);
+  const [currentWordDocument, setCurrentWordDocument] = useState<Documento | null>(null);
+  const [currentWordType, setCurrentWordType] = useState<'oficial' | 'editable' | null>(null);
 
   useEffect(() => {
     fetchDocumentos();
@@ -365,8 +399,8 @@ export default function ProcesosPage() {
       // Para PDFs, usar el visor integrado
       handleViewPDF(previewUrl, documento, tipoArchivo);
     } else if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
-      // Para Excel, usar el visor personalizado
-      handleViewExcel(previewUrl, documento);
+      // Para Excel, usar el visor personalizado CON tipo de archivo
+      handleViewExcel(previewUrl, documento, tipoArchivo);
     } else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
       // Para Word, abrir en nueva pestaña con descarga automática
       handleViewWord(previewUrl, documento, tipoArchivo);
@@ -376,43 +410,8 @@ export default function ProcesosPage() {
     }
   };
 
-  // Función para visualizar archivos Word (abre en nueva pestaña)
+  // Función corregida para visualizar archivos Word
   const handleViewWord = async (previewUrl: string, documento: Documento, tipoArchivo: string) => {
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(previewUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/octet-stream'
-        }
-      });
-
-      if (!response.ok) throw new Error('Error al cargar el archivo Word');
-
-      const blob = await response.blob();
-      const wordUrl = URL.createObjectURL(blob);
-
-      // Crear link de descarga automática
-      const link = document.createElement('a');
-      link.href = wordUrl;
-      link.download = `${documento.codigo_documento}_v${documento.version}_${tipoArchivo}.${previewUrl.toLowerCase().includes('.docx') ? 'docx' : 'doc'}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Limpiar URL después de un tiempo
-      setTimeout(() => URL.revokeObjectURL(wordUrl), 1000);
-
-      setMensaje(`Archivo Word descargado: ${link.download}`);
-
-    } catch (error) {
-      console.error('Error al cargar archivo Word:', error);
-      setFormError('Error al cargar el archivo Word');
-    }
-  };
-
-  // Función alternativa para intentar visualizar Word en línea
-  const handleViewWordOnline = async (previewUrl: string, documento: Documento, tipoArchivo: string) => {
     try {
       const token = localStorage.getItem('access_token');
       const response = await fetch(previewUrl, {
@@ -421,27 +420,26 @@ export default function ProcesosPage() {
         }
       });
 
-      if (!response.ok) throw new Error('Error al cargar el archivo');
+      if (!response.ok) throw new Error('Error al cargar el archivo Word');
 
       const blob = await response.blob();
-      const fileUrl = URL.createObjectURL(blob);
+      const wordUrl = URL.createObjectURL(blob);
 
-      // Intentar usar Google Docs Viewer
-      const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-
-      setCurrentDocumentUrl(googleViewerUrl);
-      setCurrentDocumentTitle(`${documento.codigo_documento} v${documento.version} - ${documento.nombre_documento} (${tipoArchivo})`);
-      setIsDocumentViewerOpen(true);
+      // Configurar para el modal de Word
+      setCurrentDocumentUrl(wordUrl);
+      setCurrentDocumentTitle(`${documento.codigo_documento} v${documento.version} - ${documento.nombre_documento}`);
+      setCurrentWordDocument(documento);
+      setCurrentWordType(tipoArchivo as 'oficial' | 'editable');
+      setIsWordViewerOpen(true);
 
     } catch (error) {
-      console.error('Error al cargar Word:', error);
-      // Fallback a descarga directa
-      handleViewWord(previewUrl, documento, tipoArchivo);
+      console.error('Error al cargar archivo Word:', error);
+      setFormError('Error al cargar el archivo Word. Inténtalo nuevamente.');
     }
   };
 
   // Función para visualizar archivos Excel
-  const handleViewExcel = async (previewUrl: string, documento: Documento) => {
+  const handleViewExcel = async (previewUrl: string, documento: Documento, tipoArchivo: 'oficial' | 'editable' = 'oficial') => {
     setLoadingExcel(true);
     try {
       const token = localStorage.getItem('access_token');
@@ -463,6 +461,8 @@ export default function ProcesosPage() {
       setExcelData(data);
       setExcelSheets(sheets);
       setCurrentSheet(sheets[0]);
+      setCurrentExcelDocument(documento); // Guardar referencia al documento
+      setCurrentExcelType(tipoArchivo); // Guardar tipo de archivo
       setIsExcelViewerOpen(true);
     } catch (error) {
       console.error('Error al cargar Excel:', error);
@@ -524,46 +524,66 @@ export default function ProcesosPage() {
     }
   };
 
-  // Función corregida para descarga con headers - permitir descarga oficial para todos
+  // Función corregida para descarga con permisos por rol y formato
   const handleDownload = async (documento: Documento, tipoArchivo: 'oficial' | 'editable', nombre: string) => {
-    // Solo restringir descarga de archivos editables para no admin
+    // Verificar permisos de descarga
+    if (!canDownload) {
+      setFormError("No tienes permisos para descargar documentos. Contacta al administrador.");
+      return;
+    }
+
+    // Verificar que el archivo sea descargable (Word/Excel)
+    const archivoUrl = tipoArchivo === 'oficial' ? documento.archivo_oficial : documento.archivo_editable;
+    if (!isFileDownloadable(archivoUrl ?? "")) {
+      setFormError("Solo se pueden descargar archivos de Word y Excel para su diligenciamiento.");
+      return;
+    }
+
+    // Solo admin puede descargar archivos editables
     if (tipoArchivo === 'editable' && !isAdmin) {
       setFormError("Solo los administradores pueden descargar archivos editables.");
       return;
     }
-    
+
     try {
       const token = localStorage.getItem('access_token');
       const downloadUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/processes/documentos/${documento.id}/download/?tipo=${tipoArchivo}`;
-      
+
       const response = await fetch(downloadUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (!response.ok) throw new Error('Error al descargar el archivo');
-      
+
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = nombre;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Limpiar el objeto URL
       URL.revokeObjectURL(url);
+
+      setMensaje(`Archivo descargado: ${nombre}`);
     } catch (error) {
       console.error('Error al descargar:', error);
       setFormError('Error al descargar el archivo');
     }
   };
 
+  // Función para verificar si un archivo es descargable
+  const isFileDownloadable = (filename: string) => {
+    const ext = filename?.toLowerCase().split('.').pop();
+    return ['doc', 'docx', 'xls', 'xlsx'].includes(ext || '');
+  };
 
-  // Actualiza la función filteredDocumentos para incluir filtrado por rol y estado
+  // Actualizar la función de filtrado para todos los roles (solo documentos vigentes para usuarios normales)
   const filteredDocumentos = documentos.filter(doc => {
     // Filtro básico por búsqueda, tipo y proceso
     const matchesBasicFilters = (
@@ -574,13 +594,18 @@ export default function ProcesosPage() {
       (selectedProceso === "" || doc.proceso.toString() === selectedProceso);
 
     // Filtro por estado según el rol
-    if (!isAdmin) {
-      // Usuarios no admin solo ven documentos vigentes
+    if (isUser) {
+      // Usuarios básicos solo ven documentos vigentes
       return matchesBasicFilters && doc.estado === 'VIG';
-    } else {
+    } else if (isGestor) {
+      // Gestores solo ven documentos vigentes
+      return matchesBasicFilters && doc.estado === 'VIG';
+    } else if (isAdmin) {
       // Admin puede ver todos los estados (aplicar filtro de estado seleccionado)
       return matchesBasicFilters && (selectedEstado === "" || doc.estado === selectedEstado);
     }
+
+    return false;
   });
 
   if (loading) {
@@ -601,7 +626,7 @@ export default function ProcesosPage() {
 
   return (
     <div className="p-4 sm:p-8">
-      {/* Header */}
+      {/* Header con permisos */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <div className="flex items-center mb-4 sm:mb-0">
           <HiOutlineDocumentText className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-3" />
@@ -610,11 +635,14 @@ export default function ProcesosPage() {
               Documentos de Procesos
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Gestión de documentos del sistema de calidad
+              {isAdmin ? 'Gestión completa de documentos del sistema de calidad' :
+                isGestor ? 'Consulta y descarga de documentos del sistema de calidad' :
+                  'Consulta de documentos del sistema de calidad'}
             </p>
           </div>
         </div>
-        {isAdmin && (
+        {/* Botón de subir solo para admin */}
+        {canManage && (
           <button
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -625,6 +653,7 @@ export default function ProcesosPage() {
         )}
       </div>
 
+      {/* Mensajes de estado */}
       {mensaje && (
         <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg dark:bg-green-900 dark:border-green-600 dark:text-green-200">
           {mensaje}
@@ -637,7 +666,7 @@ export default function ProcesosPage() {
         </div>
       )}
 
-      {/* Filtros mejorados */}
+      {/* Filtros - Solo mostrar filtro de estado para admin */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
           <div className="relative">
@@ -700,7 +729,7 @@ export default function ProcesosPage() {
         </div>
       </div>
 
-      {/* Estadísticas mejoradas */}
+      {/* Estadísticas según el rol */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 transition-colors">
           <div className="flex items-center">
@@ -714,7 +743,7 @@ export default function ProcesosPage() {
           </div>
         </div>
 
-        {/* Solo mostrar estadísticas de vigentes/obsoletos si es admin */}
+        {/* Estadísticas específicas por rol */}
         {isAdmin && (
           <>
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 transition-colors">
@@ -725,7 +754,7 @@ export default function ProcesosPage() {
                 <div>
                   <p className="text-sm text-green-600 dark:text-green-400 font-medium">Vigentes</p>
                   <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                    {filteredDocumentos.filter(d => d.estado === 'VIG').length}
+                    {documentos.filter(d => d.estado === 'VIG').length}
                   </p>
                 </div>
               </div>
@@ -738,7 +767,7 @@ export default function ProcesosPage() {
                 <div>
                   <p className="text-sm text-red-600 dark:text-red-400 font-medium">Obsoletos</p>
                   <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                    {filteredDocumentos.filter(d => d.estado === 'OBS').length}
+                    {documentos.filter(d => d.estado === 'OBS').length}
                   </p>
                 </div>
               </div>
@@ -746,38 +775,32 @@ export default function ProcesosPage() {
           </>
         )}
 
-        {/* Para usuarios no admin, mostrar estadísticas alternativas */}
+        {/* Para gestores y usuarios */}
         {!isAdmin && (
           <>
-
             <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 transition-colors">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-orange-100 dark:bg-orange-800 rounded-full flex items-center justify-center mr-3">
                   <FaFileAlt className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Actualizados (30 días)</p>
+                  <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Tipos Disponibles</p>
                   <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                    {filteredDocumentos.filter(d => {
-                      const thirtyDaysAgo = new Date();
-                      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                      return new Date(d.fecha_actualizacion) > thirtyDaysAgo;
-                    }).length}
+                    {new Set(filteredDocumentos.map(d => d.tipo_documento)).size}
                   </p>
                 </div>
               </div>
             </div>
 
-
             <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 transition-colors">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center mr-3">
-                  <div className="w-3 h-3 bg-purple-600 dark:bg-purple-400 rounded-full"></div>
+                  <HiOutlineCollection className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Procesos</p>
+                  <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Procesos Activos</p>
                   <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                    {processes.length}
+                    {new Set(filteredDocumentos.map(d => d.proceso)).size}
                   </p>
                 </div>
               </div>
@@ -786,7 +809,7 @@ export default function ProcesosPage() {
         )}
       </div>
 
-      {/* Tabla de documentos mejorada */}
+      {/* Tabla con permisos por rol */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -804,9 +827,12 @@ export default function ProcesosPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Versión
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Estado
-                </th>
+                {/* Solo mostrar columna de estado para admin */}
+                {isAdmin && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Estado
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Archivos
                 </th>
@@ -839,11 +865,14 @@ export default function ProcesosPage() {
                       v{documento.version}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoStyle(documento.estado)}`}>
-                      {ESTADOS.find(e => e.value === documento.estado)?.label}
-                    </span>
-                  </td>
+                  {/* Columna de estado solo para admin */}
+                  {isAdmin && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoStyle(documento.estado)}`}>
+                        {ESTADOS.find(e => e.value === documento.estado)?.label}
+                      </span>
+                    </td>
+                  )}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex space-x-2">
                       <div className="flex items-center">
@@ -856,7 +885,7 @@ export default function ProcesosPage() {
                           }
                         </span>
                       </div>
-                      {/* Solo mostrar archivo editable si el usuario es admin */}
+                      {/* Solo mostrar archivo editable para admin */}
                       {isAdmin && documento.archivo_editable && (
                         <div className="flex items-center">
                           {getFileIcon(documento.archivo_editable)}
@@ -867,58 +896,65 @@ export default function ProcesosPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleView(documento)}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                        title="Ver detalles"
-                      >
-                        <FaEye size={16} />
-                      </button>
-
-                      {/* Ver documento oficial con vista previa mejorada */}
-                      <button
-                        onClick={() => handleViewDocument(documento, 'oficial')}
-                        className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                        title="Ver documento oficial"
-                        disabled={loadingExcel}
-                      >
-                        {loadingExcel ? (
-                          <div className="animate-spin w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full"></div>
-                        ) : (
-                          <FaFileAlt size={16} />
-                        )}
-                      </button>
-
-                      {/* Descargar documento oficial - DISPONIBLE PARA TODOS */}
-                      <button
-                        onClick={() => handleDownload(documento, 'oficial', `${documento.codigo_documento}_oficial`)}
-                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                        title="Descargar archivo oficial"
-                      >
-                        <FaDownload size={16} />
-                      </button>
-
-                      {/* Ver documento editable (solo admin y solo si existe) */}
-                      {isAdmin && documento.archivo_editable && (
+                      {/* Ver detalles - Todos los roles */}
+                      {canViewDocuments && (
                         <button
-                          onClick={() => handleViewDocument(documento, 'editable')}
-                          className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
-                          title="Ver documento editable"
+                          onClick={() => handleView(documento)}
+                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                          title="Ver detalles"
+                        >
+                          <FaEye size={16} />
+                        </button>
+                      )}
+
+                      {/* Ver documento oficial - Todos los roles */}
+                      {canViewDocuments && (
+                        <button
+                          onClick={() => handleViewDocument(documento, 'oficial')}
+                          className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                          title="Ver documento oficial"
                           disabled={loadingExcel}
                         >
                           {loadingExcel ? (
-                            <div className="animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full"></div>
+                            <div className="animate-spin w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full"></div>
                           ) : (
-                            <FaEdit size={16} />
+                            <FaFileAlt size={16} />
                           )}
+                        </button>
+                      )}
+
+                      {/* Descargar documento oficial - Solo gestor y admin, y solo para Word/Excel */}
+                      {canDownload && isFileDownloadable(documento.archivo_oficial) && (
+                        <button
+                          onClick={() => handleDownload(documento, 'oficial', `${documento.codigo_documento}_oficial`)}
+                          className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                          title="Descargar archivo oficial"
+                        >
+                          <FaDownload size={16} />
                         </button>
                       )}
 
                       {/* Acciones solo para admin */}
                       {isAdmin && (
                         <>
-                          {/* Descargar archivo editable (solo si existe) */}
+                          {/* Ver documento editable */}
                           {documento.archivo_editable && (
+                            <button
+                              onClick={() => handleViewDocument(documento, 'editable')}
+                              className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
+                              title="Ver documento editable"
+                              disabled={loadingExcel}
+                            >
+                              {loadingExcel ? (
+                                <div className="animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full"></div>
+                              ) : (
+                                <FaEdit size={16} />
+                              )}
+                            </button>
+                          )}
+
+                          {/* Descargar archivo editable - Solo Word/Excel */}
+                          {documento.archivo_editable && isFileDownloadable(documento.archivo_editable) && (
                             <button
                               onClick={() => handleDownload(documento, 'editable', `${documento.codigo_documento}_editable`)}
                               className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
@@ -956,13 +992,17 @@ export default function ProcesosPage() {
           <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800">
             <FaFileAlt className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <p className="text-lg font-medium">No se encontraron documentos</p>
-            <p className="text-sm">Intenta ajustar los filtros de búsqueda</p>
+            <p className="text-sm">
+              {isUser ? 'No hay documentos disponibles para consulta' :
+                isGestor ? 'No hay documentos disponibles para consulta y descarga' :
+                  'Intenta ajustar los filtros de búsqueda'}
+            </p>
           </div>
         )}
       </div>
 
-      {/* Modal de formulario (crear/editar) */}
-      {(isModalOpen || isEditModalOpen) && (
+      {/* Modales - Solo mostrar modales de gestión para admin */}
+      {canManage && (isModalOpen || isEditModalOpen) && (
         <div className="fixed z-50 inset-0 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-xl w-full max-w-2xl mx-auto my-4">
             <h2 className="text-xl font-bold mb-6 text-center text-gray-900 dark:text-gray-100">
@@ -1077,11 +1117,11 @@ export default function ProcesosPage() {
                     type="file"
                     name="archivo_oficial"
                     onChange={handleFileChange}
-                    accept=".pdf,.xls,.xlsx"
+                    accept=".doc,.docx,.pdf,.xls,.xlsx"
                     className="mt-1 p-3 block w-full border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     {...(!isEditModalOpen && { required: true })}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Formatos permitidos: PDF, Excel</p>
+                  <p className="text-xs text-gray-500 mt-1">Formatos permitidos: PDF, Excel, Word</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Archivo Editable (Opcional)</label>
@@ -1211,12 +1251,7 @@ export default function ProcesosPage() {
                 {currentDocumentTitle || "Vista previa del documento"}
               </h3>
               <div className="flex space-x-2">
-                <button
-                  onClick={() => window.open(currentDocumentUrl, '_blank', 'noopener,noreferrer')}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                >
-                  Abrir en nueva pestaña
-                </button>
+                {/* Botón "Abrir en nueva pestaña" ELIMINADO completamente */}
                 <button
                   onClick={() => {
                     // Limpiar blob URL si existe
@@ -1275,7 +1310,7 @@ export default function ProcesosPage() {
         </div>
       )}
 
-      {/* Modal de visualización de Excel - Versión mejorada para modo oscuro */}
+      {/* Modal de visualización de Excel - Con botón de descarga */}
       {isExcelViewerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-7xl h-[90vh] flex flex-col border border-gray-200 dark:border-gray-700">
@@ -1309,6 +1344,7 @@ export default function ProcesosPage() {
                   setExcelData({});
                   setExcelSheets([]);
                   setCurrentSheet("");
+                  setCurrentExcelDocument(null);
                 }}
                 className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
               >
@@ -1328,16 +1364,16 @@ export default function ProcesosPage() {
                           <tr
                             key={rowIndex}
                             className={`transition-colors ${rowIndex === 0
-                                ? 'bg-blue-50 dark:bg-blue-900/30 font-semibold sticky top-0 z-10'
-                                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                              ? 'bg-blue-50 dark:bg-blue-900/30 font-semibold sticky top-0 z-10'
+                              : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                               }`}
                           >
                             {row.map((cell, colIndex) => (
                               <td
                                 key={colIndex}
                                 className={`px-4 py-3 text-sm border-r border-gray-200 dark:border-gray-600 max-w-xs ${rowIndex === 0
-                                    ? 'text-blue-900 dark:text-blue-100 font-semibold bg-blue-50 dark:bg-blue-900/30'
-                                    : 'text-gray-900 dark:text-gray-100'
+                                  ? 'text-blue-900 dark:text-blue-100 font-semibold bg-blue-50 dark:bg-blue-900/30'
+                                  : 'text-gray-900 dark:text-gray-100'
                                   }`}
                                 title={String(cell || '')}
                               >
@@ -1384,7 +1420,7 @@ export default function ProcesosPage() {
               )}
             </div>
 
-            {/* Footer mejorado */}
+            {/* Footer mejorado con botón de descarga */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-4 text-sm">
@@ -1412,12 +1448,149 @@ export default function ProcesosPage() {
                   )}
                 </div>
                 <div className="flex space-x-2">
+                  {/* Botón de descarga - Solo si hay permisos */}
+                  {/* {canDownload && */} {currentExcelDocument && (
+                    <button
+                      onClick={() => {
+                        const tipoArchivo = currentExcelType || 'oficial';
+                        handleDownload(currentExcelDocument, tipoArchivo, `${currentExcelDocument.codigo_documento}_${tipoArchivo}`);
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors focus:ring-2 focus:ring-green-500 flex items-center gap-2"
+                    >
+                      <FaDownload size={16} />
+                      Descargar Excel
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setIsExcelViewerOpen(false);
                       setExcelData({});
                       setExcelSheets([]);
                       setCurrentSheet("");
+                      setCurrentExcelDocument(null);
+                    }}
+                    className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal específico para documentos Word */}
+      {isWordViewerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl h-auto max-h-[90vh] flex flex-col border border-gray-200 dark:border-gray-700">
+            {/* Header */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <div className="flex items-center space-x-2">
+                <FaFileWord className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Documento Word
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  if (currentDocumentUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(currentDocumentUrl);
+                  }
+                  setIsWordViewerOpen(false);
+                  setCurrentDocumentUrl("");
+                  setCurrentDocumentTitle("");
+                  setCurrentWordDocument(null);
+                  setCurrentWordType(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <FaTimes size={24} />
+              </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="flex-1 p-6 text-center">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <FaFileWord className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+                </div>
+
+                <div className="text-center">
+                  <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    {currentDocumentTitle}
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    Los documentos de Word no se pueden previsualizar directamente en el navegador.
+                  </p>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>💡 Sugerencia:</strong>
+                      {canDownload ? (
+                        <span> Descarga el documento para abrirlo en Microsoft Word o un editor compatible.</span>
+                      ) : (
+                        <span> Contacta al administrador para obtener permisos de descarga.</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer con botones */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                  {currentWordDocument && (
+                    <>
+                      <div className="flex items-center space-x-1">
+                        <span className="font-medium">Código:</span>
+                        <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md font-mono">
+                          {currentWordDocument.codigo_documento}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="font-medium">Versión:</span>
+                        <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded-md font-mono">
+                          v{currentWordDocument.version}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="font-medium">Tipo:</span>
+                        <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-md font-mono">
+                          {currentWordType}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex space-x-2">
+                  {/* Botón de descarga - Solo si hay permisos */}
+                  {currentWordDocument && (
+                    <button
+                      onClick={() => {
+                        const tipoArchivo = currentWordType || 'oficial';
+                        handleDownload(currentWordDocument, tipoArchivo, `${currentWordDocument.codigo_documento}_${tipoArchivo}`);
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500 flex items-center gap-2"
+                    >
+                      <FaDownload size={16} />
+                      Descargar Word
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      if (currentDocumentUrl.startsWith('blob:')) {
+
+                        URL.revokeObjectURL(currentDocumentUrl);
+                      }
+                      setIsWordViewerOpen(false);
+                      setCurrentDocumentUrl("");
+                      setCurrentDocumentTitle("");
+                      setCurrentWordDocument(null);
+                      setCurrentWordType(null);
                     }}
                     className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
                   >
