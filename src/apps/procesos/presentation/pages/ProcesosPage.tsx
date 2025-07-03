@@ -18,6 +18,8 @@ import {
 import { HiOutlineDocumentText, HiOutlineCollection } from "react-icons/hi";
 import { useAuthContext } from "../../../auth/presentation/context/AuthContext";
 
+import PdfViewer from '../components/PdfViewer';
+
 interface Process {
   id: number;
   name: string;
@@ -1268,14 +1270,16 @@ export default function ProcesosPage() {
                 </button>
               </div>
             </div>
-            <div className="flex-1 p-4">
-              <iframe
-                src={currentDocumentUrl}
-                className="w-full h-full border-0 rounded"
-                title={currentDocumentTitle}
-                style={{ height: 'calc(100% - 60px)' }}
-              />
+            <div className="flex-1 p-4 overflow-hidden">
+              {(currentDocumentUrl?.endsWith('.pdf') || currentDocumentUrl?.startsWith('blob:')) ? (
+                <PdfViewer fileUrl={currentDocumentUrl} />
+              ) : (
+                <p className="text-center text-gray-500 dark:text-gray-300">
+                  Este tipo de documento no es compatible con el visor integrado.
+                </p>
+              )}
             </div>
+
           </div>
         </div>
       )}
