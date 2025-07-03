@@ -87,7 +87,7 @@ export default function ProcesosPage() {
 
   // Permisos específicos
   const canViewDocuments = isAdmin || isGestor || isUser; // Todos pueden ver
-  const canDownload = isAdmin || isGestor || isUser; // Solo admin y gestor pueden descargar
+  const canDownload = isAdmin || isGestor; // Solo admin y gestor pueden descargar
   const canManage = isAdmin; // Solo admin puede crear/editar/eliminar
 
   const [documentos, setDocumentos] = useState<Documento[]>([]);
@@ -526,18 +526,18 @@ export default function ProcesosPage() {
     }
   };
 
-  // Función corregida para descarga con permisos por rol y formato
+  // Función corregida - Línea 537
   const handleDownload = async (documento: Documento, tipoArchivo: 'oficial' | 'editable', nombre: string) => {
-    // Verificar permisos de descarga
-    if (!canDownload) {
-      setFormError("No tienes permisos para descargar documentos. Contacta al administrador.");
-      return;
-    }
-
-    // Verificar que el archivo sea descargable (Word/Excel)
     const archivoUrl = tipoArchivo === 'oficial' ? documento.archivo_oficial : documento.archivo_editable;
-    if (!isFileDownloadable(archivoUrl ?? "")) {
-      setFormError("Solo se pueden descargar archivos de Word y Excel para su diligenciamiento.");
+
+    // Verificar permisos específicos por formato
+    if (!canDownloadByFormat(archivoUrl || "")) {
+      const ext = archivoUrl?.toLowerCase().split('.').pop();
+      if (ext === 'pdf') {
+        setFormError("Solo los gestores y administradores pueden descargar documentos PDF.");
+      } else {
+        setFormError("No tienes permisos para descargar este tipo de archivo.");
+      }
       return;
     }
 
@@ -579,10 +579,21 @@ export default function ProcesosPage() {
     }
   };
 
-  // Función para verificar si un archivo es descargable
-  const isFileDownloadable = (filename: string) => {
+  // Función para verificar permisos de descarga según el formato
+  const canDownloadByFormat = (filename: string) => {
     const ext = filename?.toLowerCase().split('.').pop();
-    return ['doc', 'docx', 'xls', 'xlsx'].includes(ext || '');
+
+    // Excel y Word: todos los usuarios pueden descargar
+    if (['doc', 'docx', 'xls', 'xlsx'].includes(ext || '')) {
+      return true;
+    }
+
+    // PDF: solo gestores y administradores
+    if (ext === 'pdf') {
+      return canDownload; // isAdmin || isGestor
+    }
+
+    return false;
   };
 
   // Actualizar la función de filtrado para todos los roles (solo documentos vigentes para usuarios normales)
@@ -925,8 +936,8 @@ export default function ProcesosPage() {
                         </button>
                       )}
 
-                      {/* Descargar documento oficial - Solo gestor y admin, y solo para Word/Excel */}
-                      {canDownload && isFileDownloadable(documento.archivo_oficial) && (
+                      {/* Descargar documento oficial - Permisos específicos por formato */}
+                      {canDownloadByFormat(documento.archivo_oficial || "") && (
                         <button
                           onClick={() => handleDownload(documento, 'oficial', `${documento.codigo_documento}_oficial`)}
                           className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
@@ -955,8 +966,8 @@ export default function ProcesosPage() {
                             </button>
                           )}
 
-                          {/* Descargar archivo editable - Solo Word/Excel */}
-                          {documento.archivo_editable && isFileDownloadable(documento.archivo_editable) && (
+                          {/* Descargar archivo editable - Solo Word/Excel y solo admin */}
+                          {documento.archivo_editable && ['doc', 'docx', 'xls', 'xlsx'].includes(documento.archivo_editable.toLowerCase().split('.').pop() || '') && (
                             <button
                               onClick={() => handleDownload(documento, 'editable', `${documento.codigo_documento}_editable`)}
                               className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
@@ -1244,7 +1255,7 @@ export default function ProcesosPage() {
         </div>
       )}
 
-      {/* MANTENER SOLO ESTE MODAL - Modal de visualización de documentos */}
+      {/* Modal de visualización de documentos */}
       {isDocumentViewerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4">
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
@@ -1452,8 +1463,8 @@ export default function ProcesosPage() {
                   )}
                 </div>
                 <div className="flex space-x-2">
-                  {/* Botón de descarga - Solo si hay permisos */}
-                  {/* {canDownload && */} {currentExcelDocument && (
+                  {/* Botón de descarga - Todos los usuarios pueden descargar Excel */}
+                  {currentExcelDocument && (
                     <button
                       onClick={() => {
                         const tipoArchivo = currentExcelType || 'oficial';
@@ -1570,7 +1581,7 @@ export default function ProcesosPage() {
                 </div>
 
                 <div className="flex space-x-2">
-                  {/* Botón de descarga - Solo si hay permisos */}
+                  {/* Botón de descarga - Todos los usuarios pueden descargar Word */}
                   {currentWordDocument && (
                     <button
                       onClick={() => {
@@ -1587,7 +1598,6 @@ export default function ProcesosPage() {
                   <button
                     onClick={() => {
                       if (currentDocumentUrl.startsWith('blob:')) {
-
                         URL.revokeObjectURL(currentDocumentUrl);
                       }
                       setIsWordViewerOpen(false);

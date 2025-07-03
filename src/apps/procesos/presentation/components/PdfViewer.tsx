@@ -5,7 +5,7 @@ import workerUrl from 'pdfjs-dist/build/pdf.worker.min.js?url';
 
 export default function PdfViewer({ fileUrl }: { fileUrl: string }) {
   return (
-    <div className="w-full h-full overflow-hidden" 
+    <div className="bg-white dark:bg-gray-900  w-full h-full overflow-hidden" 
     onContextMenu={(e) => e.preventDefault()}
     onMouseDown={(e) => e.preventDefault()}    // bloquea selección
     style={{ userSelect: 'none' }} 
