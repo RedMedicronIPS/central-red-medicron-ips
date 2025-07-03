@@ -19,6 +19,7 @@ import { HiOutlineDocumentText, HiOutlineCollection } from "react-icons/hi";
 import { useAuthContext } from "../../../auth/presentation/context/AuthContext";
 
 import PdfViewer from '../components/PdfViewer';
+import { Label } from '../components/label';
 
 interface Process {
   id: number;
@@ -1175,85 +1176,80 @@ export default function ProcesosPage() {
 
       {/* Modal de visualización de detalles - Mejorado */}
       {isViewModalOpen && viewResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 modal-backdrop">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-xl w-full max-w-lg border border-gray-200 dark:border-gray-700">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                <FaFileAlt className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-                Detalles del Documento
-              </h3>
-              <button
-                onClick={() => setIsViewModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <FaTimes size={20} />
-              </button>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Código:</span>
-                <span className="text-gray-900 dark:text-gray-100 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                  {viewResult.codigo_documento}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Nombre:</span>
-                <span className="text-gray-900 dark:text-gray-100 text-right max-w-xs">
-                  {viewResult.nombre_documento}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Proceso:</span>
-                <span className="text-gray-900 dark:text-gray-100">{getProcessName(viewResult.proceso)}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Tipo:</span>
-                <span className="text-gray-900 dark:text-gray-100">{getTipoLabel(viewResult.tipo_documento)}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Versión:</span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                  v{viewResult.version}
-                </span>
-              </div>
-              {isAdmin && (
-                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Documento Padre:</span>
-                  <span className="text-gray-900 dark:text-gray-100 text-right max-w-xs">
-                    {getDocumentPadreName(viewResult.documento_padre)}
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Estado:</span>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${getEstadoStyle(viewResult.estado)}`}>
-                  {ESTADOS.find(e => e.value === viewResult.estado)?.label}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Fecha de creación:</span>
-                <span className="text-gray-900 dark:text-gray-100 font-mono text-xs">
-                  {new Date(viewResult.fecha_creacion).toLocaleDateString("es-CO")}
-                </span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Última actualización:</span>
-                <span className="text-gray-900 dark:text-gray-100 font-mono text-xs">
-                  {new Date(viewResult.fecha_actualizacion).toLocaleDateString("es-CO")}
-                </span>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setIsViewModalOpen(false)}
-                className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-700 transition-all">
+      {/* Header */}
+      <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <FaFileAlt className="text-blue-600 dark:text-blue-400" />
+          Detalles del Documento
+        </h3>
+        <button
+          onClick={() => setIsViewModalOpen(false)}
+          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white transition"
+        >
+          <FaTimes size={20} />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="px-6 py-4 space-y-4 text-sm text-gray-800 dark:text-gray-200">
+        <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+          <Label title="Código:" value={viewResult.codigo_documento} mono />
+          <Label title="Nombre:" value={viewResult.nombre_documento} />
+
+          <Label title="Proceso:" value={getProcessName(viewResult.proceso)} />
+          <Label title="Tipo:" value={getTipoLabel(viewResult.tipo_documento)} />
+
+          <Label
+            title="Versión:"
+            value={`v${viewResult.version}`}
+            badge
+            badgeColor="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+          />
+
+          {isAdmin && (
+            <Label
+              title="Documento Padre:"
+              value={getDocumentPadreName(viewResult.documento_padre)}
+            />
+          )}
+
+          <Label
+            title="Estado:"
+            value={ESTADOS.find(e => e.value === viewResult.estado)?.label || ''}
+            badge
+            badgeColor={getEstadoStyle(viewResult.estado)}
+          />
+
+          <Label
+            title="Fecha de creación:"
+            value={new Date(viewResult.fecha_creacion).toLocaleDateString('es-CO')}
+            mono
+          />
+
+          <Label
+            title="Última actualización:"
+            value={new Date(viewResult.fecha_actualizacion).toLocaleDateString('es-CO')}
+            mono
+          />
         </div>
-      )}
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <button
+          onClick={() => setIsViewModalOpen(false)}
+          className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm text-gray-800 dark:text-gray-100 rounded-lg transition"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
       {/* Modal de visualización de documentos */}
       {isDocumentViewerOpen && (
