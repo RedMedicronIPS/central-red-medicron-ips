@@ -9,7 +9,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   const navItems = [
-    { to: "/dashboard", label: "Inicio", icon: <HiHome className="w-5 h-5" /> },
+    { to: "/menu", label: "Inicio", icon: <HiHome className="w-5 h-5" /> },
     { to: "/auditorias", label: "Auditorías", icon: <HiClipboardList className="w-5 h-5" /> },
     { to: "/indicadores", label: "Indicadores", icon: <HiChartBar className="w-5 h-5" /> },
     { to: "/procesos", label: "Procesos", icon: <HiDocumentText className="w-5 h-5" /> },

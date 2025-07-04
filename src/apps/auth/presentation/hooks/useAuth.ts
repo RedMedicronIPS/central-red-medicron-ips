@@ -31,7 +31,7 @@ export const useAuth = () => {
       setUser(response.user);
       // Si el login es exitoso y no requiere 2FA
       notify.success("Inicio de sesión exitoso");
-      navigate("/dashboard");
+      navigate("/menu");
     } catch (err: any) {
       const errorMessage = err.message || "Error en el inicio de sesión";
       setError(errorMessage);

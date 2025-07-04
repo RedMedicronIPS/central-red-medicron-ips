@@ -1,4 +1,4 @@
-import { DocumentPermissions } from '../../application/services/PermissionService';
+import type { DocumentPermissions } from '../../application/services/PermissionService';
 
 export class PermissionUtils {
   static canPerformAction(

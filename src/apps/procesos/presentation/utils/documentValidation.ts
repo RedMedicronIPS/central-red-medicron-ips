@@ -1,4 +1,4 @@
-import { Document } from '../../domain/entities/Document';
+import type { Document } from '../../domain/entities/Document';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -60,8 +60,8 @@ export class DocumentValidation {
     }
 
     // Validar versión
-    if (form.version && form.version < 1) {
-      errors.push("La versión debe ser mayor a 0");
+    if (form.version !== undefined && form.version < 0) {
+      errors.push("La versión debe ser 0 o superior");
     }
 
     return {

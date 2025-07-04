@@ -8,6 +8,7 @@ import { TIPOS_DOCUMENTO, ESTADOS } from '../../../domain/types';
 interface FormModalProps {
   isEdit?: boolean;
   document?: Document;
+  documents: Document[];
   processes: Process[];
   documentService: DocumentService;
   onSubmit: (data: FormData) => Promise<void>;
@@ -17,6 +18,7 @@ interface FormModalProps {
 export default function FormModal({
   isEdit = false,
   document,
+  documents, 
   processes,
   documentService,
   onSubmit,
@@ -27,12 +29,15 @@ export default function FormModal({
     nombre_documento: document?.nombre_documento || "",
     proceso: document?.proceso || 0,
     tipo_documento: document?.tipo_documento || "",
-    version: document?.version || 1,
+    version: document?.version ?? 0,
     estado: document?.estado || "VIG",
     activo: document?.activo ?? true,
     documento_padre: document?.documento_padre || null,
   });
-
+console.log('Estado inicial del formulario:', {
+  version: document?.version ?? 0,
+  versionType: typeof (document?.version ?? 0)
+});
   const [files, setFiles] = useState<{
     archivo_oficial: File | null;
     archivo_editable: File | null;
@@ -44,12 +49,22 @@ export default function FormModal({
   const [formError, setFormError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    setForm((prevForm) => ({
-      ...prevForm,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    }));
-  };
+  const { name, value, type } = e.target;
+  
+  let processedValue: any = value;
+  
+  if (type === "checkbox") {
+    processedValue = (e.target as HTMLInputElement).checked;
+  } else if (name === "version" || name === "proceso") {
+    // ✅ SOLUCIÓN: Convertir explícitamente a número para campos numéricos
+    processedValue = value === "" ? 0 : Number(value);
+  }
+  
+  setForm((prevForm) => ({
+    ...prevForm,
+    [name]: processedValue,
+  }));
+};
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, files: selectedFiles } = e.target;
@@ -64,6 +79,10 @@ export default function FormModal({
   const validateForm = () => {
     if (!form.codigo_documento || !form.nombre_documento || !form.proceso || !form.tipo_documento) {
       setFormError("Todos los campos obligatorios deben estar completos.");
+      return false;
+    }
+    if (form.version !== undefined && form.version < 0) {
+      setFormError("La versión debe ser 0 o superior.");
       return false;
     }
     if (!isEdit && !files.archivo_oficial) {
@@ -81,6 +100,13 @@ export default function FormModal({
 
     try {
       const formData = new FormData();
+
+          // ✅ DEBUG: Ver el estado del formulario
+    //console.log('=== ESTADO DEL FORMULARIO ===');
+    //console.log('form.version:', form.version);
+    //console.log('typeof form.version:', typeof form.version);
+    //console.log('form completo:', form);
+
 
       if (isEdit && document) {
         // Para edición, solo agregar campos modificados
@@ -110,6 +136,13 @@ export default function FormModal({
           }
         });
       }
+          // ✅ DEBUG: Ver el FormData completo
+    //console.log('=== CONTENIDO DEL FORMDATA ===');
+    //for (let pair of formData.entries()) {
+    //  console.log(pair[0] + ': ' + pair[1]);
+   // }
+   // console.log('================================');
+//--------------------------------
 
       if (files.archivo_oficial) {
         formData.append('archivo_oficial', files.archivo_oficial);
@@ -127,9 +160,9 @@ export default function FormModal({
   const getDocumentosDisponiblesComoPadre = () => {
     if (isEdit && document) {
       // Excluir el documento actual y sus versiones relacionadas
-      return documentService.getDocumentosDisponiblesComoPadre([], document);
+      return documentService.getDocumentosDisponiblesComoPadre(documents, document);
     }
-    return [];
+    return documentService.getDocumentosDisponiblesComoPadre(documents);
   };
 
   return (
@@ -177,9 +210,9 @@ export default function FormModal({
               <input
                 type="number"
                 name="version"
-                value={form.version || 1}
+                value={form.version ?? 0}
                 onChange={handleChange}
-                min="1"
+                min="0"
                 className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                 required
               />

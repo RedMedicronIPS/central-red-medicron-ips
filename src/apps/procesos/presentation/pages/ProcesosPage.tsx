@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { HiOutlineDocumentText } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiRefresh } from 'react-icons/hi';
 import { FaUpload, FaTimes } from 'react-icons/fa';
 
 import { useDocumentCRUD } from '../hooks/useDocumentCRUD';
@@ -30,7 +30,9 @@ export default function ProcesosPage() {
     createDocument, 
     updateDocument, 
     deleteDocument,
-    documentService 
+    documentService,
+    fetchDocuments,
+    fetchProcesses
   } = useDocumentCRUD();
   
   const { filters, filteredDocuments, updateFilter, clearFilters } = useDocumentFilters(documents, permissions);
@@ -66,6 +68,7 @@ export default function ProcesosPage() {
   const [loadingExcel, setLoadingExcel] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState(''); // Estado local para errores específicos del componente
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Handlers para modales
   const openModal = (modalName: keyof typeof modals, data?: any) => {
@@ -110,6 +113,19 @@ export default function ProcesosPage() {
       currentWordDocument: null,
       currentWordType: null
     });
+  };
+
+// Función para recargar los datos
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([fetchDocuments(), fetchProcesses()]);
+      setMessage('Datos actualizados correctamente');
+    } catch (error) {
+      setError('Error al actualizar los datos');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   // Handlers para acciones
@@ -244,15 +260,42 @@ export default function ProcesosPage() {
             </p>
           </div>
         </div>
-        {permissions.canManage && (
+        
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {/* Botón de recarga - visible para todos los roles */}
           <button
-            onClick={() => openModal('isFormOpen')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-          >
-            <FaUpload size={16} />
-            Subir Documento
-          </button>
-        )}
+  onClick={handleRefresh}
+  disabled={isRefreshing}
+  className={`
+    group px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 justify-center
+    ${isRefreshing 
+      ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
+      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
+    }
+  `}
+  title="Actualizar datos"
+>
+  <HiRefresh 
+    size={16} 
+    className={`transition-transform duration-300 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`} 
+  />
+  <span className="hidden sm:inline">
+    {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+  </span>
+</button>
+
+          {/* Botón subir documento - solo para admin */}
+          {permissions.canManage && (
+            <button
+              onClick={() => openModal('isFormOpen')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 justify-center"
+            >
+              <FaUpload size={16} />
+              Subir Documento
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Mensajes */}
@@ -300,6 +343,7 @@ export default function ProcesosPage() {
       {/* Modales */}
       {modals.isFormOpen && (
         <FormModal
+          documents={documents}
           processes={processes}
           documentService={documentService}
           onSubmit={handleFormSubmit}
@@ -311,6 +355,7 @@ export default function ProcesosPage() {
         <FormModal
           isEdit={true}
           document={modalData.editingDocument}
+          documents={documents}
           processes={processes}
           documentService={documentService}
           onSubmit={handleFormSubmit}

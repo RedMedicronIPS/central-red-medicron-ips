@@ -16,6 +16,8 @@ interface DocumentTableProps {
   onEdit: (doc: Document) => void;
   onDelete: (doc: Document) => void;
   loadingExcel: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export default function DocumentTable({
@@ -27,15 +29,17 @@ export default function DocumentTable({
   onDownload,
   onEdit,
   onDelete,
-  loadingExcel
+  loadingExcel,
 }: DocumentTableProps) {
   const getEmptyMessage = () => {
     const role = permissions.isAdmin ? 'admin' : permissions.isGestor ? 'gestor' : 'user';
     return PermissionService.getPermissionMessage(role, 'emptyState');
   };
 
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900">

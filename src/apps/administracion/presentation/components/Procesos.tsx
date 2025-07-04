@@ -114,7 +114,8 @@ export default function Procesos() {
         const { name, value, type } = e.target;
         setForm((prevForm) => ({
             ...prevForm,
-            [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+            [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : 
+            name === "version" ? Number(value) : value,
         }));
     };
 

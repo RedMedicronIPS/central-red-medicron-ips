@@ -4,10 +4,16 @@ import { DocumentRepository } from '../../infrastructure/repositories/DocumentRe
 import { ProcessRepository } from '../../infrastructure/repositories/ProcessRepository';
 
 export class DocumentService {
+    private documentRepository: DocumentRepository;
+    private processRepository?: ProcessRepository;
+
     constructor(
-        private documentRepository: DocumentRepository,
-        private processRepository?: ProcessRepository
-    ) {}
+        documentRepository: DocumentRepository,
+        processRepository?: ProcessRepository
+    ) {
+        this.documentRepository = documentRepository;
+        this.processRepository = processRepository;
+    }
 
     async getDocuments(): Promise<Document[]> {
         return this.documentRepository.getAll();

@@ -4,7 +4,7 @@ import type { Document } from '../../../domain/entities/Document';
 import type { Process } from '../../../domain/entities/Process';
 import type { DocumentPermissions } from '../../../application/services/PermissionService';
 import type { DocumentService } from '../../../application/services/DocumentService';
-import { Label } from '../label';
+import { Label } from '../Label';
 import { TIPOS_DOCUMENTO, ESTADOS } from '../../../domain/types';
 
 interface ViewModalProps {

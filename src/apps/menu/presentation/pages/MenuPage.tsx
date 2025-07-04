@@ -12,7 +12,7 @@ import DocumentosRecursosRapidos from "../components/DocumentosRecursosRapidos";
 import ReconocimientosCumpleanios from "../components/ReconocimientosCumpleanios";
 import SoporteContacto from "../components/SoporteContacto";
 
-export default function Dashboard() {
+export default function MenuPage() {
   const { user } = useAuthContext();
 
   return (

@@ -4,15 +4,15 @@ import AuthRoutes from "../../apps/auth/routes";
 import ProveedoresRoutes from "../../apps/proveedores/routes";
 import { AuthGuard } from "./authGuard";
 import MainLayout from "../presentation/layouts/MainLayout";
-import Dashboard from "../../apps/dashboard/presentation/pages/Dashboard";
+import MenuPage from "../../apps/menu/presentation/pages/MenuPage";
 import ProfilePage from "../../apps/auth/presentation/pages/ProfilePage";
 import AuditoriasPage from "../../apps/auditorias/presentation/pages/AuditoriasPage";
 import IndicadoresPage from "../../apps/indicadores/presentation/pages/IndicadoresPage";
 import ProcesosPage from "../../apps/procesos/presentation/pages/ProcesosPage";
 import ProveedoresPage from "../../apps/proveedores/presentation/pages/ProveedoresPage";
 import AdministracionPage from "../../apps/administracion/presentation/pages/AdministracionPage";
-import NoticiasPage from "../../apps/dashboard/presentation/pages/NoticiasPage";
-import EventosPage from "../../apps/dashboard/presentation/pages/EventosPage";
+import NoticiasPage from "../../apps/menu/presentation/pages/NoticiasPage";
+import EventosPage from "../../apps/menu/presentation/pages/EventosPage";
 
 export default function AppRouter() {
   const { isAuthenticated, roles } = useAuthContext();
@@ -29,7 +29,7 @@ export default function AppRouter() {
           {roles.includes("contabilidad") || roles.includes("admin") ? (
             <ProveedoresRoutes />
           ) : (
-            <Navigate to="/dashboard" replace />
+            <Navigate to="/menu" replace />
           )}
         </AuthGuard>
       ),
@@ -44,9 +44,9 @@ export default function AppRouter() {
       children: [
         {
           path: "/",
-          element: <Navigate to="/dashboard" replace />,
+          element: <Navigate to="/menu" replace />,
         },
-        { path: "dashboard", element: <Dashboard /> },
+        { path: "menu", element: <MenuPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "auditorias", element: <AuditoriasPage /> },
         { path: "indicadores", element: <IndicadoresPage /> },
