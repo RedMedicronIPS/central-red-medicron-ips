@@ -4,9 +4,9 @@ const RECONOCIMIENTOS = [
   {
     tipo: "cumpleaños",
     nombre: "Laura Gómez",
-    fecha: "2024-06-21",
+    fecha: "2024-07-21",
     mensaje: "¡Feliz cumpleaños! Gracias por tu dedicación y alegría en el equipo.",
-    foto: "/fotos/laura.jpg",
+    foto: "/fotos/Carlos.jpg",
   },
   {
     tipo: "cumpleaños",
@@ -20,7 +20,7 @@ const RECONOCIMIENTOS = [
     nombre: "Carlos Ruiz",
     fecha: "2024-06-18",
     mensaje: "Reconocimiento por liderazgo y compromiso en el área administrativa.",
-    foto: "/fotos/carlos.jpg",
+    foto: "/fotos/Carlos.jpg",
   },
   {
     tipo: "reconocimiento",
