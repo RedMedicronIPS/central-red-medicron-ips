@@ -13,7 +13,8 @@ import {
   HiCalendarDays,
   HiNewspaper,
   HiChevronDown,
-  HiChevronRight
+  HiChevronRight,
+  HiUsers
 } from "react-icons/hi2";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 import { getProfilePicUrl } from "../utils/profile";
@@ -37,7 +38,8 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
       hasSubmenu: true,
       submenu: [
         { to: "/eventos", label: "Eventos", icon: <HiCalendarDays className="w-4 h-4" /> },
-        { to: "/noticias", label: "Noticias", icon: <HiNewspaper className="w-4 h-4" /> }
+        { to: "/noticias", label: "Noticias", icon: <HiNewspaper className="w-4 h-4" /> },
+        { to: "/funcionarios", label: "Funcionarios", icon: <HiUsers className="w-4 h-4" /> }
       ]
     },
     { to: "/auditorias", label: "Auditorías", icon: <HiClipboardDocumentList className="w-5 h-5" /> },

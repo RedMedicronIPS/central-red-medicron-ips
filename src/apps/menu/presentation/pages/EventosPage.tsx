@@ -1,101 +1,353 @@
-// src/apps/dashboard/presentation/pages/NoticiasPage.tsx
-import { useEffect, useState } from "react";
-import { HiCalendarDays, HiPlus } from "react-icons/hi2";
-import { useAuthContext } from "../../../auth/presentation/context/AuthContext";
-
-type Evento = {
-  id: string;
-  titulo: string;
-  fecha: string;
-  descripcion: string;
-  importante?: boolean;
-};
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { HiCalendarDays, HiMapPin, HiClock, HiGlobeAlt, HiStar, HiArrowLeft } from "react-icons/hi2";
+import { HiSearch } from "react-icons/hi";
+import { MenuApiService } from "../../infrastructure/services/MenuApiService";
+import type { Evento } from "../../domain/types";
 
 export default function EventosPage() {
-  const { user } = useAuthContext();
-  const isAdmin =
-    user?.role === "admin" ||
-    (typeof user?.role === "object" && "name" in user.role && user.role.name === "admin");
+  const { id } = useParams();
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [eventoDetalle, setEventoDetalle] = useState<Evento | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showVirtualOnly, setShowVirtualOnly] = useState(false);
+  const [showImportantOnly, setShowImportantOnly] = useState(false);
 
   useEffect(() => {
-    // Simulación de fetch, reemplaza por fetch real a /api/dashboard/eventos
-    setLoading(true);
-    setTimeout(() => {
-      setEventos([
-        {
-          id: "1",
-          titulo: "Reunión general de funcionarios",
-          fecha: "2024-06-25",
-          descripcion: "Encuentro institucional para socializar avances y novedades.",
-          importante: true,
-        },
-        {
-          id: "2",
-          titulo: "Inicio nueva política de vacaciones",
-          fecha: "2024-07-01",
-          descripcion: "Entra en vigencia la nueva política de vacaciones.",
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    if (id) {
+      fetchEventoDetalle(parseInt(id));
+    } else {
+      fetchEventos();
+    }
+  }, [id]);
 
-  return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 min-h-[60vh]">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <HiCalendarDays className="w-8 h-8 text-blue-600 dark:text-blue-300" />
-          Eventos Institucionales
-        </h1>
-        {isAdmin && (
-          <button
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            // onClick={...} // Aquí abrirías el modal o formulario de creación
+  const fetchEventos = async () => {
+    try {
+      setLoading(true);
+      const data = await MenuApiService.getEventosProximos();
+      setEventos(data);
+    } catch (err) {
+      setError('Error al cargar eventos');
+      console.error('Error fetching eventos:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchEventoDetalle = async (eventoId: number) => {
+    try {
+      setLoading(true);
+      const data = await MenuApiService.getEvento(eventoId);
+      setEventoDetalle(data);
+    } catch (err) {
+      setError('Error al cargar el evento');
+      console.error('Error fetching evento:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredEventos = eventos.filter(evento => {
+    const matchesSearch = evento.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      evento.detalles.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesVirtual = !showVirtualOnly || evento.es_virtual;
+    const matchesImportant = !showImportantOnly || evento.importante;
+
+    return matchesSearch && matchesVirtual && matchesImportant;
+  });
+
+  const formatFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatHora = (hora: string) => {
+    return new Date(`2000-01-01T${hora}`).toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getDaysUntilEvent = (fecha: string) => {
+    const today = new Date();
+    const eventDate = new Date(fecha);
+    const diffTime = eventDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // Si estamos viendo un evento específico
+  if (id && eventoDetalle) {
+    return (
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto">
+          <Link
+            to="/eventos"
+            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-6 font-medium"
           >
-            <HiPlus className="w-5 h-5" />
-            Agregar evento
-          </button>
-        )}
-      </div>
-      {loading ? (
-        <div className="text-center text-blue-600 dark:text-blue-300">Cargando eventos...</div>
-      ) : eventos.length === 0 ? (
-        <div className="text-center text-gray-500 dark:text-gray-400">No hay eventos registrados.</div>
-      ) : (
-        <ol className="relative border-l-4 border-blue-200 dark:border-blue-800 ml-2">
-          {eventos.map((e) => (
-            <li
-              key={e.id}
-              className={`mb-8 ml-6 group transition-all duration-300 ${
-                e.importante ? "bg-yellow-50 dark:bg-yellow-900/40" : "bg-blue-50/60 dark:bg-blue-900/40"
-              } rounded-xl shadow hover:shadow-xl hover:scale-[1.02]`}
-            >
-              <span className="absolute -left-6 flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-gray-900 border-4 border-blue-300 dark:border-blue-700 shadow">
-                <HiCalendarDays className="w-7 h-7 text-blue-500" />
-              </span>
-              <div className="p-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${e.importante ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-200" : "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200"}`}>
-                    {new Date(e.fecha).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" })}
-                  </span>
-                  {e.importante && (
-                    <span className="text-xs font-bold text-yellow-600 dark:text-yellow-300 animate-pulse ml-2">¡Importante!</span>
+            <HiArrowLeft className="w-4 h-4" />
+            Volver a eventos
+          </Link>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="p-8">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <HiCalendarDays className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    {eventoDetalle.importante && (
+                      <span className="flex items-center gap-1 px-3 py-1 text-sm font-bold bg-amber-600 text-white rounded-full">
+                        <HiStar className="w-4 h-4" />
+                        IMPORTANTE
+                      </span>
+                    )}
+                    {getDaysUntilEvent(eventoDetalle.fecha) <= 1 && (
+                      <span className="px-3 py-1 text-sm font-bold bg-red-600 text-white rounded-full animate-pulse">
+                        {getDaysUntilEvent(eventoDetalle.fecha) === 0 ? 'HOY' : 'MAÑANA'}
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                    {eventoDetalle.titulo}
+                  </h1>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <HiCalendarDays className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Fecha</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      {formatFecha(eventoDetalle.fecha)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <HiClock className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Hora</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      {formatHora(eventoDetalle.hora)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  {eventoDetalle.es_virtual ? (
+                    <>
+                      <HiGlobeAlt className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Modalidad</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">Virtual</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <HiMapPin className="w-5 h-5 text-red-600 dark:text-red-400" />
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Lugar</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
+                          {eventoDetalle.lugar || 'Presencial'}
+                        </p>
+                      </div>
+                    </>
                   )}
                 </div>
-                <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100 mb-1">{e.titulo}</h3>
-                <p className="text-gray-700 dark:text-gray-200">{e.descripcion}</p>
-                {isAdmin && (
-                  <div className="flex gap-2 mt-3">
-                    <button className="text-xs px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">Editar</button>
-                    <button className="text-xs px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">Eliminar</button>
-                  </div>
-                )}
               </div>
-            </li>
+
+              <div className="prose dark:prose-invert max-w-none mb-8">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                  Detalles del evento
+                </h2>
+                <div className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                  {eventoDetalle.detalles}
+                </div>
+              </div>
+
+              {eventoDetalle.enlace && (
+                <div className="flex gap-4">
+                  <a
+                    href={eventoDetalle.enlace}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    {eventoDetalle.es_virtual ? 'Unirse al evento' : 'Más información'}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vista de lista de eventos
+  return (
+    <div className="p-6">
+      {/* Header y filtros - igual que antes */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+            <HiCalendarDays className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              Eventos y Actividades
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Mantente informado sobre las próximas actividades institucionales
+            </p>
+          </div>
+        </div>
+
+        {/* Filtros */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+              <input
+                type="text"
+                placeholder="Buscar eventos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={showVirtualOnly}
+                  onChange={(e) => setShowVirtualOnly(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">Solo virtuales</span>
+              </label>
+
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={showImportantOnly}
+                  onChange={(e) => setShowImportantOnly(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">Solo importantes</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Loading, error y lista de eventos - igual que antes pero con filteredEventos */}
+      {loading ? (
+        <div className="animate-pulse space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
           ))}
-        </ol>
+        </div>
+      ) : error ? (
+        <div className="text-center text-red-600 dark:text-red-400">
+          <p className="text-lg font-medium">{error}</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {filteredEventos.map((evento) => (
+            <div
+              key={evento.id}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+            >
+              {/* Contenido del evento - similar al anterior pero con datos reales */}
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                    <HiCalendarDays className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      {evento.importante && (
+                        <span className="flex items-center gap-1 px-2 py-1 text-xs font-bold bg-amber-600 text-white rounded-full">
+                          <HiStar className="w-3 h-3" />
+                          IMPORTANTE
+                        </span>
+                      )}
+                      {getDaysUntilEvent(evento.fecha) <= 1 && (
+                        <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-full animate-pulse">
+                          {getDaysUntilEvent(evento.fecha) === 0 ? 'HOY' : 'MAÑANA'}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      {evento.titulo}
+                    </h3>
+
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">
+                      {evento.detalles}
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <HiCalendarDays className="w-4 h-4" />
+                        <span>{formatFecha(evento.fecha)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <HiClock className="w-4 h-4" />
+                        <span>{formatHora(evento.hora)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        {evento.es_virtual ? (
+                          <>
+                            <HiGlobeAlt className="w-4 h-4" />
+                            <span>Virtual</span>
+                          </>
+                        ) : (
+                          <>
+                            <HiMapPin className="w-4 h-4" />
+                            <span>{evento.lugar || 'Presencial'}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Link
+                        to={`/eventos/${evento.id}`}
+                        className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                      >
+                        Ver detalles
+                      </Link>
+
+                      {evento.enlace && (
+                        <a
+                          href={evento.enlace}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                        >
+                          {evento.es_virtual ? 'Unirse' : 'Más info'}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

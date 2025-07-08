@@ -13,6 +13,7 @@ import ProveedoresPage from "../../apps/proveedores/presentation/pages/Proveedor
 import AdministracionPage from "../../apps/administracion/presentation/pages/AdministracionPage";
 import NoticiasPage from "../../apps/menu/presentation/pages/NoticiasPage";
 import EventosPage from "../../apps/menu/presentation/pages/EventosPage";
+import FuncionariosPage from "../../apps/menu/presentation/pages/FuncionariosPage";
 
 export default function AppRouter() {
   const { isAuthenticated, roles } = useAuthContext();
@@ -48,7 +49,10 @@ export default function AppRouter() {
         },
         { path: "menu", element: <MenuPage /> },
         { path: "eventos", element: <EventosPage /> },
+        { path: "eventos/:id", element: <EventosPage /> },
         { path: "noticias", element: <NoticiasPage /> },
+        { path: "noticias/:id", element: <NoticiasPage /> },
+        { path: "funcionarios", element: <FuncionariosPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "auditorias", element: <AuditoriasPage /> },
         { path: "indicadores", element: <IndicadoresPage /> },
