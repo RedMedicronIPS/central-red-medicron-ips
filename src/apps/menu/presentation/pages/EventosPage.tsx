@@ -4,6 +4,12 @@ import { HiCalendarDays, HiMapPin, HiClock, HiGlobeAlt, HiStar, HiArrowLeft } fr
 import { HiSearch } from "react-icons/hi";
 import { MenuApiService } from "../../infrastructure/services/MenuApiService";
 import type { Evento } from "../../domain/types";
+import { HiPlus } from "react-icons/hi2";
+import CrudModal from "../components/CrudModal";
+import { EventoCrudService } from "../../application/services/EventoCrudService";
+import EventoForm from "../components/EventoForm";
+import { useMenuPermissions } from "../hooks/useMenuPermissions";
+import type { CreateEventoRequest } from "../../domain/types";
 
 export default function EventosPage() {
   const { id } = useParams();
@@ -14,6 +20,32 @@ export default function EventosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showVirtualOnly, setShowVirtualOnly] = useState(false);
   const [showImportantOnly, setShowImportantOnly] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [crudLoading, setCrudLoading] = useState(false);
+  const eventoCrudService = new EventoCrudService();
+  const { isAdmin } = useMenuPermissions();
+
+  // Maneja la creación de un nuevo evento
+  const handleCreate = (eventoData: CreateEventoRequest) => {
+    setCrudLoading(true);
+    setError(null);
+    eventoCrudService.createEvento(eventoData)
+      .then((nuevoEvento) => {
+        // Si createEvento retorna un objeto tipo { data: Evento }, ajusta aquí:
+        const eventoToAdd = (nuevoEvento as any).data
+          ? (nuevoEvento as any).data as Evento
+          : (nuevoEvento as unknown as Evento);
+        setEventos((prev) => [eventoToAdd, ...prev]);
+        setShowCreateModal(false);
+      })
+      .catch((err) => {
+        setError("Error al crear el evento");
+        console.error("Error creating evento:", err);
+      })
+      .finally(() => {
+        setCrudLoading(false);
+      });
+  };
 
   useEffect(() => {
     if (id) {
@@ -198,18 +230,29 @@ export default function EventosPage() {
     <div className="p-6">
       {/* Header y filtros - igual que antes */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-            <HiCalendarDays className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <HiCalendarDays className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Eventos y Actividades
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Mantente informado sobre las próximas actividades institucionales
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Eventos y Actividades
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Mantente informado sobre las próximas actividades institucionales
-            </p>
-          </div>
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <HiPlus className="w-5 h-5" />
+              Agregar evento
+            </button>
+          )}
         </div>
 
         {/* Filtros */}
@@ -349,6 +392,21 @@ export default function EventosPage() {
           ))}
         </div>
       )}
+
+      {/* Modales CRUD */}
+      <CrudModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Crear Evento"
+        onSubmit={() => {}}
+        loading={crudLoading}
+        submitText="Crear"
+      >
+        <EventoForm
+          onSubmit={handleCreate}
+          loading={crudLoading}
+        />
+      </CrudModal>
     </div>
   );
 }

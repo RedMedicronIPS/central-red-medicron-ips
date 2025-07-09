@@ -5,11 +5,16 @@ import {
   HiCalendar, 
   HiExclamationTriangle, 
   HiArrowLeft, 
-  HiGlobeAlt
+  HiGlobeAlt,
+  HiPlus
 } from "react-icons/hi2";
 import { HiSearch } from "react-icons/hi";
 import { ContenidoService } from "../../application/services/ContenidoService"; // 👈 USAR SERVICE
-import type { ContenidoInformativo, TipoContenido } from "../../domain/types";
+import type { ContenidoInformativo, TipoContenido, CreateContenidoRequest } from "../../domain/types";
+import CrudModal from "../components/CrudModal";
+import { ContenidoCrudService } from "../../application/services/ContenidoCrudService";
+import ContenidoForm from "../components/ContenidoForm";
+import { useMenuPermissions } from "../hooks/useMenuPermissions";
 
 export default function NoticiasPage() {
   const { id } = useParams();
@@ -20,6 +25,10 @@ export default function NoticiasPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTipo, setSelectedTipo] = useState<TipoContenido>('todos');
   const [showUrgentOnly, setShowUrgentOnly] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [crudLoading, setCrudLoading] = useState(false);
+  const contenidoCrudService = new ContenidoCrudService();
+  const { isAdmin } = useMenuPermissions();
 
   const contenidoService = new ContenidoService(); // 👈 USAR SERVICE
 
@@ -91,6 +100,20 @@ export default function NoticiasPage() {
     setSearchTerm('');
     setSelectedTipo('todos');
     setShowUrgentOnly(false);
+  };
+
+  const handleCreate = async (data: CreateContenidoRequest) => {
+    setCrudLoading(true);
+    const result = await contenidoCrudService.createContenido(data);
+    if (result.success) {
+      setShowCreateModal(false);
+      fetchContenidos();
+      // TODO: Mostrar toast de éxito
+    } else {
+      // TODO: Mostrar toast de error
+      console.error(result.message);
+    }
+    setCrudLoading(false);
   };
 
   if (loading) {
@@ -192,18 +215,29 @@ export default function NoticiasPage() {
     <div className="p-6">
       {/* Header y filtros */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-            <HiNewspaper className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <HiNewspaper className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Noticias y Comunicados
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Mantente informado con las últimas noticias y comunicados oficiales
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Noticias y Comunicados
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Mantente informado con las últimas noticias y comunicados oficiales
-            </p>
-          </div>
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <HiPlus className="w-5 h-5" />
+              Agregar noticia
+            </button>
+          )}
         </div>
 
         {/* Filtros */}
@@ -341,6 +375,21 @@ export default function NoticiasPage() {
           ))}
         </div>
       )}
+
+      {/* Modales CRUD */}
+      <CrudModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Crear Noticia o Comunicado"
+        onSubmit={() => {}}
+        loading={crudLoading}
+        submitText="Crear"
+      >
+        <ContenidoForm
+          onSubmit={handleCreate}
+          loading={crudLoading}
+        />
+      </CrudModal>
     </div>
   );
 }

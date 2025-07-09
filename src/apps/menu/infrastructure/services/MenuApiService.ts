@@ -203,7 +203,7 @@ export class MenuApiService {
     return response.data; }
 
   static async getEvento(id: number): Promise<Evento> { 
-    const response = await axiosInstance.get(`/main/eventos/${id}/`); 
+    const response = await axiosInstance.get("/main/eventos/${id}/"); 
     return response.data; }
 
   // ================ CONSULTA FELICITACIONES Y RECONOCIMIENTOS ================ 
@@ -214,5 +214,6 @@ export class MenuApiService {
   static async getReconocimientosPublicados(): Promise<Reconocimiento[]> { 
     const response = await axiosInstance.get("/main/reconocimientos/?publicar=true"); 
     return response.data; }
+
 
 }
