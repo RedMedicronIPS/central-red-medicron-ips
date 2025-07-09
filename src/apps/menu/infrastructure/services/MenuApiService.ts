@@ -21,12 +21,12 @@ import type {
 export class MenuApiService {
   // ================ SEDES (HEADQUARTERS) ================
   static async getHeadquarters(): Promise<Headquarters[]> {
-    const response = await axiosInstance.get("/main/headquarters/");
+    const response = await axiosInstance.get("/companies/headquarters/");
     return response.data;
   }
 
   static async getHeadquarter(id: number): Promise<Headquarters> {
-    const response = await axiosInstance.get(`/main/headquarters/${id}/`);
+    const response = await axiosInstance.get(`/companies/headquarters/${id}/`);
     return response.data;
   }
 
@@ -166,7 +166,7 @@ export class MenuApiService {
 
   // ================ CONSULTA CONTENIDOS INFORMATIVOS ================
   static async getContenidos(): Promise<ContenidoInformativo[]> {
-    const response = await axiosInstance.get("/main/contenidos/");
+    const response = await axiosInstance.get(`/main/contenidos/`);
     return response.data;
   }
 
@@ -187,32 +187,32 @@ export class MenuApiService {
 
   //================ CONSULTA EVENTOS ================ 
   static async getEventos(): Promise<Evento[]> { 
-    const response = await axiosInstance.get("/main/eventos/"); 
+    const response = await axiosInstance.get(`/main/eventos/`); 
     return response.data; }
 
   static async getEventosProximos(): Promise<Evento[]> { 
-    const response = await axiosInstance.get("/main/eventos/?proximos=true"); 
+    const response = await axiosInstance.get(`/main/eventos/?proximos=true`); 
     return response.data; }
 
   static async getEventosImportantes(): Promise<Evento[]> { 
-    const response = await axiosInstance.get("/main/eventos/?importante=true"); 
+    const response = await axiosInstance.get(`/main/eventos/?importante=true`); 
     return response.data; }
 
   static async getEventosVirtuales(): Promise<Evento[]> { 
-    const response = await axiosInstance.get("/main/eventos/?es_virtual=true"); 
+    const response = await axiosInstance.get(`/main/eventos/?es_virtual=true`); 
     return response.data; }
 
   static async getEvento(id: number): Promise<Evento> { 
-    const response = await axiosInstance.get("/main/eventos/${id}/"); 
+    const response = await axiosInstance.get(`/main/eventos/${id}/`); 
     return response.data; }
 
   // ================ CONSULTA FELICITACIONES Y RECONOCIMIENTOS ================ 
   static async getFelicitacionesMes(): Promise<FelicitacionCumpleanios[]> { 
-    const response = await axiosInstance.get("/main/felicitaciones/?mes=actual"); 
+    const response = await axiosInstance.get(`/main/felicitaciones/?mes=actual`); 
     return response.data; }
 
   static async getReconocimientosPublicados(): Promise<Reconocimiento[]> { 
-    const response = await axiosInstance.get("/main/reconocimientos/?publicar=true"); 
+    const response = await axiosInstance.get(`/main/reconocimientos/?publicar=true`); 
     return response.data; }
 
 

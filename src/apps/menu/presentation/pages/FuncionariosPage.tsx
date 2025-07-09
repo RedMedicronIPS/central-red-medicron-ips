@@ -80,7 +80,7 @@ export default function FuncionariosPage() {
       ...(typeof (data as any).foto !== "undefined" ? { foto: (data as any).foto } : {}),
     };
     const result = await funcionarioCrudService.createFuncionario(createData);
-    
+
     if (result.success) {
       setShowCreateModal(false);
       fetchFuncionarios();
@@ -100,7 +100,7 @@ export default function FuncionariosPage() {
     }
     setCrudLoading(true);
     const result = await funcionarioCrudService.updateFuncionario(data);
-    
+
     if (result.success) {
       setShowEditModal(false);
       setSelectedFuncionario(null);
@@ -115,10 +115,10 @@ export default function FuncionariosPage() {
 
   const handleDelete = async () => {
     if (!selectedFuncionario) return;
-    
+
     setCrudLoading(true);
     const result = await funcionarioCrudService.deleteFuncionario(selectedFuncionario.id);
-    
+
     if (result.success) {
       setShowDeleteModal(false);
       setSelectedFuncionario(null);
@@ -207,7 +207,7 @@ export default function FuncionariosPage() {
               </p>
             </div>
           </div>
-          
+
           {canManageFuncionarios && (
             <button
               onClick={() => setShowCreateModal(true)}
@@ -230,7 +230,7 @@ export default function FuncionariosPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
             <div className="flex items-center">
               <HiOfficeBuilding className="w-8 h-8 text-green-600 dark:text-green-400 mr-3" />
@@ -242,7 +242,7 @@ export default function FuncionariosPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
             <div className="flex items-center">
               <HiUserCircle className="w-8 h-8 text-purple-600 dark:text-purple-400 mr-3" />
@@ -269,7 +269,7 @@ export default function FuncionariosPage() {
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
               />
             </div>
-            
+
             <select
               value={selectedSede}
               onChange={(e) => setSelectedSede(parseInt(e.target.value) || 0)}
@@ -280,7 +280,7 @@ export default function FuncionariosPage() {
                 <option key={sede.id} value={sede.id}>{sede.nombre}</option>
               ))}
             </select>
-            
+
             <select
               value={selectedCargo}
               onChange={(e) => setSelectedCargo(e.target.value)}
@@ -291,7 +291,7 @@ export default function FuncionariosPage() {
                 <option key={cargo} value={cargo}>{cargo}</option>
               ))}
             </select>
-            
+
             <button
               onClick={clearFilters}
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -317,7 +317,7 @@ export default function FuncionariosPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredFuncionarios.map((funcionario) => {
             const photoUrl = getProfilePicUrl(funcionario.foto);
-            
+
             return (
               <div
                 key={funcionario.id}
@@ -336,37 +336,37 @@ export default function FuncionariosPage() {
                         }}
                       />
                     ) : null}
-                    <HiUserCircle 
-                      className={`w-20 h-20 text-gray-400 mb-4 ${photoUrl ? 'hidden' : ''}`} 
+                    <HiUserCircle
+                      className={`w-20 h-20 text-gray-400 mb-4 ${photoUrl ? 'hidden' : ''}`}
                     />
-                    
+
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                       {funcionario.nombres} {funcionario.apellidos}
                     </h3>
-                    
+
                     <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mb-2">
                       {funcionario.cargo}
                     </p>
-                    
+
                     <div className="w-full space-y-2 text-sm">
                       <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300">
                         <HiOfficeBuilding className="w-4 h-4" />
                         <span>{funcionario.sede_info?.nombre || 'Sede no asignada'}</span> {/* 👈 Mostrar nombre de sede */}
                       </div>
-                      
+
                       <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300">
                         <HiPhone className="w-4 h-4" />
-                        <a 
+                        <a
                           href={`tel:${funcionario.telefono}`}
                           className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                         >
                           {funcionario.telefono}
                         </a>
                       </div>
-                      
+
                       <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300">
                         <HiMail className="w-4 h-4" />
-                        <a 
+                        <a
                           href={`mailto:${funcionario.correo}`}
                           className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-xs truncate"
                           title={funcionario.correo}
@@ -374,14 +374,14 @@ export default function FuncionariosPage() {
                           {funcionario.correo}
                         </a>
                       </div>
-                      
+
                       <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           Cumpleaños: {formatFechaNacimiento(funcionario.fecha_nacimiento)}
                         </p>
                       </div>
                     </div>
-                    
+
                     {/* Botones CRUD */}
                     {canManageFuncionarios && (
                       <div className="flex gap-2 mt-4 w-full">
@@ -414,14 +414,12 @@ export default function FuncionariosPage() {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title="Crear Funcionario"
-        onSubmit={() => {
-          // El submit se maneja desde el formulario
-        }}
         loading={crudLoading}
         submitText="Crear"
       >
         <FuncionarioForm
           onSubmit={handleCreate}
+          onCancel={() => setShowCreateModal(false)}
           loading={crudLoading}
         />
       </CrudModal>

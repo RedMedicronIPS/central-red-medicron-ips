@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { 
-  HiNewspaper, 
-  HiCalendar, 
-  HiExclamationTriangle, 
-  HiArrowLeft, 
+import {
+  HiNewspaper,
+  HiCalendar,
+  HiExclamationTriangle,
+  HiArrowLeft,
   HiGlobeAlt,
   HiPlus
 } from "react-icons/hi2";
@@ -84,15 +84,15 @@ export default function NoticiasPage() {
 
   const getTipoColor = (tipo: string, urgente: boolean) => {
     if (urgente) return 'text-red-600 dark:text-red-400';
-    return tipo === 'comunicado' 
-      ? 'text-blue-600 dark:text-blue-400' 
+    return tipo === 'comunicado'
+      ? 'text-blue-600 dark:text-blue-400'
       : 'text-green-600 dark:text-green-400';
   };
 
   const getTipoBgColor = (tipo: string, urgente: boolean) => {
     if (urgente) return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
-    return tipo === 'comunicado' 
-      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' 
+    return tipo === 'comunicado'
+      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
       : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
   };
 
@@ -253,7 +253,7 @@ export default function NoticiasPage() {
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             </div>
-            
+
             <select
               value={selectedTipo}
               onChange={(e) => setSelectedTipo(e.target.value as 'todos' | 'noticia' | 'comunicado')}
@@ -263,7 +263,7 @@ export default function NoticiasPage() {
               <option value="noticia">Solo noticias</option>
               <option value="comunicado">Solo comunicados</option>
             </select>
-            
+
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -273,7 +273,7 @@ export default function NoticiasPage() {
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">Solo urgentes</span>
             </label>
-            
+
             <button
               onClick={clearFilters}
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -308,24 +308,24 @@ export default function NoticiasPage() {
               <div className="flex items-start gap-4">
                 <div className={`
                   p-3 rounded-lg flex-shrink-0
-                  ${contenido.urgente 
-                    ? 'bg-red-100 dark:bg-red-800' 
-                    : contenido.tipo === 'comunicado' 
-                      ? 'bg-blue-100 dark:bg-blue-800' 
+                  ${contenido.urgente
+                    ? 'bg-red-100 dark:bg-red-800'
+                    : contenido.tipo === 'comunicado'
+                      ? 'bg-blue-100 dark:bg-blue-800'
                       : 'bg-green-100 dark:bg-green-800'
                   }
                 `}>
                   <HiNewspaper className={`w-5 h-5 ${getTipoColor(contenido.tipo, contenido.urgente)}`} />
                 </div>
-                
+
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`
                       px-2 py-1 text-xs font-medium rounded-full
-                      ${contenido.urgente 
-                        ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200' 
-                        : contenido.tipo === 'comunicado' 
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200' 
+                      ${contenido.urgente
+                        ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200'
+                        : contenido.tipo === 'comunicado'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200'
                           : 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
                       }
                     `}>
@@ -341,15 +341,15 @@ export default function NoticiasPage() {
                       {formatFecha(contenido.fecha)}
                     </div>
                   </div>
-                  
+
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     {contenido.titulo}
                   </h3>
-                  
+
                   <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
                     {contenido.contenido}
                   </p>
-                  
+
                   <div className="flex items-center justify-between">
                     <Link
                       to={`/noticias/${contenido.id}`}
@@ -357,7 +357,7 @@ export default function NoticiasPage() {
                     >
                       Leer más
                     </Link>
-                    
+
                     {contenido.enlace && (
                       <a
                         href={contenido.enlace}
@@ -381,12 +381,12 @@ export default function NoticiasPage() {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title="Crear Noticia o Comunicado"
-        onSubmit={() => {}}
         loading={crudLoading}
         submitText="Crear"
       >
         <ContenidoForm
           onSubmit={handleCreate}
+          onCancel={() => setShowCreateModal(false)}
           loading={crudLoading}
         />
       </CrudModal>

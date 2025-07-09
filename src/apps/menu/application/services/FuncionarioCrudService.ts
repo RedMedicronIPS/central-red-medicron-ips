@@ -22,10 +22,13 @@ export class FuncionarioCrudService {
         message: 'Funcionario creado exitosamente'
       };
     } catch (error: any) {
-      console.error('Error creating funcionario:', error);
+      // Mostrar el mensaje real del backend si existe
+      const backendMsg = error.response?.data
+        ? JSON.stringify(error.response.data)
+        : (error.response?.data?.message || 'Error al crear funcionario');
       return {
         success: false,
-        message: error.response?.data?.message || 'Error al crear funcionario'
+        message: backendMsg
       };
     }
   }
