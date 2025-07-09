@@ -85,7 +85,7 @@ export class MenuApiService {
         if (key === 'sede') {
           formData.append(key, value.toString()); // 👈 Convertir sede a string
         } else {
-          formData.append(key, value);
+          formData.append(key, value instanceof File ? value : value.toString());
         }
       }
     });
@@ -163,4 +163,56 @@ export class MenuApiService {
   static async deleteFelicitacion(id: number): Promise<void> {
     await axiosInstance.delete(`/main/felicitaciones/${id}/`);
   }
+
+  // ================ CONSULTA CONTENIDOS INFORMATIVOS ================
+  static async getContenidos(): Promise<ContenidoInformativo[]> {
+    const response = await axiosInstance.get("/main/contenidos/");
+    return response.data;
+  }
+
+  static async getContenidosByTipo(tipo: 'noticia' | 'comunicado'): Promise<ContenidoInformativo[]> {
+    const response = await axiosInstance.get(`/main/contenidos/?tipo=${tipo}`);
+    return response.data;
+  }
+
+  static async getContenidosUrgentes(): Promise<ContenidoInformativo[]> {
+    const response = await axiosInstance.get(`/main/contenidos/?urgente=true`);
+    return response.data;
+  }
+
+  static async getContenido(id: number): Promise<ContenidoInformativo> {
+    const response = await axiosInstance.get(`/main/contenidos/${id}/`);
+    return response.data;
+  }
+
+  //================ CONSULTA EVENTOS ================ 
+  static async getEventos(): Promise<Evento[]> { 
+    const response = await axiosInstance.get("/main/eventos/"); 
+    return response.data; }
+
+  static async getEventosProximos(): Promise<Evento[]> { 
+    const response = await axiosInstance.get("/main/eventos/?proximos=true"); 
+    return response.data; }
+
+  static async getEventosImportantes(): Promise<Evento[]> { 
+    const response = await axiosInstance.get("/main/eventos/?importante=true"); 
+    return response.data; }
+
+  static async getEventosVirtuales(): Promise<Evento[]> { 
+    const response = await axiosInstance.get("/main/eventos/?es_virtual=true"); 
+    return response.data; }
+
+  static async getEvento(id: number): Promise<Evento> { 
+    const response = await axiosInstance.get(`/main/eventos/${id}/`); 
+    return response.data; }
+
+  // ================ CONSULTA FELICITACIONES Y RECONOCIMIENTOS ================ 
+  static async getFelicitacionesMes(): Promise<FelicitacionCumpleanios[]> { 
+    const response = await axiosInstance.get("/main/felicitaciones/?mes=actual"); 
+    return response.data; }
+
+  static async getReconocimientosPublicados(): Promise<Reconocimiento[]> { 
+    const response = await axiosInstance.get("/main/reconocimientos/?publicar=true"); 
+    return response.data; }
+
 }

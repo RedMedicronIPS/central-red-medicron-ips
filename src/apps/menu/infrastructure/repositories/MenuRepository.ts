@@ -45,6 +45,7 @@ export class MenuRepository {
     return MenuApiService.getFuncionariosByCargo(cargo);
   }
 
+
   // ================ CRUD FUNCIONARIOS (ACTUALIZADOS) ================
   async createFuncionario(data: CreateFuncionarioRequest): Promise<Funcionario> {
     return MenuApiService.createFuncionario(data);
@@ -108,5 +109,52 @@ export class MenuRepository {
 
   async deleteFelicitacion(id: number): Promise<void> {
     return MenuApiService.deleteFelicitacion(id);
+  }
+
+  // ================ CONSULTA CONTENIDOS INFORMATIVOS ================
+  async getContenidos(): Promise<ContenidoInformativo[]> {
+    return MenuApiService.getContenidos();
+  }
+
+  async getContenidosByTipo(tipo: 'noticia' | 'comunicado'): Promise<ContenidoInformativo[]> {
+    return MenuApiService.getContenidosByTipo(tipo);
+  }
+
+  async getContenidosUrgentes(): Promise<ContenidoInformativo[]> {
+    return MenuApiService.getContenidosUrgentes();
+  }
+
+  async getContenido(id: number): Promise<ContenidoInformativo> {
+    return MenuApiService.getContenido(id);
+  }
+
+  // ================ CONSULTA EVENTOS ================
+  async getEventos(): Promise<Evento[]> {
+    return MenuApiService.getEventos();
+  }
+
+  async getEventosProximos(): Promise<Evento[]> {
+    return MenuApiService.getEventosProximos();
+  }
+
+  async getEventosImportantes(): Promise<Evento[]> {
+    return MenuApiService.getEventosImportantes();
+  }
+
+  async getEventosVirtuales(): Promise<Evento[]> {
+    return MenuApiService.getEventosVirtuales();
+  }
+
+  async getEvento(id: number): Promise<Evento> {
+    return MenuApiService.getEvento(id);
+  }
+
+  // ================ CONSULTA FELICITACIONES Y RECONOCIMIENTOS ================
+  async getFelicitacionesMes(): Promise<FelicitacionCumpleanios[]> {
+    return MenuApiService.getFelicitacionesMes();
+  }
+
+  async getReconocimientosPublicados(): Promise<Reconocimiento[]> {
+    return MenuApiService.getReconocimientosPublicados();
   }
 }
