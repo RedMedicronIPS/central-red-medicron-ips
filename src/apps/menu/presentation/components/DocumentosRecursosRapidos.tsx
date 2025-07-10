@@ -187,7 +187,7 @@ export default function DocumentosRecursosRapidos() {
             </div>
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-700 via-gray-700 to-slate-600 dark:from-slate-200 dark:via-gray-200 dark:to-slate-300 bg-clip-text text-transparent mb-2">
-            Documentos y Recursos
+            Documentos y Recursos Rapidos
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
             Accede rápidamente a todos los documentos importantes de la institución
