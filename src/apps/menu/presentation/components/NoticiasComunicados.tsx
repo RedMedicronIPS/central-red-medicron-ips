@@ -4,6 +4,7 @@ import { HiExclamationTriangle, HiArrowRight, HiCalendar, HiEye } from "react-ic
 import { HiSpeakerphone } from "react-icons/hi";
 import { ContenidoService } from "../../application/services/ContenidoService"; // 👈 USAR SERVICE
 import type { ContenidoInformativo } from "../../domain/types";
+import { formatDisplayDate } from "../../../../shared/utils/dateUtils";
 
 export default function NoticiasComunicados() {
   const [contenidos, setContenidos] = useState<ContenidoInformativo[]>([]);
@@ -32,11 +33,11 @@ export default function NoticiasComunicados() {
   }, []);
 
   const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString('es-ES', {
+    return formatDisplayDate(fecha, {
       day: '2-digit',
       month: 'short',
       year: 'numeric'
-    });
+    }); // 👈 USAR UTILIDAD
   };
 
   const getTipoIcon = (tipo: string) => {

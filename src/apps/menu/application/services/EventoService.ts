@@ -1,5 +1,6 @@
 import { MenuRepository } from "../../infrastructure/repositories/MenuRepository";
 import type { Evento } from "../../domain/types";
+import { getDaysUntilDate } from "../../../../shared/utils/dateUtils";
 
 export class EventoService {
   private repository: MenuRepository;
@@ -71,10 +72,7 @@ export class EventoService {
   }
 
   getDaysUntilEvent(fecha: string): number {
-    const today = new Date();
-    const eventDate = new Date(fecha);
-    const diffTime = eventDate.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return getDaysUntilDate(fecha);
   }
 
   private sortByDate(eventos: Evento[]): Evento[] {

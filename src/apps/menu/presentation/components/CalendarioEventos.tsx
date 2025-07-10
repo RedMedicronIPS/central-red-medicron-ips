@@ -11,6 +11,7 @@ import {
 } from "react-icons/hi2";
 import { EventoService } from "../../application/services/EventoService"; // 👈 USAR SERVICE
 import type { Evento } from "../../domain/types";
+import { formatDisplayDate, getDaysUntilDate } from "../../../../shared/utils/dateUtils";
 
 export default function CalendarioEventos() {
   const [eventos, setEventos] = useState<Evento[]>([]);
@@ -39,12 +40,12 @@ export default function CalendarioEventos() {
   }, []);
 
   const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString('es-ES', {
+    return formatDisplayDate(fecha, {
       weekday: 'long',
       day: '2-digit',
       month: 'long',
       year: 'numeric'
-    });
+    }); // 👈 USAR UTILIDAD
   };
 
   const formatHora = (hora: string) => {
@@ -55,7 +56,7 @@ export default function CalendarioEventos() {
   };
 
   const getDaysUntilEvent = (fecha: string) => {
-    return eventoService.getDaysUntilEvent(fecha); // 👈 USAR SERVICE
+    return getDaysUntilDate(fecha); // 👈 USAR UTILIDAD
   };
 
   const getEventColor = (importante: boolean, daysUntil: number) => {

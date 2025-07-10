@@ -3,6 +3,7 @@ import { HiUser, HiPhone, HiIdentification, HiCalendar } from "react-icons/hi2";
 import { HiOfficeBuilding, HiMail } from "react-icons/hi";
 import { FuncionarioService } from "../../application/services/FuncionarioService";
 import type { Funcionario, Headquarters, CreateFuncionarioRequest, UpdateFuncionarioRequest } from "../../domain/types";
+import { formatDateToInput, getCurrentLocalDate } from "../../../../shared/utils/dateUtils";
 
 interface FuncionarioFormProps {
   funcionario?: Funcionario | null;
@@ -53,20 +54,19 @@ export default function FuncionarioForm({ funcionario, onSubmit, loading = false
         documento: funcionario.documento,
         nombres: funcionario.nombres,
         apellidos: funcionario.apellidos,
-        fecha_nacimiento: funcionario.fecha_nacimiento,
+        fecha_nacimiento: formatDateToInput(funcionario.fecha_nacimiento), // 👈 USAR UTILIDAD
         cargo: funcionario.cargo,
-        sede: funcionario.sede.id, // 👈 CORREGIR: extraer ID
+        sede: funcionario.sede.id,
         telefono: funcionario.telefono,
         correo: funcionario.correo,
         foto: null
       });
     } else {
-      // 👈 NUEVO: Limpiar formulario para creación
       setFormData({
         documento: '',
         nombres: '',
         apellidos: '',
-        fecha_nacimiento: '',
+        fecha_nacimiento: getCurrentLocalDate(), // 👈 FECHA ACTUAL POR DEFECTO
         cargo: '',
         sede: 0,
         telefono: '',
@@ -74,7 +74,7 @@ export default function FuncionarioForm({ funcionario, onSubmit, loading = false
         foto: null
       });
     }
-    setErrors({}); // Limpiar errores
+    setErrors({});
   }, [funcionario]);
 
   const validateForm = () => {

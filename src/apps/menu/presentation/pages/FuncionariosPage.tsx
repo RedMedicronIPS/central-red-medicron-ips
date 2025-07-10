@@ -9,6 +9,7 @@ import type { Funcionario, CreateFuncionarioRequest, UpdateFuncionarioRequest } 
 import CrudModal from "../components/CrudModal";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import FuncionarioForm from "../components/FuncionarioForm";
+import { formatBirthdayDate } from "../../../../shared/utils/dateUtils";
 
 export default function FuncionariosPage() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
@@ -131,10 +132,7 @@ export default function FuncionariosPage() {
   };
 
   const formatFechaNacimiento = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'long'
-    });
+    return formatBirthdayDate(fecha); // 👈 USAR UTILIDAD
   };
 
   const clearFilters = () => {

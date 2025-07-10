@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { HiGift, HiStar, HiUserCircle, HiArrowRight, HiExclamationTriangle } from "react-icons/hi2";
 import { MenuApiService } from "../../infrastructure/services/MenuApiService";
 import type { FelicitacionCumpleanios, Reconocimiento, Funcionario } from "../../domain/types";
+import { formatBirthdayDate, formatDisplayDate } from "../../../../shared/utils/dateUtils";
 
 export default function ReconocimientosCumpleanios() {
   const [felicitaciones, setFelicitaciones] = useState<FelicitacionCumpleanios[]>([]);
@@ -47,10 +48,7 @@ export default function ReconocimientosCumpleanios() {
   };
 
   const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'short'
-    });
+    return formatBirthdayDate(fecha); // 👈 USAR UTILIDAD
   };
 
   if (loading) {

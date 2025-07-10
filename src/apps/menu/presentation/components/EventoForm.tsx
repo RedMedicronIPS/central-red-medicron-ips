@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { HiCalendarDays, HiClock, HiMapPin, HiGlobeAlt } from "react-icons/hi2";
 import type { Evento, CreateEventoRequest, UpdateEventoRequest } from "../../domain/types";
+import { formatDateToInput, getCurrentLocalDate } from "../../../../shared/utils/dateUtils";
 
 interface EventoFormProps {
   evento?: Evento | null;
@@ -26,7 +27,7 @@ export default function EventoForm({ evento, onSubmit, loading = false }: Evento
     if (evento) {
       setFormData({
         titulo: evento.titulo,
-        fecha: evento.fecha,
+        fecha: formatDateToInput(evento.fecha), // 👈 USAR UTILIDAD
         hora: evento.hora,
         detalles: evento.detalles,
         es_virtual: evento.es_virtual,
@@ -37,7 +38,7 @@ export default function EventoForm({ evento, onSubmit, loading = false }: Evento
     } else {
       setFormData({
         titulo: '',
-        fecha: '',
+        fecha: getCurrentLocalDate(), // 👈 FECHA ACTUAL POR DEFECTO
         hora: '',
         detalles: '',
         es_virtual: false,
