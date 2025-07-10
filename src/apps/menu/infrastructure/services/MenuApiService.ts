@@ -284,8 +284,13 @@ export class MenuApiService {
 
   // 👈 MÉTODO YA AGREGADO: Obtener TODAS las felicitaciones para gestión
   static async getAllFelicitaciones(): Promise<FelicitacionCumpleanios[]> {
-    const response = await axiosInstance.get(`/main/felicitaciones/`);
-    return response.data;
+    try {
+      const response = await axiosInstance.get<FelicitacionCumpleanios[]>('/main/felicitaciones/');
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener todas las felicitaciones:', error);
+      throw error;
+    }
   }
 
   static async getReconocimientosPublicados(): Promise<Reconocimiento[]> {

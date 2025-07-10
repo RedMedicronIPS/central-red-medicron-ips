@@ -44,6 +44,9 @@ export default function FuncionariosPage() {
   const [selectedFelicitacion, setSelectedFelicitacion] = useState<FelicitacionCumpleanios | null>(null);
   const [funcionarioParaFelicitacion, setFuncionarioParaFelicitacion] = useState<Funcionario | null>(null);
 
+  // Nuevo estado para almacenar las felicitaciones existentes
+  const [felicitacionesExistentes, setFelicitacionesExistentes] = useState<FelicitacionCumpleanios[]>([]);
+
   const funcionarioService = new FuncionarioService();
   const funcionarioCrudService = new FuncionarioCrudService();
   const reconocimientoCrudService = new ReconocimientoCrudService();
@@ -51,7 +54,11 @@ export default function FuncionariosPage() {
   const { canManageFuncionarios, canManageReconocimientos } = useMenuPermissions();
 
   useEffect(() => {
-    fetchFuncionarios();
+    const loadData = async () => {
+      await fetchFuncionarios();
+      await fetchFelicitaciones();
+    };
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -71,6 +78,16 @@ export default function FuncionariosPage() {
 
     setFilteredFuncionarios(filtered);
   }, [funcionarios, searchTerm, selectedSede, selectedCargo, funcionarioService]);
+
+  // Función para cargar las felicitaciones existentes
+  const fetchFelicitaciones = async () => {
+    try {
+      const felicitaciones = await felicitacionCrudService.getAllFelicitaciones();
+      setFelicitacionesExistentes(felicitaciones);
+    } catch (error) {
+      console.error('Error al cargar felicitaciones:', error);
+    }
+  };
 
   const fetchFuncionarios = async () => {
     try {
@@ -131,24 +148,20 @@ export default function FuncionariosPage() {
   const handleSubmitFelicitacion = async (data: CreateFelicitacionRequest | UpdateFelicitacionRequest) => {
     setCrudLoading(true);
     
-    let result;
+    // Solo permitir actualizaciones
     if ('id' in data) {
-      result = await felicitacionCrudService.updateFelicitacion(data as UpdateFelicitacionRequest);
+      const result = await felicitacionCrudService.updateFelicitacion(data as UpdateFelicitacionRequest);
       if (result.success) {
         setShowEditFelicitacionModal(false);
         setSelectedFelicitacion(null);
         setFuncionarioParaFelicitacion(null);
+        // Recargar felicitaciones después de actualizar
+        await fetchFelicitaciones();
+      } else {
+        console.error('Error al actualizar felicitación:', result.message);
       }
     } else {
-      result = await felicitacionCrudService.createFelicitacion(data as CreateFelicitacionRequest);
-      if (result.success) {
-        setShowCreateFelicitacionModal(false);
-        setFuncionarioParaFelicitacion(null);
-      }
-    }
-    
-    if (!result.success) {
-      console.error(result.message);
+      console.error('Error: Solo se permiten actualizaciones de felicitaciones');
     }
     
     setCrudLoading(false);
@@ -163,6 +176,8 @@ export default function FuncionariosPage() {
     if (result.success) {
       setShowDeleteFelicitacionModal(false);
       setSelectedFelicitacion(null);
+      // Recargar felicitaciones después de eliminar
+      await fetchFelicitaciones();
     } else {
       console.error(result.message);
     }
@@ -175,9 +190,57 @@ export default function FuncionariosPage() {
     setShowCreateReconocimientoModal(true);
   };
 
-  const openCreateFelicitacionModal = (funcionario: Funcionario) => {
-    setFuncionarioParaFelicitacion(funcionario);
-    setShowCreateFelicitacionModal(true);
+  // Función modificada para manejar felicitaciones - SOLO EDITAR
+  const handleFelicitacionAction = async (funcionario: Funcionario) => {
+    // Siempre buscar la felicitación existente (debe existir porque el backend la crea automáticamente)
+    const felicitacionExistente = felicitacionesExistentes.find(
+      fel => fel.funcionario.id === funcionario.id
+    );
+
+    if (felicitacionExistente) {
+      // Abrir modal de edición
+      setSelectedFelicitacion(felicitacionExistente);
+      setFuncionarioParaFelicitacion(funcionario);
+      setShowEditFelicitacionModal(true);
+    } else {
+      // Si por alguna razón no existe, recargar felicitaciones e intentar de nuevo
+      console.warn('Felicitación no encontrada, recargando datos...');
+      await fetchFelicitaciones();
+      
+      // Buscar nuevamente después de recargar
+      const felicitacionActualizada = felicitacionesExistentes.find(
+        fel => fel.funcionario.id === funcionario.id
+      );
+      
+      if (felicitacionActualizada) {
+        setSelectedFelicitacion(felicitacionActualizada);
+        setFuncionarioParaFelicitacion(funcionario);
+        setShowEditFelicitacionModal(true);
+      } else {
+        console.error('No se encontró la felicitación automática para este funcionario');
+        // Opcional: mostrar un mensaje de error al usuario
+      }
+    }
+  };
+
+  // Función para obtener el texto del botón - SIEMPRE "Editar"
+  const getFelicitacionButtonText = (funcionario: Funcionario) => {
+    return 'Editar';
+  };
+
+  // Función para obtener el título del botón - SIEMPRE "Editar"
+  const getFelicitacionButtonTitle = (funcionario: Funcionario) => {
+    return 'Editar mensaje de felicitación';
+  };
+
+  // Función para obtener el ícono del botón - SIEMPRE lápiz
+  const getFelicitacionButtonIcon = (funcionario: Funcionario) => {
+    return <HiPencil className="w-3 h-3 group-hover/gift:rotate-12 transition-transform duration-300" />;
+  };
+
+  // Función para verificar si el funcionario tiene felicitación
+  const funcionarioTieneFelicitacion = (funcionario: Funcionario) => {
+    return felicitacionesExistentes.some(fel => fel.funcionario.id === funcionario.id);
   };
 
   // Handlers existentes de funcionarios
@@ -190,18 +253,20 @@ export default function FuncionariosPage() {
       if (result.success) {
         setShowEditModal(false);
         setSelectedFuncionario(null);
-        fetchFuncionarios();
+        await fetchFuncionarios();
       }
     } else {
       result = await funcionarioCrudService.createFuncionario(data as CreateFuncionarioRequest);
       if (result.success) {
         setShowCreateModal(false);
-        fetchFuncionarios();
+        await fetchFuncionarios();
+        // Recargar felicitaciones después de crear funcionario (para obtener la felicitación auto-generada)
+        await fetchFelicitaciones();
       }
     }
     
     if (!result.success) {
-      console.error(result.message);
+      console.error('Error en funcionario:', result.message);
     }
     
     setCrudLoading(false);
@@ -489,135 +554,130 @@ export default function FuncionariosPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
               {filteredFuncionarios.map((funcionario) => {
                 const photoUrl = getProfilePicUrl(funcionario.foto);
                 
                 return (
                   <div 
                     key={funcionario.id} 
-                    className="group relative overflow-hidden rounded-3xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-2 border-white/20 dark:border-gray-700/50 shadow-xl"
+                    className="group relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm"
                   >
-                    {/* Efecto de brillo en hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12"></div>
+                    {/* Efecto de brillo sutil */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12"></div>
                     
-                    {/* Línea de acento lateral */}
-                    <div className="absolute left-0 top-0 w-2 h-full bg-gradient-to-b from-blue-500 to-indigo-600 transition-all duration-300 group-hover:w-4"></div>
+                    {/* Línea de acento superior */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     
-                    <div className="relative p-8">
-                      <div className="flex flex-col items-center text-center">
-                        {/* Foto mejorada */}
-                        <div className="relative mb-6">
+                    <div className="relative p-4">
+                      {/* Header compacto */}
+                      <div className="flex items-center gap-3 mb-3">
+                        {/* Foto más pequeña */}
+                        <div className="relative flex-shrink-0">
                           {photoUrl ? (
                             <img
                               src={photoUrl}
                               alt={`${funcionario.nombres} ${funcionario.apellidos}`}
-                              className="w-24 h-24 rounded-2xl object-cover border-4 border-blue-200 dark:border-blue-600 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
+                              className="w-12 h-12 rounded-xl object-cover border-2 border-blue-200 dark:border-blue-600 shadow-sm transition-all duration-300 group-hover:scale-105"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
                                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
                               }}
                             />
                           ) : null}
-                          <div className={`w-24 h-24 rounded-2xl flex items-center justify-center border-4 border-blue-200 dark:border-blue-600 shadow-lg bg-blue-100 dark:bg-blue-900 transition-all duration-300 group-hover:scale-110 ${photoUrl ? 'hidden' : ''}`}>
-                            <HiUserCircle className="w-16 h-16 text-blue-500 dark:text-blue-400" />
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 border-blue-200 dark:border-blue-600 shadow-sm bg-blue-50 dark:bg-blue-900/50 transition-all duration-300 group-hover:scale-105 ${photoUrl ? 'hidden' : ''}`}>
+                            <HiUserCircle className="w-8 h-8 text-blue-500 dark:text-blue-400" />
                           </div>
                           
-                          {/* Indicador online */}
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 border-3 border-white dark:border-gray-900 rounded-full shadow-lg"></div>
+                          {/* Indicador online más pequeño */}
+                          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 border-2 border-white dark:border-gray-900 rounded-full shadow-sm"></div>
                         </div>
 
-                        {/* Información personal */}
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                          {funcionario.nombres} {funcionario.apellidos}
-                        </h3>
-
-                        <div className="flex items-center gap-2 mb-4">
-                          <span className="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 text-blue-700 dark:text-blue-300 rounded-xl border border-blue-200 dark:border-blue-700">
+                        {/* Información básica */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                            {funcionario.nombres} {funcionario.apellidos}
+                          </h3>
+                          <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-md">
                             {funcionario.cargo}
                           </span>
                         </div>
+                      </div>
 
-                        {/* Información de contacto mejorada */}
-                        <div className="w-full space-y-4 text-sm">
-                          <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                            <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                              <HiOfficeBuilding className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div className="flex-1 text-left">
-                              <p className="font-medium">{funcionario.sede.name}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">{funcionario.sede.city}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                            <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                              <HiPhone className="w-4 h-4 text-green-600 dark:text-green-400" />
-                            </div>
-                            <span className="flex-1 text-left font-medium">{funcionario.telefono}</span>
-                          </div>
-
-                          <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                            <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                              <HiMail className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                            </div>
-                            <span className="flex-1 text-left font-medium truncate">{funcionario.correo}</span>
-                          </div>
-
-                          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center gap-2 justify-center text-gray-500 dark:text-gray-400">
-                              <HiGift className="w-4 h-4" />
-                              <span className="text-xs font-medium">
-                                Cumpleaños: {formatFechaNacimiento(funcionario.fecha_nacimiento)}
-                              </span>
-                            </div>
-                          </div>
+                      {/* Información de contacto compacta */}
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                          <HiOfficeBuilding className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                          <span className="truncate">{funcionario.sede.name}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                          <HiPhone className="w-3 h-3 text-green-500 flex-shrink-0" />
+                          <span className="truncate">{funcionario.telefono}</span>
                         </div>
 
-                        {/* Botones de acción mejorados */}
-                        <div className="flex flex-col gap-3 mt-6 w-full">
-                          {/* Botones CRUD Funcionarios */}
-                          {canManageFuncionarios && (
-                            <div className="flex gap-2 w-full">
-                              <button
-                                onClick={() => openEditModal(funcionario)}
-                                className="group/edit flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                              >
-                                <HiPencil className="w-4 h-4 group-hover/edit:rotate-12 transition-transform duration-300" />
-                                Editar
-                              </button>
-                              
-                              <button
-                                onClick={() => openDeleteModal(funcionario)}
-                                className="group/delete flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                              >
-                                <HiTrash className="w-4 h-4 group-hover/delete:scale-110 transition-transform duration-300" />
-                                Eliminar
-                              </button>
-                            </div>
-                          )}
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                          <HiMail className="w-3 h-3 text-purple-500 flex-shrink-0" />
+                          <span className="truncate">{funcionario.correo}</span>
+                        </div>
 
-                          {/* Botones reconocimientos y felicitaciones 
-                          {canManageReconocimientos && (
-                            <div className="flex gap-2 w-full">
-                              <button
-                                onClick={() => openCreateReconocimientoModal(funcionario)}
-                                className="group/star flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                              >
-                                <HiStar className="w-4 h-4 group-hover/star:rotate-12 transition-transform duration-300" />
-                                Reconocer
-                              </button>
-                              <button
-                                onClick={() => openCreateFelicitacionModal(funcionario)}
-                                className="group/gift flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                              >
-                                <HiGift className="w-4 h-4 group-hover/gift:scale-110 transition-transform duration-300" />
-                                Felicitar
-                              </button>
-                            </div>
-                          )}*/}
+                        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-800">
+                          <HiGift className="w-3 h-3 text-pink-500 flex-shrink-0" />
+                          <span className="text-xs">{formatFechaNacimiento(funcionario.fecha_nacimiento)}</span>
                         </div>
                       </div>
+
+                      {/* Botones de acción compactos */}
+                      {canManageFuncionarios && (
+                        <div className="flex gap-1 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                          <button
+                            onClick={() => openEditModal(funcionario)}
+                            className="group/edit flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
+                            title="Editar funcionario"
+                          >
+                            <HiPencil className="w-3 h-3 group-hover/edit:rotate-12 transition-transform duration-300" />
+                            <span className="text-xs">Editar</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => openDeleteModal(funcionario)}
+                            className="group/delete flex items-center justify-center px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
+                            title="Eliminar funcionario"
+                          >
+                            <HiTrash className="w-3 h-3 group-hover/delete:scale-110 transition-transform duration-300" />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Botones de reconocimiento y felicitación */}
+                      {canManageReconocimientos && (
+                        <div className="flex gap-1 mt-2">
+                          <button
+                            onClick={() => openCreateReconocimientoModal(funcionario)}
+                            className="group/star flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
+                            title="Crear reconocimiento"
+                          >
+                            <HiStar className="w-3 h-3 group-hover/star:rotate-12 transition-transform duration-300" />
+                            <span className="text-xs">Reconocer</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => handleFelicitacionAction(funcionario)}
+                            className={`group/gift flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 ${
+                              funcionarioTieneFelicitacion(funcionario)
+                                ? 'bg-blue-500 hover:bg-blue-600'
+                                : 'bg-gray-400 cursor-not-allowed'
+                            }`}
+                            title={getFelicitacionButtonTitle(funcionario)}
+                            disabled={!funcionarioTieneFelicitacion(funcionario)}
+                          >
+                            
+                            <HiGift className="w-4 h-4 group-hover/gift:scale-110 transition-transform duration-300" />
+                                Felicitar
+
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -724,33 +784,15 @@ export default function FuncionariosPage() {
 
       {/* Modales CRUD Felicitaciones */}
       <CrudModal
-        isOpen={showCreateFelicitacionModal}
-        onClose={() => {
-          setShowCreateFelicitacionModal(false);
-          setFuncionarioParaFelicitacion(null);
-        }}
-        title={funcionarioParaFelicitacion ? `Crear Felicitación - ${funcionarioParaFelicitacion.nombres} ${funcionarioParaFelicitacion.apellidos}` : "Crear Felicitación"}
-        loading={crudLoading}
-        submitText="Crear Felicitación"
-      >
-        <FelicitacionForm
-          funcionarioPreseleccionado={funcionarioParaFelicitacion}
-          funcionarios={funcionarios}
-          onSubmit={handleSubmitFelicitacion}
-          loading={crudLoading}
-        />
-      </CrudModal>
-
-      <CrudModal
         isOpen={showEditFelicitacionModal}
         onClose={() => {
           setShowEditFelicitacionModal(false);
           setSelectedFelicitacion(null);
           setFuncionarioParaFelicitacion(null);
         }}
-        title="Editar Felicitación"
+        title="Editar Mensaje de Felicitación"
         loading={crudLoading}
-        submitText="Actualizar"
+        submitText="Actualizar Mensaje"
       >
         <FelicitacionForm
           felicitacion={selectedFelicitacion}
