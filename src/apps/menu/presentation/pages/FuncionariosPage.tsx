@@ -41,8 +41,8 @@ export default function FuncionariosPage() {
       filtered = funcionarioService.searchFuncionarios(filtered, searchTerm);
     }
 
-    if (selectedSede && selectedSede !== 0) { // 👈 Filtrar por ID de sede
-      filtered = filtered.filter(funcionario => funcionario.sede === selectedSede);
+    if (selectedSede && selectedSede !== 0) {
+      filtered = filtered.filter(funcionario => funcionario.sede.id === selectedSede); // 👈 CAMBIAR: usar sede.id
     }
 
     if (selectedCargo) {
@@ -65,51 +65,33 @@ export default function FuncionariosPage() {
     }
   };
 
-  const handleCreate = async (data: CreateFuncionarioRequest | UpdateFuncionarioRequest) => {
+  // 👈 CAMBIAR: Handler genérico que maneja ambos casos
+  const handleSubmit = async (data: CreateFuncionarioRequest | UpdateFuncionarioRequest) => {
     setCrudLoading(true);
-    // Always use only the CreateFuncionarioRequest fields
-    const createData: CreateFuncionarioRequest = {
-      documento: (data as any).documento ?? "",
-      nombres: (data as any).nombres ?? "",
-      apellidos: (data as any).apellidos ?? "",
-      fecha_nacimiento: (data as any).fecha_nacimiento ?? "",
-      cargo: (data as any).cargo ?? "",
-      sede: (data as any).sede ?? "",
-      telefono: (data as any).telefono ?? "",
-      correo: (data as any).correo ?? "",
-      ...(typeof (data as any).foto !== "undefined" ? { foto: (data as any).foto } : {}),
-    };
-    const result = await funcionarioCrudService.createFuncionario(createData);
-
-    if (result.success) {
-      setShowCreateModal(false);
-      fetchFuncionarios();
-      // TODO: Mostrar toast de éxito
+    
+    let result;
+    if ('id' in data) {
+      // Es una actualización
+      result = await funcionarioCrudService.updateFuncionario(data as UpdateFuncionarioRequest);
+      if (result.success) {
+        setShowEditModal(false);
+        setSelectedFuncionario(null);
+        fetchFuncionarios();
+      }
     } else {
-      // TODO: Mostrar toast de error
+      // Es una creación
+      result = await funcionarioCrudService.createFuncionario(data as CreateFuncionarioRequest);
+      if (result.success) {
+        setShowCreateModal(false);
+        fetchFuncionarios();
+      }
+    }
+    
+    if (!result.success) {
       console.error(result.message);
-    }
-    setCrudLoading(false);
-  };
-
-  const handleEdit = async (data: CreateFuncionarioRequest | UpdateFuncionarioRequest) => {
-    // Only proceed if data has an 'id' (i.e., is UpdateFuncionarioRequest)
-    if (!('id' in data)) {
-      console.error("No se proporcionó ID para la actualización del funcionario.");
-      return;
-    }
-    setCrudLoading(true);
-    const result = await funcionarioCrudService.updateFuncionario(data);
-
-    if (result.success) {
-      setShowEditModal(false);
-      setSelectedFuncionario(null);
-      fetchFuncionarios();
-      // TODO: Mostrar toast de éxito
-    } else {
       // TODO: Mostrar toast de error
-      console.error(result.message);
     }
+    
     setCrudLoading(false);
   };
 
@@ -277,7 +259,9 @@ export default function FuncionariosPage() {
             >
               <option value={0}>Todas las sedes</option>
               {sedesUnicas.map(sede => (
-                <option key={sede.id} value={sede.id}>{sede.nombre}</option>
+                <option key={sede.id} value={sede.id}>
+                  {sede.name} - {sede.city} {/* 👈 CAMBIAR: usar name y city */}
+                </option>
               ))}
             </select>
 
@@ -317,12 +301,9 @@ export default function FuncionariosPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredFuncionarios.map((funcionario) => {
             const photoUrl = getProfilePicUrl(funcionario.foto);
-
+            
             return (
-              <div
-                key={funcionario.id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
-              >
+              <div key={funcionario.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
                 <div className="p-6">
                   <div className="flex flex-col items-center text-center">
                     {photoUrl ? (
@@ -351,9 +332,9 @@ export default function FuncionariosPage() {
                     <div className="w-full space-y-2 text-sm">
                       <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300">
                         <HiOfficeBuilding className="w-4 h-4" />
-                        <span>{funcionario.sede_info?.nombre || 'Sede no asignada'}</span> {/* 👈 Mostrar nombre de sede */}
+                        <span>{funcionario.sede.name} - {funcionario.sede.city}</span> {/* 👈 CAMBIAR: mostrar name y city */}
                       </div>
-
+                      
                       <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300">
                         <HiPhone className="w-4 h-4" />
                         <a
@@ -418,8 +399,7 @@ export default function FuncionariosPage() {
         submitText="Crear"
       >
         <FuncionarioForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowCreateModal(false)}
+          onSubmit={handleSubmit} // 👈 CAMBIAR: usar handler genérico
           loading={crudLoading}
         />
       </CrudModal>
@@ -431,19 +411,17 @@ export default function FuncionariosPage() {
           setSelectedFuncionario(null);
         }}
         title="Editar Funcionario"
-        onSubmit={() => {
-          // El submit se maneja desde el formulario
-        }}
         loading={crudLoading}
         submitText="Actualizar"
       >
         <FuncionarioForm
           funcionario={selectedFuncionario}
-          onSubmit={handleEdit}
+          onSubmit={handleSubmit} // 👈 CAMBIAR: usar el mismo handler genérico
           loading={crudLoading}
         />
       </CrudModal>
 
+      {/* DeleteConfirmModal se mantiene igual */}
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => {

@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { HiUser, HiPhone, HiIdentification, HiCalendar } from "react-icons/hi2";
-import { HiOfficeBuilding } from "react-icons/hi";
-import { HiMail } from "react-icons/hi";
+import { HiOfficeBuilding, HiMail } from "react-icons/hi";
 import { FuncionarioService } from "../../application/services/FuncionarioService";
 import type { Funcionario, Headquarters, CreateFuncionarioRequest, UpdateFuncionarioRequest } from "../../domain/types";
 
 interface FuncionarioFormProps {
   funcionario?: Funcionario | null;
-  onSubmit: (data: CreateFuncionarioRequest | UpdateFuncionarioRequest) => void;
-  onCancel: () => void;
+  onSubmit: (data: CreateFuncionarioRequest | UpdateFuncionarioRequest) => Promise<void>; // 👈 CAMBIAR: agregar Promise<void>
   loading?: boolean;
 }
 
-export default function FuncionarioForm({ funcionario, onSubmit, onCancel, loading = false }: FuncionarioFormProps) {
+export default function FuncionarioForm({ funcionario, onSubmit, loading = false }: FuncionarioFormProps) {
   const [formData, setFormData] = useState({
     documento: '',
     nombres: '',
@@ -31,6 +29,7 @@ export default function FuncionarioForm({ funcionario, onSubmit, onCancel, loadi
 
   const funcionarioService = new FuncionarioService();
 
+  // Cargar sedes
   useEffect(() => {
     const fetchSedes = async () => {
       try {
@@ -47,6 +46,7 @@ export default function FuncionarioForm({ funcionario, onSubmit, onCancel, loadi
     fetchSedes();
   }, []);
 
+  // Llenar formulario cuando hay funcionario para editar
   useEffect(() => {
     if (funcionario) {
       setFormData({
@@ -55,12 +55,26 @@ export default function FuncionarioForm({ funcionario, onSubmit, onCancel, loadi
         apellidos: funcionario.apellidos,
         fecha_nacimiento: funcionario.fecha_nacimiento,
         cargo: funcionario.cargo,
-        sede: funcionario.sede,
+        sede: funcionario.sede.id, // 👈 CORREGIR: extraer ID
         telefono: funcionario.telefono,
         correo: funcionario.correo,
         foto: null
       });
+    } else {
+      // 👈 NUEVO: Limpiar formulario para creación
+      setFormData({
+        documento: '',
+        nombres: '',
+        apellidos: '',
+        fecha_nacimiento: '',
+        cargo: '',
+        sede: 0,
+        telefono: '',
+        correo: '',
+        foto: null
+      });
     }
+    setErrors({}); // Limpiar errores
   }, [funcionario]);
 
   const validateForm = () => {
@@ -80,15 +94,15 @@ export default function FuncionarioForm({ funcionario, onSubmit, onCancel, loadi
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => { // 👈 CAMBIAR: hacer async
     e.preventDefault();
     if (!validateForm()) return;
 
-    const submitData = funcionario
+    const submitData = funcionario 
       ? { id: funcionario.id, ...formData } as UpdateFuncionarioRequest
       : formData as CreateFuncionarioRequest;
 
-    onSubmit(submitData);
+    await onSubmit(submitData); // 👈 CAMBIAR: agregar await
   };
 
   const handleInputChange = (field: string, value: string | number | File | null) => {
@@ -99,128 +113,180 @@ export default function FuncionarioForm({ funcionario, onSubmit, onCancel, loadi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form 
+      id="crud-form" // 👈 NUEVO: ID para que el modal pueda encontrarlo
+      onSubmit={handleSubmit} 
+      className="space-y-6"
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Documento */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <HiIdentification className="w-4 h-4 inline mr-2" />
             Documento
           </label>
           <input
             type="text"
             value={formData.documento}
             onChange={(e) => handleInputChange('documento', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${errors.documento ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+            className={`
+              w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${errors.documento ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            `}
             disabled={loading}
           />
           {errors.documento && <p className="text-red-500 text-sm mt-1">{errors.documento}</p>}
         </div>
+
         {/* Nombres */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <HiUser className="w-4 h-4 inline mr-2" />
             Nombres
           </label>
           <input
             type="text"
             value={formData.nombres}
             onChange={(e) => handleInputChange('nombres', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${errors.nombres ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+            className={`
+              w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${errors.nombres ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            `}
             disabled={loading}
           />
           {errors.nombres && <p className="text-red-500 text-sm mt-1">{errors.nombres}</p>}
         </div>
+
         {/* Apellidos */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <HiUser className="w-4 h-4 inline mr-2" />
             Apellidos
           </label>
           <input
             type="text"
             value={formData.apellidos}
             onChange={(e) => handleInputChange('apellidos', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${errors.apellidos ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+            className={`
+              w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${errors.apellidos ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            `}
             disabled={loading}
           />
           {errors.apellidos && <p className="text-red-500 text-sm mt-1">{errors.apellidos}</p>}
         </div>
+
         {/* Fecha de nacimiento */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <HiCalendar className="w-4 h-4 inline mr-2" />
             Fecha de nacimiento
           </label>
           <input
             type="date"
             value={formData.fecha_nacimiento}
             onChange={(e) => handleInputChange('fecha_nacimiento', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${errors.fecha_nacimiento ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+            className={`
+              w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${errors.fecha_nacimiento ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            `}
             disabled={loading}
           />
           {errors.fecha_nacimiento && <p className="text-red-500 text-sm mt-1">{errors.fecha_nacimiento}</p>}
         </div>
+
         {/* Cargo */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <HiOfficeBuilding className="w-4 h-4 inline mr-2" />
             Cargo
           </label>
           <input
             type="text"
             value={formData.cargo}
             onChange={(e) => handleInputChange('cargo', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${errors.cargo ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+            className={`
+              w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${errors.cargo ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            `}
             disabled={loading}
           />
           {errors.cargo && <p className="text-red-500 text-sm mt-1">{errors.cargo}</p>}
         </div>
+
         {/* Sede */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <HiOfficeBuilding className="w-4 h-4 inline mr-2" />
             Sede
           </label>
           <select
             value={formData.sede}
             onChange={(e) => handleInputChange('sede', parseInt(e.target.value) || 0)}
-            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${errors.sede ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+            className={`
+              w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${errors.sede ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            `}
             disabled={loading || loadingSedes}
           >
             <option value={0}>Seleccionar sede...</option>
             {sedes.map(sede => (
               <option key={sede.id} value={sede.id}>
-                {sede.nombre}
+                {sede.name} - {sede.city}
               </option>
             ))}
           </select>
           {errors.sede && <p className="text-red-500 text-sm mt-1">{errors.sede}</p>}
           {loadingSedes && <p className="text-gray-500 text-sm mt-1">Cargando sedes...</p>}
         </div>
+
         {/* Teléfono */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <HiPhone className="w-4 h-4 inline mr-2" />
             Teléfono
           </label>
           <input
             type="tel"
             value={formData.telefono}
             onChange={(e) => handleInputChange('telefono', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${errors.telefono ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+            className={`
+              w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${errors.telefono ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            `}
             disabled={loading}
           />
           {errors.telefono && <p className="text-red-500 text-sm mt-1">{errors.telefono}</p>}
         </div>
+
         {/* Correo */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <HiMail className="w-4 h-4 inline mr-2" />
             Correo electrónico
           </label>
           <input
             type="email"
             value={formData.correo}
             onChange={(e) => handleInputChange('correo', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${errors.correo ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+            className={`
+              w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${errors.correo ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            `}
             disabled={loading}
           />
           {errors.correo && <p className="text-red-500 text-sm mt-1">{errors.correo}</p>}
         </div>
       </div>
+
       {/* Foto */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -234,23 +300,8 @@ export default function FuncionarioForm({ funcionario, onSubmit, onCancel, loadi
           disabled={loading}
         />
       </div>
-      <div className="flex justify-end gap-4 mt-6">
-        <button
-          type="button"
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-          onClick={onCancel}
-          disabled={loading}
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          disabled={loading}
-        >
-          {loading ? "Creando..." : "Crear"}
-        </button>
-      </div>
+      
+      {/* 👈 REMOVER: Ya no necesitamos botones aquí */}
     </form>
   );
 }

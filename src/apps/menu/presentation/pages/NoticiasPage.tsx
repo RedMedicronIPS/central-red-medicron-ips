@@ -6,14 +6,17 @@ import {
   HiExclamationTriangle,
   HiArrowLeft,
   HiGlobeAlt,
-  HiPlus
+  HiPlus,
+  HiPencil,
+  HiTrash
 } from "react-icons/hi2";
 import { HiSearch } from "react-icons/hi";
-import { ContenidoService } from "../../application/services/ContenidoService"; // 👈 USAR SERVICE
-import type { ContenidoInformativo, TipoContenido, CreateContenidoRequest } from "../../domain/types";
+import { ContenidoService } from "../../application/services/ContenidoService";
+import { ContenidoCrudService } from "../../application/services/ContenidoCrudService"; // 👈 AGREGAR
+import type { ContenidoInformativo, TipoContenido, CreateContenidoRequest, UpdateContenidoRequest } from "../../domain/types";
 import CrudModal from "../components/CrudModal";
-import { ContenidoCrudService } from "../../application/services/ContenidoCrudService";
 import ContenidoForm from "../components/ContenidoForm";
+import DeleteConfirmModal from "../components/DeleteConfirmModal"; // 👈 AGREGAR
 import { useMenuPermissions } from "../hooks/useMenuPermissions";
 
 export default function NoticiasPage() {
@@ -25,12 +28,19 @@ export default function NoticiasPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTipo, setSelectedTipo] = useState<TipoContenido>('todos');
   const [showUrgentOnly, setShowUrgentOnly] = useState(false);
+
+  // 👈 AGREGAR: Estados para CRUD
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedContenido, setSelectedContenido] = useState<ContenidoInformativo | null>(null);
   const [crudLoading, setCrudLoading] = useState(false);
+
+  // 👈 AGREGAR: Servicios
   const contenidoCrudService = new ContenidoCrudService();
   const { isAdmin } = useMenuPermissions();
 
-  const contenidoService = new ContenidoService(); // 👈 USAR SERVICE
+  const contenidoService = new ContenidoService();
 
   useEffect(() => {
     if (id) {
@@ -43,10 +53,10 @@ export default function NoticiasPage() {
   const fetchContenidos = async () => {
     try {
       setLoading(true);
-      const data = await contenidoService.getAllContenidos(); // 👈 USAR SERVICE
+      const data = await contenidoService.getAllContenidos();
       setContenidos(data);
     } catch (err: any) {
-      setError(err.message); // 👈 USAR err.message para consistencia
+      setError(err.message);
       console.error('Error fetching contenidos:', err);
     } finally {
       setLoading(false);
@@ -56,17 +66,77 @@ export default function NoticiasPage() {
   const fetchContenidoDetalle = async (contenidoId: number) => {
     try {
       setLoading(true);
-      const data = await contenidoService.getContenidoById(contenidoId); // 👈 USAR SERVICE
+      const data = await contenidoService.getContenidoById(contenidoId);
       setContenidoDetalle(data);
     } catch (err: any) {
-      setError(err.message); // 👈 USAR err.message para consistencia
+      setError(err.message);
       console.error('Error fetching contenido:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredContenidos = contenidoService.filterContenidos( // 👈 USAR SERVICE PARA FILTRAR
+  // 👈 AGREGAR: Handler genérico para CRUD
+  const handleSubmit = async (data: CreateContenidoRequest | UpdateContenidoRequest) => {
+    setCrudLoading(true);
+    
+    let result;
+    if ('id' in data) {
+      // Es una actualización
+      result = await contenidoCrudService.updateContenido(data as UpdateContenidoRequest);
+      if (result.success) {
+        setShowEditModal(false);
+        setSelectedContenido(null);
+        fetchContenidos();
+      }
+    } else {
+      // Es una creación
+      result = await contenidoCrudService.createContenido(data as CreateContenidoRequest);
+      if (result.success) {
+        setShowCreateModal(false);
+        fetchContenidos();
+      }
+    }
+    
+    if (!result.success) {
+      console.error(result.message);
+      // TODO: Mostrar toast de error
+    }
+    
+    setCrudLoading(false);
+  };
+
+  // 👈 AGREGAR: Handler para eliminar
+  const handleDelete = async () => {
+    if (!selectedContenido) return;
+
+    setCrudLoading(true);
+    const result = await contenidoCrudService.deleteContenido(selectedContenido.id);
+
+    if (result.success) {
+      setShowDeleteModal(false);
+      setSelectedContenido(null);
+      fetchContenidos();
+      // TODO: Mostrar toast de éxito
+    } else {
+      // TODO: Mostrar toast de error
+      console.error(result.message);
+    }
+    setCrudLoading(false);
+  };
+
+  // 👈 AGREGAR: Handlers para abrir modales
+  const openEditModal = (contenido: ContenidoInformativo) => {
+    setSelectedContenido(contenido);
+    setShowEditModal(true);
+  };
+
+  const openDeleteModal = (contenido: ContenidoInformativo) => {
+    setSelectedContenido(contenido);
+    setShowDeleteModal(true);
+  };
+
+  const filteredContenidos = contenidoService.filterContenidos(
     contenidos,
     searchTerm,
     selectedTipo,
@@ -100,20 +170,6 @@ export default function NoticiasPage() {
     setSearchTerm('');
     setSelectedTipo('todos');
     setShowUrgentOnly(false);
-  };
-
-  const handleCreate = async (data: CreateContenidoRequest) => {
-    setCrudLoading(true);
-    const result = await contenidoCrudService.createContenido(data);
-    if (result.success) {
-      setShowCreateModal(false);
-      fetchContenidos();
-      // TODO: Mostrar toast de éxito
-    } else {
-      // TODO: Mostrar toast de error
-      console.error(result.message);
-    }
-    setCrudLoading(false);
   };
 
   if (loading) {
@@ -351,22 +407,44 @@ export default function NoticiasPage() {
                   </p>
 
                   <div className="flex items-center justify-between">
-                    <Link
-                      to={`/noticias/${contenido.id}`}
-                      className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                    >
-                      Leer más
-                    </Link>
-
-                    {contenido.enlace && (
-                      <a
-                        href={contenido.enlace}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                    <div className="flex items-center gap-4">
+                      <Link
+                        to={`/noticias/${contenido.id}`}
+                        className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                       >
-                        Enlace externo
-                      </a>
+                        Leer más
+                      </Link>
+
+                      {contenido.enlace && (
+                        <a
+                          href={contenido.enlace}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                        >
+                          Enlace externo
+                        </a>
+                      )}
+                    </div>
+
+                    {/* 👈 AGREGAR: Botones CRUD */}
+                    {isAdmin && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openEditModal(contenido)}
+                          className="flex items-center gap-1 px-3 py-2 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                        >
+                          <HiPencil className="w-3 h-3" />
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(contenido)}
+                          className="flex items-center gap-1 px-3 py-2 text-xs bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                        >
+                          <HiTrash className="w-3 h-3" />
+                          Eliminar
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -376,7 +454,7 @@ export default function NoticiasPage() {
         </div>
       )}
 
-      {/* Modales CRUD */}
+      {/* 👈 AGREGAR: Modales CRUD */}
       <CrudModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -385,11 +463,40 @@ export default function NoticiasPage() {
         submitText="Crear"
       >
         <ContenidoForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowCreateModal(false)}
+          onSubmit={handleSubmit}
           loading={crudLoading}
         />
       </CrudModal>
+
+      <CrudModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedContenido(null);
+        }}
+        title="Editar Contenido"
+        loading={crudLoading}
+        submitText="Actualizar"
+      >
+        <ContenidoForm
+          contenido={selectedContenido}
+          onSubmit={handleSubmit}
+          loading={crudLoading}
+        />
+      </CrudModal>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedContenido(null);
+        }}
+        onConfirm={handleDelete}
+        loading={crudLoading}
+        title="Eliminar Contenido"
+        message="¿Estás seguro de que deseas eliminar este contenido? Esta acción no se puede deshacer."
+        itemName={selectedContenido ? selectedContenido.titulo : ''}
+      />
     </div>
   );
 }

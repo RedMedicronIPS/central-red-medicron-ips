@@ -10,8 +10,7 @@ export interface Funcionario extends TimeStampedModel {
   apellidos: string;
   fecha_nacimiento: string;
   cargo: string;
-  sede: number; // 👈 Ahora es el ID de la sede
-  sede_info?: Headquarters; // 👈 Información completa de la sede (opcional)
+  sede: Headquarters; // 👈 CAMBIAR: objeto completo en lugar de number
   telefono: string;
   correo: string;
   foto: string;
@@ -63,7 +62,7 @@ export interface ApiResponse<T> {
   count: number;
   next: string | null;
   previous: string | null;
-}
+} 
 
 // Tipos para filtros
 export type TipoContenido = 'noticia' | 'comunicado' | 'todos';
@@ -76,7 +75,7 @@ export interface CreateFuncionarioRequest {
   apellidos: string;
   fecha_nacimiento: string;
   cargo: string;
-  sede: number; // 👈 Ahora recibe el ID de la sede
+  sede: number; // 👈 MANTENER: enviar solo el ID
   telefono: string;
   correo: string;
   foto?: File;
@@ -146,8 +145,8 @@ export interface CrudResponse<T> {
 // Nuevo tipo para Headquarters
 export interface Headquarters extends TimeStampedModel {
   id: number;
-  nombre: string;
-  direccion?: string;
-  telefono?: string;
-  ciudad?: string;
+  name: string; // 👈 CAMBIAR: name en lugar de nombre
+  habilitationCode: string; // 👈 AGREGAR
+  city: string; // 👈 AGREGAR
+  address: string; // 👈 AGREGAR
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { HiXMark, HiExclamationTriangle } from "react-icons/hi2";
+import { HiXMark } from "react-icons/hi2";
 
 interface CrudModalProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ interface CrudModalProps {
   loading?: boolean;
   submitText?: string;
   submitButtonColor?: 'blue' | 'red' | 'green';
+  showFooter?: boolean; // 👈 NUEVO: controlar si mostrar footer
 }
 
 export default function CrudModal({
@@ -20,7 +21,8 @@ export default function CrudModal({
   onSubmit,
   loading = false,
   submitText = "Guardar",
-  submitButtonColor = 'blue'
+  submitButtonColor = 'blue',
+  showFooter = true // 👈 NUEVO: por defecto true
 }: CrudModalProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -48,6 +50,16 @@ export default function CrudModal({
         return 'bg-green-600 hover:bg-green-700 focus:ring-green-500';
       default:
         return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
+    }
+  };
+
+  // 👈 NUEVO: función para disparar submit del formulario hijo
+  const handleSubmit = () => {
+    const form = document.querySelector('#crud-form') as HTMLFormElement;
+    if (form) {
+      form.requestSubmit(); // Dispara el submit del formulario
+    } else if (onSubmit) {
+      onSubmit(); // Fallback para modales sin formulario
     }
   };
 
@@ -83,12 +95,12 @@ export default function CrudModal({
           </div>
 
           {/* Content */}
-          <div className="p-6 max-h-96 overflow-y-auto">
+          <div className="p-6 max-h-[70vh] overflow-y-auto"> {/* 👈 MEJORAR: altura máxima */}
             {children}
           </div>
 
-          {/* Footer */}
-          {onSubmit && (
+          {/* Footer - Condicional */}
+          {showFooter && (
             <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
@@ -99,8 +111,8 @@ export default function CrudModal({
                 Cancelar
               </button>
               <button
-                type="submit"
-                form={React.Children.only(children)?.props?.id || undefined}
+                type="button"
+                onClick={handleSubmit} // 👈 CAMBIAR: usar handleSubmit
                 disabled={loading}
                 className={`
                   px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed

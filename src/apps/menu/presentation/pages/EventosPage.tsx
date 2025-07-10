@@ -1,15 +1,25 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { HiCalendarDays, HiMapPin, HiClock, HiGlobeAlt, HiStar, HiArrowLeft } from "react-icons/hi2";
+import {
+  HiCalendarDays,
+  HiClock,
+  HiMapPin,
+  HiGlobeAlt,
+  HiArrowLeft,
+  HiExclamationTriangle,
+  HiStar,
+  HiPlus,
+  HiPencil,
+  HiTrash
+} from "react-icons/hi2";
 import { HiSearch } from "react-icons/hi";
-import { MenuApiService } from "../../infrastructure/services/MenuApiService";
-import type { Evento } from "../../domain/types";
-import { HiPlus } from "react-icons/hi2";
+import { EventoService } from "../../application/services/EventoService";
+import { EventoCrudService } from "../../application/services/EventoCrudService"; // 👈 AGREGAR
+import type { Evento, CreateEventoRequest, UpdateEventoRequest } from "../../domain/types";
 import CrudModal from "../components/CrudModal";
-import { EventoCrudService } from "../../application/services/EventoCrudService";
 import EventoForm from "../components/EventoForm";
+import DeleteConfirmModal from "../components/DeleteConfirmModal"; // 👈 AGREGAR
 import { useMenuPermissions } from "../hooks/useMenuPermissions";
-import type { CreateEventoRequest } from "../../domain/types";
 
 export default function EventosPage() {
   const { id } = useParams();
@@ -20,32 +30,19 @@ export default function EventosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showVirtualOnly, setShowVirtualOnly] = useState(false);
   const [showImportantOnly, setShowImportantOnly] = useState(false);
+
+  // 👈 AGREGAR: Estados para CRUD
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
   const [crudLoading, setCrudLoading] = useState(false);
+
+  // 👈 AGREGAR: Servicios
   const eventoCrudService = new EventoCrudService();
   const { isAdmin } = useMenuPermissions();
 
-  // Maneja la creación de un nuevo evento
-  const handleCreate = (eventoData: CreateEventoRequest) => {
-    setCrudLoading(true);
-    setError(null);
-    eventoCrudService.createEvento(eventoData)
-      .then((nuevoEvento) => {
-        // Si createEvento retorna un objeto tipo { data: Evento }, ajusta aquí:
-        const eventoToAdd = (nuevoEvento as any).data
-          ? (nuevoEvento as any).data as Evento
-          : (nuevoEvento as unknown as Evento);
-        setEventos((prev) => [eventoToAdd, ...prev]);
-        setShowCreateModal(false);
-      })
-      .catch((err) => {
-        setError("Error al crear el evento");
-        console.error("Error creating evento:", err);
-      })
-      .finally(() => {
-        setCrudLoading(false);
-      });
-  };
+  const eventoService = new EventoService();
 
   useEffect(() => {
     if (id) {
@@ -58,10 +55,10 @@ export default function EventosPage() {
   const fetchEventos = async () => {
     try {
       setLoading(true);
-      const data = await MenuApiService.getEventosProximos();
+      const data = await eventoService.getAllEventos(); // 👈 CAMBIAR: usar getAllEventos en lugar de getEventosProximos
       setEventos(data);
-    } catch (err) {
-      setError('Error al cargar eventos');
+    } catch (err: any) {
+      setError(err.message);
       console.error('Error fetching eventos:', err);
     } finally {
       setLoading(false);
@@ -71,24 +68,82 @@ export default function EventosPage() {
   const fetchEventoDetalle = async (eventoId: number) => {
     try {
       setLoading(true);
-      const data = await MenuApiService.getEvento(eventoId);
+      const data = await eventoService.getEventoById(eventoId);
       setEventoDetalle(data);
-    } catch (err) {
-      setError('Error al cargar el evento');
+    } catch (err: any) {
+      setError(err.message);
       console.error('Error fetching evento:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredEventos = eventos.filter(evento => {
-    const matchesSearch = evento.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      evento.detalles.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesVirtual = !showVirtualOnly || evento.es_virtual;
-    const matchesImportant = !showImportantOnly || evento.importante;
+  // 👈 AGREGAR: Handler genérico para CRUD
+  const handleSubmit = async (data: CreateEventoRequest | UpdateEventoRequest) => {
+    setCrudLoading(true);
+    
+    let result;
+    if ('id' in data) {
+      // Es una actualización
+      result = await eventoCrudService.updateEvento(data as UpdateEventoRequest);
+      if (result.success) {
+        setShowEditModal(false);
+        setSelectedEvento(null);
+        fetchEventos();
+      }
+    } else {
+      // Es una creación
+      result = await eventoCrudService.createEvento(data as CreateEventoRequest);
+      if (result.success) {
+        setShowCreateModal(false);
+        fetchEventos();
+      }
+    }
+    
+    if (!result.success) {
+      console.error(result.message);
+      // TODO: Mostrar toast de error
+    }
+    
+    setCrudLoading(false);
+  };
 
-    return matchesSearch && matchesVirtual && matchesImportant;
-  });
+  // 👈 AGREGAR: Handler para eliminar
+  const handleDelete = async () => {
+    if (!selectedEvento) return;
+
+    setCrudLoading(true);
+    const result = await eventoCrudService.deleteEvento(selectedEvento.id);
+
+    if (result.success) {
+      setShowDeleteModal(false);
+      setSelectedEvento(null);
+      fetchEventos();
+      // TODO: Mostrar toast de éxito
+    } else {
+      // TODO: Mostrar toast de error
+      console.error(result.message);
+    }
+    setCrudLoading(false);
+  };
+
+  // 👈 AGREGAR: Handlers para abrir modales
+  const openEditModal = (evento: Evento) => {
+    setSelectedEvento(evento);
+    setShowEditModal(true);
+  };
+
+  const openDeleteModal = (evento: Evento) => {
+    setSelectedEvento(evento);
+    setShowDeleteModal(true);
+  };
+
+  const filteredEventos = eventoService.filterEventos(
+    eventos,
+    searchTerm,
+    showVirtualOnly,
+    showImportantOnly
+  );
 
   const formatFecha = (fecha: string) => {
     return new Date(fecha).toLocaleDateString('es-ES', {
@@ -107,12 +162,65 @@ export default function EventosPage() {
   };
 
   const getDaysUntilEvent = (fecha: string) => {
-    const today = new Date();
-    const eventDate = new Date(fecha);
-    const diffTime = eventDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return eventoService.getDaysUntilEvent(fecha);
   };
+
+  const getEventColor = (importante: boolean, daysUntil: number) => {
+    if (importante) return {
+      bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
+      icon: 'text-amber-600 dark:text-amber-400',
+      iconBg: 'bg-amber-100 dark:bg-amber-800'
+    };
+    
+    if (daysUntil <= 1) return {
+      bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
+      icon: 'text-red-600 dark:text-red-400',
+      iconBg: 'bg-red-100 dark:bg-red-800'
+    };
+    
+    if (daysUntil <= 7) return {
+      bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800',
+      icon: 'text-orange-600 dark:text-orange-400',
+      iconBg: 'bg-orange-100 dark:bg-orange-800'
+    };
+    
+    return {
+      bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
+      icon: 'text-blue-600 dark:text-blue-400',
+      iconBg: 'bg-blue-100 dark:bg-blue-800'
+    };
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setShowVirtualOnly(false);
+    setShowImportantOnly(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-red-600 dark:text-red-400">
+          <p className="text-lg font-medium">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   // Si estamos viendo un evento específico
   if (id && eventoDetalle) {
@@ -228,7 +336,7 @@ export default function EventosPage() {
   // Vista de lista de eventos
   return (
     <div className="p-6">
-      {/* Header y filtros - igual que antes */}
+      {/* Header y filtros */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -289,23 +397,20 @@ export default function EventosPage() {
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300">Solo importantes</span>
               </label>
+
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Limpiar
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Loading, error y lista de eventos - igual que antes pero con filteredEventos */}
-      {loading ? (
-        <div className="animate-pulse space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-          ))}
-        </div>
-      ) : error ? (
-        <div className="text-center text-red-600 dark:text-red-400">
-          <p className="text-lg font-medium">{error}</p>
-        </div>
-      ) : filteredEventos.length === 0 ? (
+      {/* Lista de eventos */}
+      {filteredEventos.length === 0 ? (
         <div className="text-center py-12">
           <HiCalendarDays className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
@@ -317,16 +422,21 @@ export default function EventosPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {filteredEventos.map((evento) => (
-            <div
-              key={evento.id}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* Contenido del evento - similar al anterior pero con datos reales */}
-              <div className="p-6">
+          {filteredEventos.map((evento) => {
+            const daysUntil = getDaysUntilEvent(evento.fecha);
+            const colors = getEventColor(evento.importante, daysUntil);
+            
+            return (
+              <div
+                key={evento.id}
+                className={`
+                  p-6 rounded-xl border transition-all duration-200 hover:shadow-md
+                  ${colors.bg}
+                `}
+              >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                    <HiCalendarDays className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <div className={`p-3 rounded-lg flex-shrink-0 ${colors.iconBg}`}>
+                    <HiCalendarDays className={`w-5 h-5 ${colors.icon}`} />
                   </div>
 
                   <div className="flex-1">
@@ -337,9 +447,14 @@ export default function EventosPage() {
                           IMPORTANTE
                         </span>
                       )}
-                      {getDaysUntilEvent(evento.fecha) <= 1 && (
+                      {daysUntil <= 1 && (
                         <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-full animate-pulse">
-                          {getDaysUntilEvent(evento.fecha) === 0 ? 'HOY' : 'MAÑANA'}
+                          {daysUntil === 0 ? 'HOY' : 'MAÑANA'}
+                        </span>
+                      )}
+                      {daysUntil > 1 && daysUntil <= 7 && (
+                        <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-200 rounded-full">
+                          En {daysUntil} días
                         </span>
                       )}
                     </div>
@@ -365,45 +480,67 @@ export default function EventosPage() {
                         {evento.es_virtual ? (
                           <>
                             <HiGlobeAlt className="w-4 h-4" />
-                            <span>Virtual</span>
+                            Virtual
                           </>
                         ) : (
                           <>
                             <HiMapPin className="w-4 h-4" />
-                            <span>{evento.lugar || 'Presencial'}</span>
+                            {evento.lugar || 'Presencial'}
                           </>
                         )}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <Link
-                        to={`/eventos/${evento.id}`}
-                        className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                      >
-                        Ver detalles
-                      </Link>
-
-                      {evento.enlace && (
-                        <a
-                          href={evento.enlace}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                      <div className="flex items-center gap-4">
+                        <Link
+                          to={`/eventos/${evento.id}`}
+                          className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                         >
-                          {evento.es_virtual ? 'Unirse' : 'Más info'}
-                        </a>
+                          Ver detalles
+                        </Link>
+
+                        {evento.enlace && (
+                          <a
+                            href={evento.enlace}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                          >
+                            {evento.es_virtual ? 'Unirse' : 'Más info'}
+                          </a>
+                        )}
+                      </div>
+
+                      {/* 👈 AGREGAR: Botones CRUD */}
+                      {isAdmin && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditModal(evento)}
+                            className="flex items-center gap-1 px-3 py-2 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                          >
+                            <HiPencil className="w-3 h-3" />
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => openDeleteModal(evento)}
+                            className="flex items-center gap-1 px-3 py-2 text-xs bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                          >
+                            <HiTrash className="w-3 h-3" />
+                            Eliminar
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Modales CRUD */}
+      {/* 👈 AGREGAR: Modales CRUD */}
       <CrudModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -412,11 +549,40 @@ export default function EventosPage() {
         submitText="Crear"
       >
         <EventoForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowCreateModal(false)}
+          onSubmit={handleSubmit}
           loading={crudLoading}
         />
       </CrudModal>
+
+      <CrudModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedEvento(null);
+        }}
+        title="Editar Evento"
+        loading={crudLoading}
+        submitText="Actualizar"
+      >
+        <EventoForm
+          evento={selectedEvento}
+          onSubmit={handleSubmit}
+          loading={crudLoading}
+        />
+      </CrudModal>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedEvento(null);
+        }}
+        onConfirm={handleDelete}
+        loading={crudLoading}
+        title="Eliminar Evento"
+        message="¿Estás seguro de que deseas eliminar este evento? Esta acción no se puede deshacer."
+        itemName={selectedEvento ? selectedEvento.titulo : ''}
+      />
     </div>
   );
 }

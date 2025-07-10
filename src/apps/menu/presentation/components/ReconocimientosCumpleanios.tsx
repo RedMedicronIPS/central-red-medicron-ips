@@ -144,7 +144,7 @@ export default function ReconocimientosCumpleanios() {
                           {funcionario ? `${funcionario.nombres} ${funcionario.apellidos}` : 'Funcionario'}
                         </h4>
                         <p className="text-sm text-pink-700 dark:text-pink-300">
-                          {funcionario?.cargo || 'Cargo no disponible'}
+                          {funcionario?.cargo || 'Cargo no disponible'} - {funcionario?.sede.name || 'Sede no disponible'}
                         </p>
                         <p className="text-xs text-pink-600 dark:text-pink-400 mt-1">
                           {felicitacion.mensaje}

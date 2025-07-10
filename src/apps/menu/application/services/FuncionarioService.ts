@@ -60,30 +60,27 @@ export class FuncionarioService {
       funcionario.apellidos.toLowerCase().includes(term) ||
       funcionario.cargo.toLowerCase().includes(term) ||
       funcionario.correo.toLowerCase().includes(term) ||
-      funcionario.sede_info?.nombre.toLowerCase().includes(term) // 👈 Buscar por nombre de sede
+      funcionario.sede.name.toLowerCase().includes(term) || // 👈 CAMBIAR: usar sede.name
+      funcionario.sede.city.toLowerCase().includes(term)    // 👈 AGREGAR: buscar por ciudad
     );
   }
 
   getUniqueValues<K extends keyof Funcionario>(funcionarios: Funcionario[], key: K): string[] {
     if (key === 'sede') {
-      // Para sede, extraer los nombres únicos de sede_info
+      // Para sede, extraer los nombres únicos
       return Array.from(new Set(
-        funcionarios
-          .map(f => f.sede_info?.nombre)
-          .filter(Boolean) as string[]
+        funcionarios.map(f => f.sede.name) // 👈 CAMBIAR: usar sede.name
       )).sort();
     }
     return Array.from(new Set(funcionarios.map(f => f[key] as string))).sort();
   }
 
-  // Nuevo método para obtener sedes únicas
+  // Actualizar método para obtener sedes únicas
   getUniqueSedes(funcionarios: Funcionario[]): Headquarters[] {
     const sedesMap = new Map<number, Headquarters>();
     funcionarios.forEach(funcionario => {
-      if (funcionario.sede_info) {
-        sedesMap.set(funcionario.sede_info.id, funcionario.sede_info);
-      }
+      sedesMap.set(funcionario.sede.id, funcionario.sede); // 👈 CAMBIAR: usar sede directamente
     });
-    return Array.from(sedesMap.values()).sort((a, b) => a.nombre.localeCompare(b.nombre));
+    return Array.from(sedesMap.values()).sort((a, b) => a.name.localeCompare(b.name)); // 👈 CAMBIAR: usar name
   }
 }

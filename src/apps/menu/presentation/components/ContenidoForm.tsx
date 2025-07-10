@@ -1,137 +1,189 @@
-import React, { useState } from "react";
-import type { CreateContenidoRequest } from "../../domain/types";
+import React, { useState, useEffect } from "react";
+import { HiNewspaper, HiCalendarDays, HiGlobeAlt } from "react-icons/hi2";
+import type { ContenidoInformativo, CreateContenidoRequest, UpdateContenidoRequest } from "../../domain/types";
 
 interface ContenidoFormProps {
-  onSubmit: (data: CreateContenidoRequest) => void;
-  onCancel: () => void;
+  contenido?: ContenidoInformativo | null;
+  onSubmit: (data: CreateContenidoRequest | UpdateContenidoRequest) => Promise<void>; // 👈 CAMBIAR: agregar Promise<void>
   loading?: boolean;
 }
 
-const initialState: CreateContenidoRequest = {
-  titulo: "",
-  fecha: "",
-  contenido: "",
-  enlace: "",
-  urgente: false,
-  tipo: "noticia",
-};
+export default function ContenidoForm({ contenido, onSubmit, loading = false }: ContenidoFormProps) {
+  const [formData, setFormData] = useState({
+    titulo: '',
+    fecha: '',
+    contenido: '',
+    enlace: '',
+    urgente: false,
+    tipo: 'noticia' as 'noticia' | 'comunicado'
+  });
 
-export default function ContenidoForm({ onSubmit, onCancel, loading = false }: ContenidoFormProps) {
-  const [form, setForm] = useState<CreateContenidoRequest>(initialState);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validate = () => {
-    const errs: Record<string, string> = {};
-    if (!form.titulo.trim()) errs.titulo = "Título requerido";
-    if (!form.fecha) errs.fecha = "Fecha requerida";
-    if (!form.contenido.trim()) errs.contenido = "Contenido requerido";
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+  useEffect(() => {
+    if (contenido) {
+      setFormData({
+        titulo: contenido.titulo,
+        fecha: contenido.fecha,
+        contenido: contenido.contenido,
+        enlace: contenido.enlace || '',
+        urgente: contenido.urgente,
+        tipo: contenido.tipo
+      });
+    } else {
+      setFormData({
+        titulo: '',
+        fecha: new Date().toISOString().split('T')[0], // Fecha actual por defecto
+        contenido: '',
+        enlace: '',
+        urgente: false,
+        tipo: 'noticia'
+      });
+    }
+    setErrors({});
+  }, [contenido]);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.titulo.trim()) newErrors.titulo = 'Título es requerido';
+    if (!formData.fecha) newErrors.fecha = 'Fecha es requerida';
+    if (!formData.contenido.trim()) newErrors.contenido = 'Contenido es requerido';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox"
-        ? (e.target as HTMLInputElement).checked
-        : value,
-    }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => { // 👈 CAMBIAR: hacer async
     e.preventDefault();
-    if (!validate()) return;
-    onSubmit(form);
+    if (!validateForm()) return;
+
+    const submitData = contenido 
+      ? { id: contenido.id, ...formData } as UpdateContenidoRequest
+      : formData as CreateContenidoRequest;
+
+    await onSubmit(submitData); // 👈 CAMBIAR: agregar await
+  };
+
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form 
+      id="crud-form"
+      onSubmit={handleSubmit} 
+      className="space-y-6"
+    >
+      {/* Título */}
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Título</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <HiNewspaper className="w-4 h-4 inline mr-2" />
+          Título
+        </label>
         <input
-          name="titulo"
-          value={form.titulo}
-          onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.titulo ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+          type="text"
+          value={formData.titulo}
+          onChange={(e) => handleInputChange('titulo', e.target.value)}
+          className={`
+            w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+            ${errors.titulo ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+            focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+          `}
           disabled={loading}
         />
-        {errors.titulo && <p className="text-red-500 text-xs mt-1">{errors.titulo}</p>}
+        {errors.titulo && <p className="text-red-500 text-sm mt-1">{errors.titulo}</p>}
       </div>
-      <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Fecha</label>
-        <input
-          type="date"
-          name="fecha"
-          value={form.fecha}
-          onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.fecha ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
-          disabled={loading}
-        />
-        {errors.fecha && <p className="text-red-500 text-xs mt-1">{errors.fecha}</p>}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Fecha */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <HiCalendarDays className="w-4 h-4 inline mr-2" />
+            Fecha
+          </label>
+          <input
+            type="date"
+            value={formData.fecha}
+            onChange={(e) => handleInputChange('fecha', e.target.value)}
+            className={`
+              w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+              ${errors.fecha ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            `}
+            disabled={loading}
+          />
+          {errors.fecha && <p className="text-red-500 text-sm mt-1">{errors.fecha}</p>}
+        </div>
+
+        {/* Tipo */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Tipo de contenido
+          </label>
+          <select
+            value={formData.tipo}
+            onChange={(e) => handleInputChange('tipo', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={loading}
+          >
+            <option value="noticia">Noticia</option>
+            <option value="comunicado">Comunicado</option>
+          </select>
+        </div>
       </div>
+
+      {/* Contenido */}
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Tipo</label>
-        <select
-          name="tipo"
-          value={form.tipo}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          disabled={loading}
-        >
-          <option value="noticia">Noticia</option>
-          <option value="comunicado">Comunicado</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Contenido</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Contenido
+        </label>
         <textarea
-          name="contenido"
-          value={form.contenido}
-          onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.contenido ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
-          rows={4}
+          value={formData.contenido}
+          onChange={(e) => handleInputChange('contenido', e.target.value)}
+          rows={6}
+          className={`
+            w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+            ${errors.contenido ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+            focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+          `}
           disabled={loading}
         />
-        {errors.contenido && <p className="text-red-500 text-xs mt-1">{errors.contenido}</p>}
+        {errors.contenido && <p className="text-red-500 text-sm mt-1">{errors.contenido}</p>}
       </div>
+
+      {/* Enlace externo */}
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Enlace externo (opcional)</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <HiGlobeAlt className="w-4 h-4 inline mr-2" />
+          Enlace externo (opcional)
+        </label>
         <input
-          name="enlace"
-          value={form.enlace}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          type="url"
+          value={formData.enlace}
+          onChange={(e) => handleInputChange('enlace', e.target.value)}
+          placeholder="https://..."
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           disabled={loading}
         />
       </div>
-      <div className="flex items-center gap-2">
+
+      {/* Urgente */}
+      <div className="flex items-center">
         <input
+          id="urgente"
           type="checkbox"
-          name="urgente"
-          checked={form.urgente}
-          onChange={handleChange}
+          checked={formData.urgente}
+          onChange={(e) => handleInputChange('urgente', e.target.checked)}
+          className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
           disabled={loading}
         />
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Marcar como urgente</label>
-      </div>
-      <div className="flex justify-end gap-4 mt-6">
-        <button
-          type="button"
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-          onClick={onCancel}
-          disabled={loading}
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          disabled={loading}
-        >
-          {loading ? "Creando..." : "Crear"}
-        </button>
+        <label htmlFor="urgente" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+          Marcar como urgente
+        </label>
       </div>
     </form>
   );

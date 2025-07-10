@@ -19,7 +19,7 @@ import type {
 } from "../../domain/types";
 
 export class MenuApiService {
-  // ================ SEDES (HEADQUARTERS) ================
+  // ================ SEDES (HEADQUARTERS) - ACTUALIZAR ENDPOINT ================
   static async getHeadquarters(): Promise<Headquarters[]> {
     const response = await axiosInstance.get("/companies/headquarters/");
     return response.data;
@@ -30,7 +30,7 @@ export class MenuApiService {
     return response.data;
   }
 
-  // ================ FUNCIONARIOS (ACTUALIZADOS) ================
+  // ================ FUNCIONARIOS - MANTENER IGUAL ================
   static async getFuncionarios(): Promise<Funcionario[]> {
     const response = await axiosInstance.get("/main/funcionarios/");
     return response.data;
@@ -46,28 +46,33 @@ export class MenuApiService {
     return response.data;
   }
 
-  static async getFuncionariosByCargo(cargo: string): Promise<Funcionario[]> {
-    const response = await axiosInstance.get(`/main/funcionarios/?cargo=${cargo}`);
-    return response.data;
-  }
-
-  // ================ CRUD FUNCIONARIOS (ACTUALIZADOS) ================
+  // ================ CRUD FUNCIONARIOS - MEJORADOS ================
   static async createFuncionario(data: CreateFuncionarioRequest): Promise<Funcionario> {
     const formData = new FormData();
     
-    // Convertir sede a string para FormData
-    formData.append('documento', data.documento);
-    formData.append('nombres', data.nombres);
-    formData.append('apellidos', data.apellidos);
-    formData.append('fecha_nacimiento', data.fecha_nacimiento);
-    formData.append('cargo', data.cargo);
-    formData.append('sede', data.sede.toString()); // 👈 Convertir a string
-    formData.append('telefono', data.telefono);
-    formData.append('correo', data.correo);
-    
-    if (data.foto) {
-      formData.append('foto', data.foto);
-    }
+    // 👈 MEJORAR: Función helper para agregar campos de forma segura
+    const appendSafeField = (key: string, value: any) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (key === 'sede') {
+          formData.append('sede_id', value.toString());
+        } else if (value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, value.toString());
+        }
+      }
+    };
+
+    // Agregar todos los campos de forma segura
+    appendSafeField('documento', data.documento);
+    appendSafeField('nombres', data.nombres);
+    appendSafeField('apellidos', data.apellidos);
+    appendSafeField('fecha_nacimiento', data.fecha_nacimiento);
+    appendSafeField('cargo', data.cargo);
+    appendSafeField('sede', data.sede);
+    appendSafeField('telefono', data.telefono);
+    appendSafeField('correo', data.correo);
+    appendSafeField('foto', data.foto);
     
     const response = await axiosInstance.post("/main/funcionarios/", formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -79,16 +84,29 @@ export class MenuApiService {
     const { id, ...updateData } = data;
     const formData = new FormData();
     
-    // Solo agregar campos que están definidos
-    Object.entries(updateData).forEach(([key, value]) => {
-      if (value !== undefined) {
+    // 👈 MEJORAR: Función helper para agregar campos de forma segura
+    const appendSafeField = (key: string, value: any) => {
+      if (value !== undefined && value !== null && value !== '') {
         if (key === 'sede') {
-          formData.append(key, value.toString()); // 👈 Convertir sede a string
+          formData.append('sede_id', value.toString());
+        } else if (value instanceof File) {
+          formData.append(key, value);
         } else {
-          formData.append(key, value instanceof File ? value : value.toString());
+          formData.append(key, value.toString());
         }
       }
+    };
+
+    // Iterar sobre los datos de actualización
+    Object.entries(updateData).forEach(([key, value]) => {
+      appendSafeField(key, value);
     });
+
+    // 👈 DEBUG: Ver qué datos estamos enviando
+    console.log('Datos de actualización enviados:');
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
 
     const response = await axiosInstance.patch(`/main/funcionarios/${id}/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
