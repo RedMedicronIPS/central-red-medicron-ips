@@ -14,7 +14,9 @@ import {
   HiNewspaper,
   HiChevronDown,
   HiChevronRight,
-  HiUsers
+  HiUsers,
+  HiStar,
+  HiGift // 👈 AGREGAR: nuevo icono
 } from "react-icons/hi2";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 import { getProfilePicUrl } from "../utils/profile";
@@ -39,7 +41,15 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
       submenu: [
         { to: "/eventos", label: "Eventos", icon: <HiCalendarDays className="w-4 h-4" /> },
         { to: "/noticias", label: "Noticias", icon: <HiNewspaper className="w-4 h-4" /> },
-        { to: "/funcionarios", label: "Funcionarios", icon: <HiUsers className="w-4 h-4" /> }
+        { to: "/funcionarios", label: "Funcionarios", icon: <HiUsers className="w-4 h-4" /> },
+        // 👈 OPCIONAL: Solo mostrar para admin y adminMenu
+        ...(roles.includes("admin") || roles.includes("adminMenu") 
+          ? [
+              { to: "/reconocimientos", label: "Reconocimientos", icon: <HiStar className="w-4 h-4" /> },
+              { to: "/felicitaciones", label: "Felicitaciones", icon: <HiGift className="w-4 h-4" /> }
+            ]
+          : []
+        )
       ]
     },
     { to: "/auditorias", label: "Auditorías", icon: <HiClipboardDocumentList className="w-5 h-5" /> },

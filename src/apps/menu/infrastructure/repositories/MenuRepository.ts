@@ -149,12 +149,22 @@ export class MenuRepository {
     return MenuApiService.getEvento(id);
   }
 
-  // ================ CONSULTA FELICITACIONES Y RECONOCIMIENTOS ================
+  // ================ CONSULTA FELICITACIONES Y RECONOCIMIENTOS (ACTUALIZADO) ================
   async getFelicitacionesMes(): Promise<FelicitacionCumpleanios[]> {
     return MenuApiService.getFelicitacionesMes();
   }
 
+  // 👈 AGREGAR: Para gestión completa
+  async getAllFelicitaciones(): Promise<FelicitacionCumpleanios[]> {
+    return MenuApiService.getAllFelicitaciones();
+  }
+
   async getReconocimientosPublicados(): Promise<Reconocimiento[]> {
     return MenuApiService.getReconocimientosPublicados();
+  }
+
+  // 👈 AGREGAR: Para gestión completa
+  async getAllReconocimientos(): Promise<Reconocimiento[]> {
+    return MenuApiService.getAllReconocimientos();
   }
 }

@@ -40,15 +40,13 @@ export interface Evento extends TimeStampedModel {
 
 export interface FelicitacionCumpleanios extends TimeStampedModel {
   id: number;
-  funcionario: number;
-  funcionario_info?: Funcionario;
+  funcionario: Funcionario; // 👈 CAMBIAR: objeto completo en lugar de number
   mensaje: string;
 }
 
 export interface Reconocimiento extends TimeStampedModel {
   id: number;
-  funcionario: number;
-  funcionario_info?: Funcionario;
+  funcionario: Funcionario; // 👈 CAMBIAR: objeto completo en lugar de number
   titulo: string;
   descripcion: string;
   fecha: string;
@@ -113,8 +111,9 @@ export interface UpdateEventoRequest extends Partial<CreateEventoRequest> {
   id: number;
 }
 
+// Para CREATE requests mantenemos number porque enviamos solo el ID
 export interface CreateReconocimientoRequest {
-  funcionario: number;
+  funcionario: number; // 👈 MANTENER: ID para crear
   titulo: string;
   descripcion: string;
   fecha: string;
@@ -127,7 +126,7 @@ export interface UpdateReconocimientoRequest extends Partial<CreateReconocimient
 }
 
 export interface CreateFelicitacionRequest {
-  funcionario: number;
+  funcionario: number; // 👈 MANTENER: ID para crear
   mensaje: string;
 }
 

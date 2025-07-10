@@ -14,6 +14,8 @@ import AdministracionPage from "../../apps/administracion/presentation/pages/Adm
 import NoticiasPage from "../../apps/menu/presentation/pages/NoticiasPage";
 import EventosPage from "../../apps/menu/presentation/pages/EventosPage";
 import FuncionariosPage from "../../apps/menu/presentation/pages/FuncionariosPage";
+import ReconocimientosPage from "../../apps/menu/presentation/pages/ReconocimientosPage";
+import FelicitacionesPage from "../../apps/menu/presentation/pages/FelicitacionesPage";
 
 export default function AppRouter() {
   const { isAuthenticated, roles } = useAuthContext();
@@ -53,6 +55,8 @@ export default function AppRouter() {
         { path: "noticias", element: <NoticiasPage /> },
         { path: "noticias/:id", element: <NoticiasPage /> },
         { path: "funcionarios", element: <FuncionariosPage /> },
+        { path: "reconocimientos", element: <ReconocimientosPage /> },
+        { path: "felicitaciones", element: <FelicitacionesPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "auditorias", element: <AuditoriasPage /> },
         { path: "indicadores", element: <IndicadoresPage /> },

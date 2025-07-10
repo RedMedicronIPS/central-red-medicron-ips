@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { HiUsers, HiPhone, HiUserCircle, HiPlus, HiPencil, HiTrash } from "react-icons/hi2";
-import { HiSearch } from "react-icons/hi";
-import { HiOfficeBuilding, HiMail } from "react-icons/hi";
+import { HiUsers, HiPhone, HiUserCircle, HiPlus, HiPencil, HiTrash, HiStar, HiGift, HiEye } from "react-icons/hi2";
+import { HiOfficeBuilding, HiSearch, HiMail } from "react-icons/hi";
 import { FuncionarioService } from "../../application/services/FuncionarioService";
 import { FuncionarioCrudService } from "../../application/services/FuncionarioCrudService";
+import { ReconocimientoCrudService } from "../../application/services/ReconocimientoCrudService"; // 👈 NUEVO
+import { FelicitacionCrudService } from "../../application/services/FelicitacionCrudService"; // 👈 NUEVO
 import { useMenuPermissions } from "../hooks/useMenuPermissions";
-import type { Funcionario, CreateFuncionarioRequest, UpdateFuncionarioRequest } from "../../domain/types";
+import type { Funcionario, CreateFuncionarioRequest, UpdateFuncionarioRequest, Reconocimiento, FelicitacionCumpleanios, CreateReconocimientoRequest, UpdateReconocimientoRequest, CreateFelicitacionRequest, UpdateFelicitacionRequest } from "../../domain/types";
 import CrudModal from "../components/CrudModal";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import FuncionarioForm from "../components/FuncionarioForm";
+import ReconocimientoForm from "../components/ReconocimientoForm"; // 👈 NUEVO
+import FelicitacionForm from "../components/FelicitacionForm"; // 👈 NUEVO
 import { formatBirthdayDate } from "../../../../shared/utils/dateUtils";
 
 export default function FuncionariosPage() {
@@ -17,19 +20,39 @@ export default function FuncionariosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSede, setSelectedSede] = useState<number>(0); // 👈 Ahora es number
+  const [selectedSede, setSelectedSede] = useState<number>(0);
   const [selectedCargo, setSelectedCargo] = useState('');
 
-  // CRUD states
+  // Estados CRUD Funcionarios
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
   const [crudLoading, setCrudLoading] = useState(false);
 
+  // 👈 NUEVO: Estados CRUD Reconocimientos
+  const [showCreateReconocimientoModal, setShowCreateReconocimientoModal] = useState(false);
+  const [showEditReconocimientoModal, setShowEditReconocimientoModal] = useState(false);
+  const [showDeleteReconocimientoModal, setShowDeleteReconocimientoModal] = useState(false);
+  const [selectedReconocimiento, setSelectedReconocimiento] = useState<Reconocimiento | null>(null);
+  const [funcionarioParaReconocimiento, setFuncionarioParaReconocimiento] = useState<Funcionario | null>(null);
+
+  // 👈 NUEVO: Estados CRUD Felicitaciones
+  const [showCreateFelicitacionModal, setShowCreateFelicitacionModal] = useState(false);
+  const [showEditFelicitacionModal, setShowEditFelicitacionModal] = useState(false);
+  const [showDeleteFelicitacionModal, setShowDeleteFelicitacionModal] = useState(false);
+  const [selectedFelicitacion, setSelectedFelicitacion] = useState<FelicitacionCumpleanios | null>(null);
+  const [funcionarioParaFelicitacion, setFuncionarioParaFelicitacion] = useState<Funcionario | null>(null);
+
+  // 👈 NUEVO: Estados para mostrar reconocimientos y felicitaciones por funcionario
+  const [reconocimientosFuncionario, setReconocimientosFuncionario] = useState<Record<number, Reconocimiento[]>>({});
+  const [felicitacionesFuncionario, setFelicitacionesFuncionario] = useState<Record<number, FelicitacionCumpleanios[]>>({});
+
   const funcionarioService = new FuncionarioService();
   const funcionarioCrudService = new FuncionarioCrudService();
-  const { canManageFuncionarios } = useMenuPermissions();
+  const reconocimientoCrudService = new ReconocimientoCrudService(); // 👈 NUEVO
+  const felicitacionCrudService = new FelicitacionCrudService(); // 👈 NUEVO
+  const { canManageFuncionarios, canManageReconocimientos } = useMenuPermissions();
 
   useEffect(() => {
     fetchFuncionarios();
@@ -43,7 +66,7 @@ export default function FuncionariosPage() {
     }
 
     if (selectedSede && selectedSede !== 0) {
-      filtered = filtered.filter(funcionario => funcionario.sede.id === selectedSede); // 👈 CAMBIAR: usar sede.id
+      filtered = filtered.filter(funcionario => funcionario.sede.id === selectedSede);
     }
 
     if (selectedCargo) {
@@ -66,13 +89,111 @@ export default function FuncionariosPage() {
     }
   };
 
-  // 👈 CAMBIAR: Handler genérico que maneja ambos casos
+  // 👈 NUEVO: Handlers para reconocimientos
+  const handleSubmitReconocimiento = async (data: CreateReconocimientoRequest | UpdateReconocimientoRequest) => {
+    setCrudLoading(true);
+    
+    console.log('Enviando datos de reconocimiento:', data); // 👈 DEBUG: verificar datos
+    
+    let result;
+    if ('id' in data) {
+      result = await reconocimientoCrudService.updateReconocimiento(data as UpdateReconocimientoRequest);
+      if (result.success) {
+        setShowEditReconocimientoModal(false);
+        setSelectedReconocimiento(null);
+        setFuncionarioParaReconocimiento(null);
+      }
+    } else {
+      result = await reconocimientoCrudService.createReconocimiento(data as CreateReconocimientoRequest);
+      if (result.success) {
+        setShowCreateReconocimientoModal(false);
+        setFuncionarioParaReconocimiento(null);
+      }
+    }
+    
+    if (!result.success) {
+      console.error('Error en reconocimiento:', result.message); // 👈 DEBUG: ver errores específicos
+    } else {
+      console.log('Reconocimiento guardado exitosamente'); // 👈 DEBUG: confirmar éxito
+    }
+    
+    setCrudLoading(false);
+  };
+
+  const handleDeleteReconocimiento = async () => {
+    if (!selectedReconocimiento) return;
+
+    setCrudLoading(true);
+    const result = await reconocimientoCrudService.deleteReconocimiento(selectedReconocimiento.id);
+
+    if (result.success) {
+      setShowDeleteReconocimientoModal(false);
+      setSelectedReconocimiento(null);
+    } else {
+      console.error(result.message);
+    }
+    setCrudLoading(false);
+  };
+
+  // 👈 NUEVO: Handlers para felicitaciones
+  const handleSubmitFelicitacion = async (data: CreateFelicitacionRequest | UpdateFelicitacionRequest) => {
+    setCrudLoading(true);
+    
+    let result;
+    if ('id' in data) {
+      result = await felicitacionCrudService.updateFelicitacion(data as UpdateFelicitacionRequest);
+      if (result.success) {
+        setShowEditFelicitacionModal(false);
+        setSelectedFelicitacion(null);
+        setFuncionarioParaFelicitacion(null);
+      }
+    } else {
+      result = await felicitacionCrudService.createFelicitacion(data as CreateFelicitacionRequest);
+      if (result.success) {
+        setShowCreateFelicitacionModal(false);
+        setFuncionarioParaFelicitacion(null);
+      }
+    }
+    
+    if (!result.success) {
+      console.error(result.message);
+    }
+    
+    setCrudLoading(false);
+  };
+
+  const handleDeleteFelicitacion = async () => {
+    if (!selectedFelicitacion) return;
+
+    setCrudLoading(true);
+    const result = await felicitacionCrudService.deleteFelicitacion(selectedFelicitacion.id);
+
+    if (result.success) {
+      setShowDeleteFelicitacionModal(false);
+      setSelectedFelicitacion(null);
+    } else {
+      console.error(result.message);
+    }
+    setCrudLoading(false);
+  };
+
+  // 👈 NUEVO: Handlers para abrir modales de reconocimientos
+  const openCreateReconocimientoModal = (funcionario: Funcionario) => {
+    setFuncionarioParaReconocimiento(funcionario);
+    setShowCreateReconocimientoModal(true);
+  };
+
+  const openCreateFelicitacionModal = (funcionario: Funcionario) => {
+    setFuncionarioParaFelicitacion(funcionario);
+    setShowCreateFelicitacionModal(true);
+  };
+
+  // Handlers existentes de funcionarios
   const handleSubmit = async (data: CreateFuncionarioRequest | UpdateFuncionarioRequest) => {
     setCrudLoading(true);
     
     let result;
     if ('id' in data) {
-      // Es una actualización
       result = await funcionarioCrudService.updateFuncionario(data as UpdateFuncionarioRequest);
       if (result.success) {
         setShowEditModal(false);
@@ -80,7 +201,6 @@ export default function FuncionariosPage() {
         fetchFuncionarios();
       }
     } else {
-      // Es una creación
       result = await funcionarioCrudService.createFuncionario(data as CreateFuncionarioRequest);
       if (result.success) {
         setShowCreateModal(false);
@@ -90,7 +210,6 @@ export default function FuncionariosPage() {
     
     if (!result.success) {
       console.error(result.message);
-      // TODO: Mostrar toast de error
     }
     
     setCrudLoading(false);
@@ -106,9 +225,7 @@ export default function FuncionariosPage() {
       setShowDeleteModal(false);
       setSelectedFuncionario(null);
       fetchFuncionarios();
-      // TODO: Mostrar toast de éxito
     } else {
-      // TODO: Mostrar toast de error
       console.error(result.message);
     }
     setCrudLoading(false);
@@ -132,12 +249,12 @@ export default function FuncionariosPage() {
   };
 
   const formatFechaNacimiento = (fecha: string) => {
-    return formatBirthdayDate(fecha); // 👈 USAR UTILIDAD
+    return formatBirthdayDate(fecha);
   };
 
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedSede(0); // 👈 Reset a 0
+    setSelectedSede(0);
     setSelectedCargo('');
   };
 
@@ -166,7 +283,7 @@ export default function FuncionariosPage() {
     );
   }
 
-  const sedesUnicas = funcionarioService.getUniqueSedes(funcionarios); // 👈 Usar nuevo método
+  const sedesUnicas = funcionarioService.getUniqueSedes(funcionarios);
   const cargos = funcionarioService.getUniqueValues(funcionarios, 'cargo');
 
   return (
@@ -188,15 +305,26 @@ export default function FuncionariosPage() {
             </div>
           </div>
 
-          {canManageFuncionarios && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <HiPlus className="w-5 h-5" />
-              Agregar funcionario
-            </button>
-          )}
+          <div className="flex gap-2">
+            {canManageReconocimientos && (
+              <button
+                onClick={() => setShowCreateReconocimientoModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+              >
+                <HiStar className="w-5 h-5" />
+                Nuevo reconocimiento
+              </button>
+            )}
+            {canManageFuncionarios && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <HiPlus className="w-5 h-5" />
+                Agregar funcionario
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Estadísticas */}
@@ -236,7 +364,7 @@ export default function FuncionariosPage() {
           </div>
         </div>
 
-        {/* Filtros actualizados */}
+        {/* Filtros */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
@@ -258,7 +386,7 @@ export default function FuncionariosPage() {
               <option value={0}>Todas las sedes</option>
               {sedesUnicas.map(sede => (
                 <option key={sede.id} value={sede.id}>
-                  {sede.name} - {sede.city} {/* 👈 CAMBIAR: usar name y city */}
+                  {sede.name} - {sede.city}
                 </option>
               ))}
             </select>
@@ -330,56 +458,69 @@ export default function FuncionariosPage() {
                     <div className="w-full space-y-2 text-sm">
                       <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300">
                         <HiOfficeBuilding className="w-4 h-4" />
-                        <span>{funcionario.sede.name} - {funcionario.sede.city}</span> {/* 👈 CAMBIAR: mostrar name y city */}
+                        <span>{funcionario.sede.name} - {funcionario.sede.city}</span>
                       </div>
                       
                       <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300">
                         <HiPhone className="w-4 h-4" />
-                        <a
-                          href={`tel:${funcionario.telefono}`}
-                          className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                        >
-                          {funcionario.telefono}
-                        </a>
+                        <span>{funcionario.telefono}</span>
                       </div>
 
                       <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300">
                         <HiMail className="w-4 h-4" />
-                        <a
-                          href={`mailto:${funcionario.correo}`}
-                          className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-xs truncate"
-                          title={funcionario.correo}
-                        >
-                          {funcionario.correo}
-                        </a>
+                        <span className="truncate">{funcionario.correo}</span>
                       </div>
 
                       <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           Cumpleaños: {formatFechaNacimiento(funcionario.fecha_nacimiento)}
-                        </p>
+                        </span>
                       </div>
                     </div>
 
-                    {/* Botones CRUD */}
-                    {canManageFuncionarios && (
-                      <div className="flex gap-2 mt-4 w-full">
-                        <button
-                          onClick={() => openEditModal(funcionario)}
-                          className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                        >
-                          <HiPencil className="w-3 h-3" />
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => openDeleteModal(funcionario)}
-                          className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-xs bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-                        >
-                          <HiTrash className="w-3 h-3" />
-                          Eliminar
-                        </button>
-                      </div>
-                    )}
+                    {/* 👈 NUEVO: Botones de gestión */}
+                    <div className="flex flex-col gap-2 mt-4 w-full">
+                      {/* Botones CRUD Funcionarios */}
+                      {canManageFuncionarios && (
+                        <div className="flex gap-2 w-full">
+                          <button
+                            onClick={() => openEditModal(funcionario)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors text-sm"
+                          >
+                            <HiPencil className="w-4 h-4" />
+                            Editar
+                          </button>
+                          
+                          <button
+                            onClick={() => openDeleteModal(funcionario)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors text-sm"
+                          >
+                            <HiTrash className="w-4 h-4" />
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+
+                      {/* 👈 NUEVO: Botones reconocimientos y felicitaciones 
+                      {canManageReconocimientos && (
+                        <div className="flex gap-2 w-full">
+                          <button
+                            onClick={() => openCreateReconocimientoModal(funcionario)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors text-sm"
+                          >
+                            <HiStar className="w-4 h-4" />
+                            Reconocer
+                          </button>
+                          <button
+                            onClick={() => openCreateFelicitacionModal(funcionario)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300 rounded-lg hover:bg-pink-200 dark:hover:bg-pink-800 transition-colors text-sm"
+                          >
+                            <HiGift className="w-4 h-4" />
+                            Felicitar
+                          </button>
+                        </div>
+                      )}*/}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -388,7 +529,7 @@ export default function FuncionariosPage() {
         </div>
       )}
 
-      {/* Modales CRUD */}
+      {/* Modales CRUD Funcionarios */}
       <CrudModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -397,7 +538,7 @@ export default function FuncionariosPage() {
         submitText="Crear"
       >
         <FuncionarioForm
-          onSubmit={handleSubmit} // 👈 CAMBIAR: usar handler genérico
+          onSubmit={handleSubmit}
           loading={crudLoading}
         />
       </CrudModal>
@@ -414,12 +555,11 @@ export default function FuncionariosPage() {
       >
         <FuncionarioForm
           funcionario={selectedFuncionario}
-          onSubmit={handleSubmit} // 👈 CAMBIAR: usar el mismo handler genérico
+          onSubmit={handleSubmit}
           loading={crudLoading}
         />
       </CrudModal>
 
-      {/* DeleteConfirmModal se mantiene igual */}
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => {
@@ -431,6 +571,108 @@ export default function FuncionariosPage() {
         title="Eliminar Funcionario"
         message="¿Estás seguro de que deseas eliminar este funcionario? Esta acción no se puede deshacer."
         itemName={selectedFuncionario ? `${selectedFuncionario.nombres} ${selectedFuncionario.apellidos}` : ''}
+      />
+
+      {/* 👈 NUEVO: Modales CRUD Reconocimientos */}
+      <CrudModal
+        isOpen={showCreateReconocimientoModal}
+        onClose={() => {
+          setShowCreateReconocimientoModal(false);
+          setFuncionarioParaReconocimiento(null);
+        }}
+        title={funcionarioParaReconocimiento ? `Crear Reconocimiento - ${funcionarioParaReconocimiento.nombres} ${funcionarioParaReconocimiento.apellidos}` : "Crear Reconocimiento"}
+        loading={crudLoading}
+        submitText="Crear Reconocimiento"
+      >
+        <ReconocimientoForm
+          funcionarioPreseleccionado={funcionarioParaReconocimiento}
+          funcionarios={funcionarios}
+          onSubmit={handleSubmitReconocimiento}
+          loading={crudLoading}
+        />
+      </CrudModal>
+
+      <CrudModal
+        isOpen={showEditReconocimientoModal}
+        onClose={() => {
+          setShowEditReconocimientoModal(false);
+          setSelectedReconocimiento(null);
+          setFuncionarioParaReconocimiento(null);
+        }}
+        title="Editar Reconocimiento"
+        loading={crudLoading}
+        submitText="Actualizar"
+      >
+        <ReconocimientoForm
+          reconocimiento={selectedReconocimiento}
+          funcionarios={funcionarios}
+          onSubmit={handleSubmitReconocimiento}
+          loading={crudLoading}
+        />
+      </CrudModal>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteReconocimientoModal}
+        onClose={() => {
+          setShowDeleteReconocimientoModal(false);
+          setSelectedReconocimiento(null);
+        }}
+        onConfirm={handleDeleteReconocimiento}
+        loading={crudLoading}
+        title="Eliminar Reconocimiento"
+        message="¿Estás seguro de que deseas eliminar este reconocimiento? Esta acción no se puede deshacer."
+        itemName={selectedReconocimiento ? selectedReconocimiento.titulo : ''}
+      />
+
+      {/* 👈 NUEVO: Modales CRUD Felicitaciones */}
+      <CrudModal
+        isOpen={showCreateFelicitacionModal}
+        onClose={() => {
+          setShowCreateFelicitacionModal(false);
+          setFuncionarioParaFelicitacion(null);
+        }}
+        title={funcionarioParaFelicitacion ? `Crear Felicitación - ${funcionarioParaFelicitacion.nombres} ${funcionarioParaFelicitacion.apellidos}` : "Crear Felicitación"}
+        loading={crudLoading}
+        submitText="Crear Felicitación"
+      >
+        <FelicitacionForm
+          funcionarioPreseleccionado={funcionarioParaFelicitacion}
+          funcionarios={funcionarios}
+          onSubmit={handleSubmitFelicitacion}
+          loading={crudLoading}
+        />
+      </CrudModal>
+
+      <CrudModal
+        isOpen={showEditFelicitacionModal}
+        onClose={() => {
+          setShowEditFelicitacionModal(false);
+          setSelectedFelicitacion(null);
+          setFuncionarioParaFelicitacion(null);
+        }}
+        title="Editar Felicitación"
+        loading={crudLoading}
+        submitText="Actualizar"
+      >
+        <FelicitacionForm
+          felicitacion={selectedFelicitacion}
+          funcionarios={funcionarios}
+          onSubmit={handleSubmitFelicitacion}
+          loading={crudLoading}
+        />
+      </CrudModal>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteFelicitacionModal}
+        onClose={() => {
+          setShowDeleteFelicitacionModal(false);
+          setSelectedFelicitacion(null);
+        }}
+        onConfirm={handleDeleteFelicitacion}
+        loading={crudLoading}
+        title="Eliminar Felicitación"
+        message="¿Estás seguro de que deseas eliminar esta felicitación? Esta acción no se puede deshacer."
+        itemName={selectedFelicitacion ? "Felicitación de cumpleaños" : ''}
       />
     </div>
   );

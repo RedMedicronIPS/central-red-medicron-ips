@@ -19,7 +19,7 @@ import type {
 } from "../../domain/types";
 
 export class MenuApiService {
-  // ================ SEDES (HEADQUARTERS) - ACTUALIZAR ENDPOINT ================
+  // ================ SEDES (HEADQUARTERS) ================
   static async getHeadquarters(): Promise<Headquarters[]> {
     const response = await axiosInstance.get("/companies/headquarters/");
     return response.data;
@@ -30,7 +30,7 @@ export class MenuApiService {
     return response.data;
   }
 
-  // ================ FUNCIONARIOS - MANTENER IGUAL ================
+  // ================ FUNCIONARIOS - CONSULTAS ================
   static async getFuncionarios(): Promise<Funcionario[]> {
     const response = await axiosInstance.get("/main/funcionarios/");
     return response.data;
@@ -46,11 +46,16 @@ export class MenuApiService {
     return response.data;
   }
 
-  // ================ CRUD FUNCIONARIOS - MEJORADOS ================
+  // 👈 AGREGAR: Método faltante
+  static async getFuncionariosByCargo(cargo: string): Promise<Funcionario[]> {
+    const response = await axiosInstance.get(`/main/funcionarios/?cargo=${encodeURIComponent(cargo)}`);
+    return response.data;
+  }
+
+  // ================ CRUD FUNCIONARIOS ================
   static async createFuncionario(data: CreateFuncionarioRequest): Promise<Funcionario> {
     const formData = new FormData();
     
-    // 👈 MEJORAR: Función helper para agregar campos de forma segura
     const appendSafeField = (key: string, value: any) => {
       if (value !== undefined && value !== null && value !== '') {
         if (key === 'sede') {
@@ -84,7 +89,6 @@ export class MenuApiService {
     const { id, ...updateData } = data;
     const formData = new FormData();
     
-    // 👈 MEJORAR: Función helper para agregar campos de forma segura
     const appendSafeField = (key: string, value: any) => {
       if (value !== undefined && value !== null && value !== '') {
         if (key === 'sede') {
@@ -101,12 +105,6 @@ export class MenuApiService {
     Object.entries(updateData).forEach(([key, value]) => {
       appendSafeField(key, value);
     });
-
-    // 👈 DEBUG: Ver qué datos estamos enviando
-    console.log('Datos de actualización enviados:');
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
 
     const response = await axiosInstance.patch(`/main/funcionarios/${id}/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -152,13 +150,41 @@ export class MenuApiService {
 
   // ================ CRUD RECONOCIMIENTOS ================
   static async createReconocimiento(data: CreateReconocimientoRequest): Promise<Reconocimiento> {
-    const response = await axiosInstance.post("/main/reconocimientos/", data);
+    console.log('MenuApiService - Enviando reconocimiento:', data);
+    
+    // 👈 SOLUCIÓN: Mapear funcionario a funcionario_id
+    const requestData = {
+      funcionario_id: data.funcionario, // 👈 CAMBIAR: mapear funcionario a funcionario_id
+      titulo: data.titulo,
+      descripcion: data.descripcion,
+      fecha: data.fecha,
+      tipo: data.tipo,
+      publicar: data.publicar
+    };
+    
+    console.log('MenuApiService - Datos mapeados:', requestData);
+    
+    const response = await axiosInstance.post("/main/reconocimientos/", requestData);
+    
+    console.log('MenuApiService - Respuesta del servidor:', response.data);
+    
     return response.data;
   }
 
   static async updateReconocimiento(data: UpdateReconocimientoRequest): Promise<Reconocimiento> {
-    const { id, ...updateData } = data;
-    const response = await axiosInstance.patch(`/main/reconocimientos/${id}/`, updateData);
+    const { id, funcionario, ...otherData } = data;
+    
+    const updateData = funcionario !== undefined 
+      ? { funcionario_id: funcionario, ...otherData }
+      : otherData;
+    
+    console.log('MenuApiService - Actualizando reconocimiento:', { id, updateData });
+    
+    // 👈 CAMBIAR: usar PUT en lugar de PATCH si también da error 405
+    const response = await axiosInstance.put(`/main/reconocimientos/${id}/`, updateData);
+    
+    console.log('MenuApiService - Respuesta del servidor:', response.data);
+    
     return response.data;
   }
 
@@ -168,13 +194,34 @@ export class MenuApiService {
 
   // ================ CRUD FELICITACIONES ================
   static async createFelicitacion(data: CreateFelicitacionRequest): Promise<FelicitacionCumpleanios> {
-    const response = await axiosInstance.post("/main/felicitaciones/", data);
+    console.log('MenuApiService - Enviando felicitación:', data);
+    
+    const requestData = {
+      funcionario_id: data.funcionario,
+      mensaje: data.mensaje
+    };
+    
+    console.log('MenuApiService - Datos mapeados:', requestData);
+    
+    const response = await axiosInstance.post("/main/felicitaciones/", requestData);
     return response.data;
   }
 
   static async updateFelicitacion(data: UpdateFelicitacionRequest): Promise<FelicitacionCumpleanios> {
-    const { id, ...updateData } = data;
-    const response = await axiosInstance.patch(`/main/felicitaciones/${id}/`, updateData);
+    const { id, funcionario, ...otherData } = data;
+    
+    // Mapear funcionario a funcionario_id si está presente
+    const updateData = funcionario !== undefined 
+      ? { funcionario_id: funcionario, ...otherData }
+      : otherData;
+    
+    console.log('MenuApiService - Actualizando felicitación:', { id, updateData });
+    
+    // 👈 CAMBIAR: usar PUT en lugar de PATCH
+    const response = await axiosInstance.put(`/main/felicitaciones/${id}/`, updateData);
+    
+    console.log('MenuApiService - Respuesta del servidor:', response.data);
+    
     return response.data;
   }
 
@@ -203,35 +250,52 @@ export class MenuApiService {
     return response.data;
   }
 
-  //================ CONSULTA EVENTOS ================ 
-  static async getEventos(): Promise<Evento[]> { 
-    const response = await axiosInstance.get(`/main/eventos/`); 
-    return response.data; }
+  // ================ CONSULTA EVENTOS ================
+  static async getEventos(): Promise<Evento[]> {
+    const response = await axiosInstance.get(`/main/eventos/`);
+    return response.data;
+  }
 
-  static async getEventosProximos(): Promise<Evento[]> { 
-    const response = await axiosInstance.get(`/main/eventos/?proximos=true`); 
-    return response.data; }
+  static async getEventosProximos(): Promise<Evento[]> {
+    const response = await axiosInstance.get(`/main/eventos/?proximos=true`);
+    return response.data;
+  }
 
-  static async getEventosImportantes(): Promise<Evento[]> { 
-    const response = await axiosInstance.get(`/main/eventos/?importante=true`); 
-    return response.data; }
+  static async getEventosImportantes(): Promise<Evento[]> {
+    const response = await axiosInstance.get(`/main/eventos/?importante=true`);
+    return response.data;
+  }
 
-  static async getEventosVirtuales(): Promise<Evento[]> { 
-    const response = await axiosInstance.get(`/main/eventos/?es_virtual=true`); 
-    return response.data; }
+  static async getEventosVirtuales(): Promise<Evento[]> {
+    const response = await axiosInstance.get(`/main/eventos/?es_virtual=true`);
+    return response.data;
+  }
 
-  static async getEvento(id: number): Promise<Evento> { 
-    const response = await axiosInstance.get(`/main/eventos/${id}/`); 
-    return response.data; }
+  static async getEvento(id: number): Promise<Evento> {
+    const response = await axiosInstance.get(`/main/eventos/${id}/`);
+    return response.data;
+  }
 
-  // ================ CONSULTA FELICITACIONES Y RECONOCIMIENTOS ================ 
-  static async getFelicitacionesMes(): Promise<FelicitacionCumpleanios[]> { 
-    const response = await axiosInstance.get(`/main/felicitaciones/?mes=actual`); 
-    return response.data; }
+  // ================ CONSULTA FELICITACIONES Y RECONOCIMIENTOS (ACTUALIZADO) ================
+  static async getFelicitacionesMes(): Promise<FelicitacionCumpleanios[]> {
+    const response = await axiosInstance.get(`/main/felicitaciones/?mes=actual`);
+    return response.data;
+  }
 
-  static async getReconocimientosPublicados(): Promise<Reconocimiento[]> { 
-    const response = await axiosInstance.get(`/main/reconocimientos/?publicar=true`); 
-    return response.data; }
+  // 👈 MÉTODO YA AGREGADO: Obtener TODAS las felicitaciones para gestión
+  static async getAllFelicitaciones(): Promise<FelicitacionCumpleanios[]> {
+    const response = await axiosInstance.get(`/main/felicitaciones/`);
+    return response.data;
+  }
 
+  static async getReconocimientosPublicados(): Promise<Reconocimiento[]> {
+    const response = await axiosInstance.get(`/main/reconocimientos/?publicar=true`);
+    return response.data;
+  }
 
+  // 👈 MÉTODO YA AGREGADO: Obtener TODOS los reconocimientos para gestión
+  static async getAllReconocimientos(): Promise<Reconocimiento[]> {
+    const response = await axiosInstance.get(`/main/reconocimientos/`);
+    return response.data;
+  }
 }

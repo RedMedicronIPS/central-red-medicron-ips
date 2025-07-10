@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { HiGift, HiStar, HiUserCircle, HiArrowRight, HiExclamationTriangle } from "react-icons/hi2";
 import { MenuApiService } from "../../infrastructure/services/MenuApiService";
-import type { FelicitacionCumpleanios, Reconocimiento, Funcionario } from "../../domain/types";
+import type { FelicitacionCumpleanios, Reconocimiento } from "../../domain/types";
 import { formatBirthdayDate, formatDisplayDate } from "../../../../shared/utils/dateUtils";
 
 export default function ReconocimientosCumpleanios() {
   const [felicitaciones, setFelicitaciones] = useState<FelicitacionCumpleanios[]>([]);
   const [reconocimientos, setReconocimientos] = useState<Reconocimiento[]>([]);
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,15 +15,13 @@ export default function ReconocimientosCumpleanios() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [felicitacionesData, reconocimientosData, funcionariosData] = await Promise.all([
+        const [felicitacionesData, reconocimientosData] = await Promise.all([
           MenuApiService.getFelicitacionesMes(),
-          MenuApiService.getReconocimientosPublicados(),
-          MenuApiService.getFuncionarios()
+          MenuApiService.getReconocimientosPublicados()
         ]);
         
         setFelicitaciones(felicitacionesData.slice(0, 5));
         setReconocimientos(reconocimientosData.slice(0, 5));
-        setFuncionarios(funcionariosData);
       } catch (err) {
         setError('Error al cargar reconocimientos y cumpleaños');
         console.error('Error fetching data:', err);
@@ -36,10 +33,6 @@ export default function ReconocimientosCumpleanios() {
     fetchData();
   }, []);
 
-  const getFuncionarioInfo = (funcionarioId: number) => {
-    return funcionarios.find(f => f.id === funcionarioId);
-  };
-
   const getProfilePicUrl = (foto: string | undefined) => {
     if (!foto) return null;
     if (foto.startsWith('http')) return foto;
@@ -48,7 +41,7 @@ export default function ReconocimientosCumpleanios() {
   };
 
   const formatFecha = (fecha: string) => {
-    return formatBirthdayDate(fecha); // 👈 USAR UTILIDAD
+    return formatBirthdayDate(fecha);
   };
 
   if (loading) {
@@ -113,7 +106,7 @@ export default function ReconocimientosCumpleanios() {
           ) : (
             <div className="space-y-3">
               {felicitaciones.map((felicitacion) => {
-                const funcionario = getFuncionarioInfo(felicitacion.funcionario);
+                const funcionario = felicitacion.funcionario; // 👈 CAMBIAR: usar directamente
                 const photoUrl = getProfilePicUrl(funcionario?.foto);
                 
                 return (
@@ -177,7 +170,7 @@ export default function ReconocimientosCumpleanios() {
           ) : (
             <div className="space-y-3">
               {reconocimientos.map((reconocimiento) => {
-                const funcionario = getFuncionarioInfo(reconocimiento.funcionario);
+                const funcionario = reconocimiento.funcionario; // 👈 CAMBIAR: usar directamente
                 const photoUrl = getProfilePicUrl(funcionario?.foto);
                 
                 return (
