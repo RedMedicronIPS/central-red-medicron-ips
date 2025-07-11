@@ -16,7 +16,9 @@ import {
   HiChevronRight,
   HiUsers,
   HiStar,
-  HiGift // 👈 AGREGAR: nuevo icono
+  HiGift,
+  HiTableCells,
+  HiPresentationChartBar // 👈 AGREGAR: nuevo icono para dashboard
 } from "react-icons/hi2";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 import { getProfilePicUrl } from "../utils/profile";
@@ -32,6 +34,7 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
   const navigate = useNavigate();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['menu']); // 'menu' expandido por defecto
 
+  // 👈 CORREGIR: URLs del sidebar para que coincidan con las rutas
   const navItems = [
     { 
       to: "/menu", 
@@ -53,7 +56,18 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
       ]
     },
     { to: "/auditorias", label: "Auditorías", icon: <HiClipboardDocumentList className="w-5 h-5" /> },
-    { to: "/indicadores", label: "Indicadores", icon: <HiChartBar className="w-5 h-5" /> },
+    // 🔧 CORREGIR: URLs de indicadores
+    { 
+      to: "/dashboard", // 👈 Cambiar base URL
+      label: "Indicadores", 
+      icon: <HiChartBar className="w-5 h-5" />,
+      hasSubmenu: true,
+      submenu: [
+        { to: "/dashboard", label: "Dashboard", icon: <HiPresentationChartBar className="w-4 h-4" /> },
+        { to: "/indicators", label: "Indicadores", icon: <HiChartBar className="w-4 h-4" /> },
+        { to: "/results", label: "Resultados", icon: <HiTableCells className="w-4 h-4" /> },
+      ]
+    },
     { to: "/procesos", label: "Procesos", icon: <HiDocumentText className="w-5 h-5" /> },
     { to: "/proveedores", label: "Proveedores", icon: <HiBuildingOffice2 className="w-5 h-5" /> },
     { to: "/profile", label: "Mi perfil", icon: <HiUser className="w-5 h-5" /> },

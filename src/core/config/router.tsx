@@ -7,7 +7,6 @@ import MainLayout from "../presentation/layouts/MainLayout";
 import MenuPage from "../../apps/menu/presentation/pages/MenuPage";
 import ProfilePage from "../../apps/auth/presentation/pages/ProfilePage";
 import AuditoriasPage from "../../apps/auditorias/presentation/pages/AuditoriasPage";
-import IndicadoresPage from "../../apps/indicadores/presentation/pages/IndicadoresPage";
 import ProcesosPage from "../../apps/procesos/presentation/pages/ProcesosPage";
 import ProveedoresPage from "../../apps/proveedores/presentation/pages/ProveedoresPage";
 import AdministracionPage from "../../apps/administracion/presentation/pages/AdministracionPage";
@@ -16,6 +15,9 @@ import EventosPage from "../../apps/menu/presentation/pages/EventosPage";
 import FuncionariosPage from "../../apps/menu/presentation/pages/FuncionariosPage";
 import ReconocimientosPage from "../../apps/menu/presentation/pages/ReconocimientosPage";
 import FelicitacionesPage from "../../apps/menu/presentation/pages/FelicitacionesPage";
+import DashboardPage from "../../apps/indicadores/presentation/pages/DashboardPage";
+import IndicadoresPage from "../../apps/indicadores/presentation/pages/IndicadoresPage";
+import ResultadosPage from "../../apps/indicadores/presentation/pages/ResultadosPage";
 
 export default function AppRouter() {
   const { isAuthenticated, roles } = useAuthContext();
@@ -59,7 +61,12 @@ export default function AppRouter() {
         { path: "felicitaciones", element: <FelicitacionesPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "auditorias", element: <AuditoriasPage /> },
-        { path: "indicadores", element: <IndicadoresPage /> },
+        
+        // 🔧 CORREGIR: Rutas de indicadores sin duplicados
+        { path: "dashboard", element: <DashboardPage /> },
+        { path: "indicators", element: <IndicadoresPage /> },
+        { path: "results", element: <ResultadosPage /> },
+        
         { path: "procesos", element: <ProcesosPage /> },
         { path: "proveedores", element: <ProveedoresPage /> },
         { path: "administracion", element: <AdministracionPage /> },
