@@ -1,16 +1,8 @@
+// src/apps/indicadores/presentation/components/Forms/ResultForm.tsx
 import React, { useState, useEffect } from 'react';
-import type { 
-  Result, 
-  CreateResultRequest, 
-  UpdateResultRequest
-} from '../../../domain/entities';
-import { 
-  MONTHS, 
-  QUARTERS, 
-  SEMESTERS, 
-  YEARS 
-} from '../../../domain/entities';
 import { useAuthContext } from '../../../../../apps/auth/presentation/context/AuthContext';
+import type { Result, CreateResultRequest, UpdateResultRequest } from '../../../domain/entities/Result';
+import { MONTHS, QUARTERS, SEMESTERS, YEARS } from '../../../domain/entities/Result';
 
 interface ResultFormProps {
   result?: Result;
@@ -44,13 +36,13 @@ const ResultForm: React.FC<ResultFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedIndicator, setSelectedIndicator] = useState<any>(null);
 
-  // Buscar el indicador seleccionado para obtener la frecuencia
+  // 🔍 Buscar el indicador seleccionado para obtener la frecuencia
   useEffect(() => {
     if (form.indicator) {
       const indicator = indicators.find(ind => ind.id === form.indicator);
       setSelectedIndicator(indicator);
       
-      // Limpiar campos de período que no corresponden a la frecuencia
+      // 🧹 Limpiar campos de período que no corresponden a la frecuencia
       if (indicator) {
         const newForm = { ...form };
         if (indicator.measurementFrequency !== 'monthly') {
@@ -83,7 +75,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
       [name]: processedValue
     }));
 
-    // Limpiar error del campo
+    // 🧹 Limpiar error del campo
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -112,7 +104,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
       newErrors.year = 'El año debe estar entre 2020 y 2030';
     }
 
-    // Validar períodos según la frecuencia del indicador
+    // 🔍 Validar períodos según la frecuencia del indicador
     if (selectedIndicator) {
       if (selectedIndicator.measurementFrequency === 'monthly' && (!form.month || form.month < 1 || form.month > 12)) {
         newErrors.month = 'Debe seleccionar un mes válido';
@@ -155,7 +147,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Mes - Solo para frecuencia mensual */}
+        {/* 📅 Mes - Solo para frecuencia mensual */}
         {measurementFrequency === 'monthly' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -169,7 +161,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
                 errors.month ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
             >
-              <option value="">Seleccionar mes</option>
+              <option value="">Seleccione mes</option>
               {MONTHS.map(month => (
                 <option key={month.value} value={month.value}>
                   {month.label}
@@ -180,7 +172,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
           </div>
         )}
 
-        {/* Trimestre - Solo para frecuencia trimestral */}
+        {/* 📅 Trimestre - Solo para frecuencia trimestral */}
         {measurementFrequency === 'quarterly' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -194,7 +186,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
                 errors.quarter ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
             >
-              <option value="">Seleccionar trimestre</option>
+              <option value="">Seleccione trimestre</option>
               {QUARTERS.map(quarter => (
                 <option key={quarter.value} value={quarter.value}>
                   {quarter.label}
@@ -205,7 +197,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
           </div>
         )}
 
-        {/* Semestre - Solo para frecuencia semestral */}
+        {/* 📅 Semestre - Solo para frecuencia semestral */}
         {measurementFrequency === 'semiannual' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -219,7 +211,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
                 errors.semester ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
             >
-              <option value="">Seleccionar semestre</option>
+              <option value="">Seleccione semestre</option>
               {SEMESTERS.map(semester => (
                 <option key={semester.value} value={semester.value}>
                   {semester.label}
@@ -236,14 +228,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Información básica */}
-        <div className="md:col-span-2">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            Información del Resultado
-          </h3>
-        </div>
-
-        {/* Sede */}
+        {/* 🏢 Sede */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Sede *
@@ -256,7 +241,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
               errors.headquarters ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
             } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
           >
-            <option value="">Seleccionar sede</option>
+            <option value="">Seleccione sede</option>
             {headquarters.map(hq => (
               <option key={hq.id} value={hq.id}>
                 {hq.name}
@@ -266,7 +251,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
           {errors.headquarters && <p className="text-red-500 text-sm mt-1">{errors.headquarters}</p>}
         </div>
 
-        {/* Indicador */}
+        {/* 📊 Indicador */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Indicador *
@@ -279,7 +264,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
               errors.indicator ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
             } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
           >
-            <option value="">Seleccionar indicador</option>
+            <option value="">Seleccione indicador</option>
             {indicators.map(indicator => (
               <option key={indicator.id} value={indicator.id}>
                 {indicator.code} - {indicator.name}
@@ -289,7 +274,47 @@ const ResultForm: React.FC<ResultFormProps> = ({
           {errors.indicator && <p className="text-red-500 text-sm mt-1">{errors.indicator}</p>}
         </div>
 
-        {/* Año */}
+        {/* 🔢 Numerador */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            Numerador *
+          </label>
+          <input
+            type="number"
+            name="numerator"
+            value={form.numerator || ''}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+            placeholder="Ej: 85"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              errors.numerator ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+            } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
+          />
+          {errors.numerator && <p className="text-red-500 text-sm mt-1">{errors.numerator}</p>}
+        </div>
+
+        {/* 🔢 Denominador */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            Denominador *
+          </label>
+          <input
+            type="number"
+            name="denominator"
+            value={form.denominator || ''}
+            onChange={handleChange}
+            step="0.01"
+            min="0.01"
+            placeholder="Ej: 100"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              errors.denominator ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+            } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
+          />
+          {errors.denominator && <p className="text-red-500 text-sm mt-1">{errors.denominator}</p>}
+        </div>
+
+        {/* 📅 Año */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             Año *
@@ -302,7 +327,7 @@ const ResultForm: React.FC<ResultFormProps> = ({
               errors.year ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
             } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
           >
-            <option value="">Seleccionar año</option>
+            <option value="">Seleccione año</option>
             {YEARS.map(year => (
               <option key={year.value} value={year.value}>
                 {year.label}
@@ -312,90 +337,40 @@ const ResultForm: React.FC<ResultFormProps> = ({
           {errors.year && <p className="text-red-500 text-sm mt-1">{errors.year}</p>}
         </div>
 
-        {/* Mostrar información del indicador seleccionado */}
+        {/* 🗓️ Mostrar información del indicador seleccionado */}
         {selectedIndicator && (
           <div className="md:col-span-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+            <h4 className="font-medium text-blue-900 dark:text-blue-200 mb-2">
               Información del Indicador
             </h4>
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>Código:</strong> {selectedIndicator.code}
-            </p>
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>Nombre:</strong> {selectedIndicator.name}
-            </p>
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>Frecuencia:</strong> {selectedIndicator.measurementFrequency}
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-blue-800 dark:text-blue-300">
+              <div><strong>Código:</strong> {selectedIndicator.code}</div>
+              <div><strong>Frecuencia:</strong> {selectedIndicator.measurementFrequency}</div>
+              <div><strong>Nombre:</strong> {selectedIndicator.name}</div>
+            </div>
           </div>
         )}
 
-        {/* Campos de período según la frecuencia */}
+        {/* 📅 Campos de período dinámicos */}
         {selectedIndicator && (
           <div className="md:col-span-2">
-            <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
               Período de Medición
             </h4>
             {renderPeriodFields()}
           </div>
         )}
-
-        {/* Valores */}
-        <div className="md:col-span-2">
-          <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">
-            Valores del Resultado
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Numerador *
-              </label>
-              <input
-                type="number"
-                name="numerator"
-                value={form.numerator || ''}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.numerator ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
-              />
-              {errors.numerator && <p className="text-red-500 text-sm mt-1">{errors.numerator}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Denominador *
-              </label>
-              <input
-                type="number"
-                name="denominator"
-                value={form.denominator || ''}
-                onChange={handleChange}
-                step="0.01"
-                min="0.01"
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.denominator ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
-              />
-              {errors.denominator && <p className="text-red-500 text-sm mt-1">{errors.denominator}</p>}
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Botones */}
+      {/* 🔘 Botones */}
       <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
         <button
           type="submit"
           disabled={loading}
           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
         >
-          {loading && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-          )}
-          {loading ? 'Guardando...' : (result ? 'Actualizar' : 'Crear')} Resultado
+          {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+          {result ? 'Actualizar' : 'Crear'} Resultado
         </button>
       </div>
     </form>

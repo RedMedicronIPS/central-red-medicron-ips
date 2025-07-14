@@ -21,6 +21,7 @@ export class ApiResultRepository implements ResultRepository {
     try {
       return await this.apiService.getResultById(id);
     } catch (error) {
+      console.error(`Error fetching result ${id}:`, error);
       return null;
     }
   }
@@ -34,7 +35,7 @@ export class ApiResultRepository implements ResultRepository {
   }
 
   async delete(id: number): Promise<void> {
-    await this.apiService.deleteResult(id);
+    return await this.apiService.deleteResult(id);
   }
 
   async getByIndicator(indicatorId: number): Promise<Result[]> {

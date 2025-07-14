@@ -6,8 +6,21 @@ interface Props {
 }
 
 export default function SummaryCards({ data }: Props) {
+  // 🔧 Función segura para obtener valores numéricos
+  const safeGetNumber = (value: any, defaultValue: number = 0): number => {
+    const num = parseFloat(value);
+    return isNaN(num) ? defaultValue : num;
+  };
+
   const total = data.length;
-  const cumplidos = data.filter((d) => d.calculatedValue >= d.target).length;
+  
+  // 🔧 Calcular cumplidos de forma segura
+  const cumplidos = data.filter((d) => {
+    const calculatedValue = safeGetNumber(d.calculatedValue);
+    const target = safeGetNumber(d.target || d.indicator?.target);
+    return calculatedValue >= target;
+  }).length;
+  
   const noCumplidos = total - cumplidos;
   const promedioCumplimiento = total > 0 
     ? ((cumplidos / total) * 100).toFixed(1) 

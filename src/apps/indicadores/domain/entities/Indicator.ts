@@ -17,12 +17,12 @@ export interface Indicator {
   trend: 'increasing' | 'decreasing';
   target: string;
   author: string;
-  Process: number; // FK al proceso
+  Process: number; // ✅ Coincide con la API
   measurementFrequency: 'monthly' | 'quarterly' | 'semiannual' | 'annual';
   status: boolean;
   user?: number;
-  creationDate?: string;
-  updateDate?: string;
+  creationDate?: string; // ✅ La API devuelve string en formato ISO
+  updateDate?: string;   // ✅ La API devuelve string en formato ISO
 }
 
 export interface CreateIndicatorRequest {

@@ -17,20 +17,39 @@ export const useResults = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('🔄 Iniciando carga de resultados...');
+      
       const [resultsData, detailedResultsData, indicatorsData, headquartersData] = await Promise.all([
         resultService.getAllResults(),
         resultService.getAllResultsWithDetails(),
         resultService.getIndicators(),
         resultService.getHeadquarters()
       ]);
-      setResults(resultsData);
-      setDetailedResults(detailedResultsData);
-      setIndicators(indicatorsData);
-      setHeadquarters(headquartersData);
+      
+      console.log('📊 Datos cargados:', {
+        results: resultsData.length,
+        detailedResults: detailedResultsData.length,
+        indicators: indicatorsData.length,
+        headquarters: headquartersData.length
+      });
+      
+      // 🔧 CORREGIR: Validar que los datos sean arrays
+      setResults(Array.isArray(resultsData) ? resultsData : []);
+      setDetailedResults(Array.isArray(detailedResultsData) ? detailedResultsData : []);
+      setIndicators(Array.isArray(indicatorsData) ? indicatorsData : []);
+      setHeadquarters(Array.isArray(headquartersData) ? headquartersData : []);
+      
     } catch (err: any) {
       console.error('❌ Error al cargar resultados:', err);
       setError(err.message || 'Error al cargar los resultados');
       notifyError('Error al cargar los resultados');
+      
+      // 🔧 Establecer arrays vacíos en caso de error
+      setResults([]);
+      setDetailedResults([]);
+      setIndicators([]);
+      setHeadquarters([]);
     } finally {
       setLoading(false);
     }

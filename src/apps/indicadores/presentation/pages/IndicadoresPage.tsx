@@ -15,6 +15,7 @@ import { useIndicators } from '../hooks/useIndicators';
 import type { Indicator } from '../../domain/entities/Indicator';
 import IndicatorForm from '../components/Forms/IndicadoresForm';
 import FilterPanel from '../components/Shared/FilterPanel';
+import IndicatorDebug from '../components/Debug/IndicatorDebug';
 
 // Componentes auxiliares
 const LoadingSpinner = () => (
@@ -386,7 +387,7 @@ const IndicadoresPage: React.FC = () => {
         title="Editar Indicador"
       >
         <IndicatorForm
-          indicator={selectedIndicator}
+          indicator={selectedIndicator ?? undefined}
           processes={processes}
           onSubmit={handleSubmitIndicator}
           loading={crudLoading}
@@ -404,6 +405,9 @@ const IndicadoresPage: React.FC = () => {
         loading={crudLoading}
         itemName={selectedIndicator?.name || ''}
       />
+
+      {/* 🐛 TEMPORAL: Componente de debug */}
+      {import.meta.env.MODE === 'development' && <IndicatorDebug />}
     </div>
   );
 };

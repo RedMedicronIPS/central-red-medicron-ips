@@ -547,7 +547,7 @@ const ResultadosPage: React.FC = () => {
         title="Editar Resultado"
       >
         <ResultForm
-          result={selectedResult}
+          result={selectedResult ?? undefined}
           indicators={indicators}
           headquarters={headquarters}
           onSubmit={handleSubmitResult}
