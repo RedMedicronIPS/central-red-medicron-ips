@@ -198,9 +198,39 @@ export default function Configure2FA() {
     navigate("/profile");
   };
 
+  // 🔧 NUEVO: Función para volver al perfil sin configurar 2FA
+  const handleBackToProfile = () => {
+    navigate("/profile");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        {/* 🔧 NUEVO: Botón de volver arriba */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleBackToProfile}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            disabled={loading}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-sm">Volver al perfil</span>
+          </button>
+          
+          {/* 🔧 OPCIONAL: Indicador de progreso */}
+          {!is2FAEnabled && (
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex gap-1">
+                <div className={`w-2 h-2 rounded-full ${!otpUri ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                <div className={`w-2 h-2 rounded-full ${otpUri ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+              </div>
+              <span>{!otpUri ? 'Configurar' : 'Completar'}</span>
+            </div>
+          )}
+        </div>
+
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Configuración de Autenticación de Dos Factores
@@ -252,14 +282,29 @@ export default function Configure2FA() {
                     <p className="font-medium">⚠️ 2FA no está activado</p>
                     <p className="text-sm mt-1">Tu cuenta no está protegida con autenticación de dos factores</p>
                   </div>
-                  <Button
-                    variant="primary"
-                    onClick={handleEnable2FA}
-                    loading={loading}
-                    disabled={loading}
-                  >
-                    {loading ? "Configurando..." : "Configurar 2FA"}
-                  </Button>
+                  
+                  {/* 🔧 MEJORAR: Botones centrados con mejor espacio */}
+                  <div className="space-y-3">
+                    <Button
+                      variant="primary"
+                      onClick={handleEnable2FA}
+                      loading={loading}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? "Configurando..." : "Configurar 2FA"}
+                    </Button>
+                    
+                    {/* 🔧 NUEVO: Botón para saltar configuración */}
+                    <Button
+                      variant="secondary"
+                      onClick={handleBackToProfile}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      Tal vez más tarde
+                    </Button>
+                  </div>
                 </div>
               )}
 
