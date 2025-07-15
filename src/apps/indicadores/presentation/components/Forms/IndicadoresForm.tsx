@@ -44,7 +44,7 @@ const IndicatorForm: React.FC<IndicatorFormProps> = ({
         trend: indicator?.trend || 'increasing',
         target: indicator?.target || '',
         author: indicator?.author || '',
-        Process: indicator?.Process || 0,
+        process: indicator?.process || 0,
         measurementFrequency: indicator?.measurementFrequency || 'quarterly',
         status: indicator?.status ?? true,
         user: user?.id || indicator?.user || 0,
@@ -86,7 +86,7 @@ const IndicatorForm: React.FC<IndicatorFormProps> = ({
         if (!form.denominator?.trim()) newErrors.denominator = 'El denominador es obligatorio';
         if (!form.target?.trim()) newErrors.target = 'La meta es obligatoria';
         if (!form.author?.trim()) newErrors.author = 'El autor es obligatorio';
-        if (!form.Process || form.Process === 0) newErrors.Process = 'Debe seleccionar un proceso';
+        if (!form.process || form.process === 0) newErrors.process = 'Debe seleccionar un proceso';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -169,20 +169,20 @@ const IndicatorForm: React.FC<IndicatorFormProps> = ({
                         Proceso *
                     </label>
                     <select
-                        name="Process"
-                        value={form.Process || ''}
+                        name="process"
+                        value={form.process || ''}
                         onChange={handleChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.Process ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.process ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                             } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
                     >
                         <option value="">Seleccionar proceso</option>
-                        {processes.map(process => (
-                            <option key={process.id} value={process.id}>
-                                {process.name}
+                        {processes.map(proc => (
+                            <option key={proc.id} value={proc.id}>
+                                {proc.name}
                             </option>
                         ))}
                     </select>
-                    {errors.Process && <p className="text-red-500 text-sm mt-1">{errors.Process}</p>}
+                    {errors.process && <p className="text-red-500 text-sm mt-1">{errors.process}</p>}
                 </div>
 
                 <div className="md:col-span-2">
