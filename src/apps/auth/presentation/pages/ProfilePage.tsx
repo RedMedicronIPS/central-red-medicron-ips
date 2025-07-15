@@ -9,6 +9,63 @@ import { notify } from '../../../../shared/utils/notifications';
 import { useAuthContext } from "../context/AuthContext";
 import { validateNewPassword } from "../../../../shared/utils/passwordValidation";
 
+// 🔧 NUEVO: Modal personalizado para desactivar 2FA en ProfilePage
+const Disable2FAConfirmModal = ({ isOpen, onClose, onConfirm, loading }: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  loading: boolean;
+}) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                <span className="text-red-600 dark:text-red-400 text-lg">⚠️</span>
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Desactivar Autenticación de Dos Factores
+            </h3>
+          </div>
+          
+          <div className="mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-3">
+              ¿Estás seguro de que deseas desactivar la autenticación de dos factores?
+            </p>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+              <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                <strong>Advertencia:</strong> Esta acción reducirá significativamente la seguridad de tu cuenta. Sin 2FA, tu cuenta será más vulnerable a accesos no autorizados.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            >
+              {loading ? 'Desactivando...' : 'Sí, desactivar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Helper para requisitos individuales
 const passwordRequirements = [
   {
@@ -34,7 +91,7 @@ const passwordRequirements = [
   {
     label: "Las contraseñas coinciden",
     test: (_pw: string, confirm: string) => _pw.length > 0 && _pw === confirm,
-    isMatch: true, // Para identificarlo si quieres mostrarlo diferente
+    isMatch: true,
   },
 ];
 
@@ -55,8 +112,8 @@ export default function ProfilePage() {
   const [is2FAEnabled, setIs2FAEnabled] = useState(user?.is_2fa_enabled || false);
   const [loading2FA, setLoading2FA] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
-  const [error2FA, setError2FA] = useState("");
-  const [success2FA, setSuccess2FA] = useState("");
+  // 🔧 NUEVO: Estado para el modal
+  const [showDisableModal, setShowDisableModal] = useState(false);
 
   const [passwords, setPasswords] = useState({
     current: "",
@@ -84,7 +141,7 @@ export default function ProfilePage() {
         });
         setProfilePicPreview(profile.profile_picture || null);
         setIs2FAEnabled(profile.is_2fa_enabled);
-        setUser(profile); // Actualiza el contexto y localStorage
+        setUser(profile);
       } catch (err: any) {
         notify.error("No se pudo cargar el perfil");
       } finally {
@@ -122,7 +179,7 @@ export default function ProfilePage() {
       if (profilePicFile) {
         formData.append("profile_picture", profilePicFile);
       }
-      const updated = await updateProfile(formData, true); // true = multipart
+      const updated = await updateProfile(formData, true);
       setUser(updated);
       setValues({
         ...values,
@@ -139,20 +196,31 @@ export default function ProfilePage() {
     }
   };
 
-  const handleDisable2FA = async () => {
-    if (!window.confirm("¿Estás seguro de que deseas desactivar la autenticación de dos factores?")) {
-      return;
-    }
+  // 🔧 CORREGIDO: Usar modal personalizado en lugar de window.confirm
+  const handleDisable2FA = () => {
+    setShowDisableModal(true);
+  };
+
+  // 🔧 NUEVO: Manejar confirmación desde el modal
+  const handleConfirmDisable2FA = async () => {
     setLoading2FA(true);
     try {
       await disable2FA();
       setIs2FAEnabled(false);
       setUser({ ...(user as any), is_2fa_enabled: false, id: user!.id });
+      setShowDisableModal(false);
       notify.success("Autenticación de dos factores desactivada exitosamente");
     } catch (err: any) {
       notify.error(err.message || "Error al desactivar 2FA");
     } finally {
       setLoading2FA(false);
+    }
+  };
+
+  // 🔧 NUEVO: Manejar cierre del modal
+  const handleCloseModal = () => {
+    if (!loading2FA) {
+      setShowDisableModal(false);
     }
   };
 
@@ -180,7 +248,7 @@ export default function ProfilePage() {
         new_password: passwords.new,
       });
       notify.success("Contraseña actualizada correctamente");
-      setPasswords({ current: "", new: "", confirm: "" }); // Limpia todos los campos
+      setPasswords({ current: "", new: "", confirm: "" });
     } catch (err: any) {
       setPasswordError(err.message || "Error al cambiar la contraseña");
     } finally {
@@ -366,6 +434,14 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* 🔧 NUEVO: Modal de confirmación personalizado */}
+      <Disable2FAConfirmModal
+        isOpen={showDisableModal}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmDisable2FA}
+        loading={loading2FA}
+      />
     </div>
   );
 }
