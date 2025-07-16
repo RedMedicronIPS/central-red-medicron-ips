@@ -251,7 +251,7 @@ export default function ProcesosPage() {
           <HiOutlineDocumentText className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-3" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Documentos de Procesos
+              Sistema de Gestion Institucional
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
               {permissions.isAdmin ? 'Gestión completa de documentos del sistema de calidad' :
