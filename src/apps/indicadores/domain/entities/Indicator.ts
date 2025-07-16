@@ -17,7 +17,7 @@ export interface Indicator {
   trend: 'increasing' | 'decreasing';
   target: string;
   author: string;
-  Process: number; // ✅ Coincide con la API
+  process: number; // ✅ Coincide con la API
   measurementFrequency: 'monthly' | 'quarterly' | 'semiannual' | 'annual';
   status: boolean;
   user?: number;
@@ -43,7 +43,7 @@ export interface CreateIndicatorRequest {
   trend: 'increasing' | 'decreasing';
   target: string;
   author: string;
-  Process: number;
+  process: number;
   measurementFrequency: 'monthly' | 'quarterly' | 'semiannual' | 'annual';
   status: boolean;
   user?: number;

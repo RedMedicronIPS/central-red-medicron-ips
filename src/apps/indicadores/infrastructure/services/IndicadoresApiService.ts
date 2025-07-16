@@ -32,7 +32,7 @@ export class IndicadoresApiService {
       console.log('📤 Enviando indicador al backend:', indicator);
       
       // 🔧 Validar datos antes de enviar
-      if (!indicator.Process || indicator.Process === 0) {
+      if (!indicator.process || indicator.process === 0) {
         throw new Error('Debe seleccionar un proceso válido');
       }
 

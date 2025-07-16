@@ -42,7 +42,7 @@ export const useIndicators = () => {
       console.log('🚀 Creando indicador:', indicator);
       
       // 🔧 Validar datos requeridos
-      if (!indicator.Process || indicator.Process === 0) {
+      if (!indicator.process || indicator.process === 0) {
         notifyError('Debe seleccionar un proceso');
         return false;
       }
