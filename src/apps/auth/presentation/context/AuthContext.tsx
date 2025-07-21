@@ -18,7 +18,7 @@ interface User {
 interface AuthContextProps {
   user: User | null;
   isAuthenticated: boolean;
-  roles: string[];
+  roles: Role[];
   setUser: (user: User | null) => void;
   logout: () => void;
 }
@@ -33,11 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  const roles = user
-    ? typeof user.role === "string"
-      ? [user.role]
-      : [user.role?.name]
-    : [];
+  const roles = user?.roles ?? [];
 
   const logout = () => {
     localStorage.removeItem("access_token");

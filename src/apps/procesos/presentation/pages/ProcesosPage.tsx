@@ -21,20 +21,21 @@ import type { Document } from '../../domain/entities/Document';
 import { FileHandlingService } from '../../application/services/FileHandlingService';
 
 export default function ProcesosPage() {
-  const permissions = useDocumentPermissions();
-  const { 
-    documents, 
-    processes, 
-    loading, 
+  //const permissions = useDocumentPermissions();
+  const permissions = useDocumentPermissions("procesos");
+  const {
+    documents,
+    processes,
+    loading,
     error: crudError, // Renombrar para evitar conflicto
-    createDocument, 
-    updateDocument, 
+    createDocument,
+    updateDocument,
     deleteDocument,
     documentService,
     fetchDocuments,
     fetchProcesses
   } = useDocumentCRUD();
-  
+
   const { filters, filteredDocuments, updateFilter, clearFilters } = useDocumentFilters(documents, permissions);
   const { handleDownload, handlePreview, processExcelFile } = useFileHandling();
 
@@ -115,7 +116,7 @@ export default function ProcesosPage() {
     });
   };
 
-// Función para recargar los datos
+  // Función para recargar los datos
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -174,7 +175,7 @@ export default function ProcesosPage() {
     try {
       const blob = await documentService.previewDocument(document.id, type);
       const { data, sheets } = await processExcelFile(blob);
-      
+
       openModal('isExcelViewerOpen', {
         excelData: data,
         excelSheets: sheets,
@@ -191,7 +192,7 @@ export default function ProcesosPage() {
 
   const handleViewWord = async (document: Document, type: 'oficial' | 'editable') => {
     const title = `${document.codigo_documento} v${document.version} - ${document.nombre_documento}`;
-    
+
     openModal('isWordViewerOpen', {
       currentDocumentTitle: title,
       currentWordDocument: document,
@@ -216,7 +217,7 @@ export default function ProcesosPage() {
 
   const handleConfirmDelete = async () => {
     if (!modalData.deletingDocument) return;
-    
+
     try {
       await deleteDocument(modalData.deletingDocument.id);
       setMessage('Documento eliminado exitosamente');
@@ -260,30 +261,30 @@ export default function ProcesosPage() {
             </p>
           </div>
         </div>
-        
+
         {/* Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Botón de recarga - visible para todos los roles */}
           <button
-  onClick={handleRefresh}
-  disabled={isRefreshing}
-  className={`
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={`
     group px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 justify-center
-    ${isRefreshing 
-      ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
-      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
-    }
+    ${isRefreshing
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
+              }
   `}
-  title="Actualizar datos"
->
-  <HiRefresh 
-    size={16} 
-    className={`transition-transform duration-300 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`} 
-  />
-  <span className="hidden sm:inline">
-    {isRefreshing ? 'Actualizando...' : 'Actualizar'}
-  </span>
-</button>
+            title="Actualizar datos"
+          >
+            <HiRefresh
+              size={16}
+              className={`transition-transform duration-300 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`}
+            />
+            <span className="hidden sm:inline">
+              {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+            </span>
+          </button>
 
           {/* Botón subir documento - solo para admin */}
           {permissions.canManage && (

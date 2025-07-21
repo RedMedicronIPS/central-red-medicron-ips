@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { 
-  HiHome, 
-  HiUser, 
-  HiCog, 
+import {
+  HiHome,
+  HiUser,
+  HiCog,
   HiArrowLeftOnRectangle,
   HiClipboardDocumentList,
-  HiChartBar, 
-  HiDocumentText, 
+  HiChartBar,
+  HiDocumentText,
   HiBuildingOffice2,
   HiXMark,
   HiCalendarDays,
@@ -28,53 +28,73 @@ interface SidebarProps {
   onToggle?: () => void;
 }
 
+function hasAppAccess(roles: any[], appName: string) {
+  return roles.some(r => r.app?.name?.toLowerCase() === appName.toLowerCase());
+}
 export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
   const { user, logout, roles } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['menu']); // 'menu' expandido por defecto
 
-  // 👈 CORREGIR: URLs del sidebar para que coincidan con las rutas
   const navItems = [
-    { 
-      to: "/menu", 
-      label: "Inicio", 
+    {
+      to: "/menu",
+      label: "Inicio",
       icon: <HiHome className="w-5 h-5" />,
       hasSubmenu: true,
       submenu: [
         { to: "/eventos", label: "Eventos", icon: <HiCalendarDays className="w-4 h-4" /> },
         { to: "/noticias", label: "Noticias", icon: <HiNewspaper className="w-4 h-4" /> },
         { to: "/funcionarios", label: "Funcionarios", icon: <HiUsers className="w-4 h-4" /> },
-        // 👈 OPCIONAL: Solo mostrar para admin y adminMenu
-        ...(roles.includes("admin") || roles.includes("adminMenu") 
-          ? [
-              { to: "/reconocimientos", label: "Reconocimientos", icon: <HiStar className="w-4 h-4" /> },
-              { to: "/felicitaciones", label: "Felicitaciones", icon: <HiGift className="w-4 h-4" /> }
-            ]
-          : []
-        )
+        { to: "/reconocimientos", label: "Reconocimientos", icon: <HiStar className="w-4 h-4" /> },
+        { to: "/felicitaciones", label: "Felicitaciones", icon: <HiGift className="w-4 h-4" /> }
+        // Reconocimientos y Felicitaciones: cualquier rol en "menu"
+        //...(hasAppAccess(roles, "menu")
+        //  ? [
+        //      { to: "/reconocimientos", label: "Reconocimientos", icon: <HiStar className="w-4 h-4" /> },
+        //      { to: "/felicitaciones", label: "Felicitaciones", icon: <HiGift className="w-4 h-4" /> }
+        //    ]
+        //  : []
+        //)
       ]
     },
-    { to: "/auditorias", label: "Auditorías", icon: <HiClipboardDocumentList className="w-5 h-5" /> },
-    // 🔧 CORREGIR: URLs de indicadores
-    { 
-      to: "/dashboard", // 👈 Cambiar base URL
-      label: "Indicadores", 
+    // Auditorías: cualquier rol en "auditorias"
+    ...(hasAppAccess(roles, "auditorias")
+      ? [{ to: "/auditorias", label: "Auditorías", icon: <HiClipboardDocumentList className="w-5 h-5" /> }]
+      : []),
+    {
+      to: "/dashboard",
+      label: "Indicadores",
       icon: <HiChartBar className="w-5 h-5" />,
       hasSubmenu: true,
       submenu: [
         { to: "/dashboard", label: "Dashboard", icon: <HiPresentationChartBar className="w-4 h-4" /> },
-        { to: "/indicators", label: "Indicadores", icon: <HiChartBar className="w-4 h-4" /> },
-        { to: "/results", label: "Resultados", icon: <HiTableCells className="w-4 h-4" /> },
+        ...(hasAppAccess(roles, "indicadores")
+          ? [
+            { to: "/indicators", label: "Indicadores", icon: <HiChartBar className="w-4 h-4" /> },
+            { to: "/results", label: "Resultados", icon: <HiTableCells className="w-4 h-4" /> }
+          ]
+          : []
+        )
       ]
     },
-    { to: "/procesos", label: "Procesos", icon: <HiDocumentText className="w-5 h-5" /> },
-    { to: "/proveedores", label: "Proveedores", icon: <HiBuildingOffice2 className="w-5 h-5" /> },
+    // Procesos: cualquier rol en "procesos"
+    ...(hasAppAccess(roles, "procesos")
+      ? [{ to: "/procesos", label: "Procesos", icon: <HiDocumentText className="w-5 h-5" /> }]
+      : []),
+    // Proveedores: cualquier rol en "proveedores"
+    ...(hasAppAccess(roles, "proveedores")
+      ? [{ to: "/proveedores", label: "Proveedores", icon: <HiBuildingOffice2 className="w-5 h-5" /> }]
+      : []),
     { to: "/profile", label: "Mi perfil", icon: <HiUser className="w-5 h-5" /> },
-    ...(roles.includes("admin")
+    // Administración: cualquier rol en "administracion"
+    ...(hasAppAccess(roles, "administracion")
       ? [{ to: "/administracion", label: "Administración", icon: <HiCog className="w-5 h-5" /> }]
       : []),
   ];
+
+
 
   const handleLogout = () => {
     logout();
@@ -89,8 +109,8 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
   };
 
   const toggleSubmenu = (itemTo: string) => {
-    setExpandedMenus(prev => 
-      prev.includes(itemTo) 
+    setExpandedMenus(prev =>
+      prev.includes(itemTo)
         ? prev.filter(item => item !== itemTo)
         : [...prev, itemTo]
     );
@@ -107,7 +127,7 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
     <>
       {/* Overlay para móviles */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onToggle}
         />
@@ -187,7 +207,7 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
                     </span>
                     <span className="truncate">{item.label}</span>
                   </Link>
-                  
+
                   {/* Botón para expandir/contraer submenú */}
                   {item.hasSubmenu && (
                     <button
