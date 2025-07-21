@@ -1,10 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
+interface Role {
+  id: number;
+  name: string;
+  app: { id: number; name: string };
+}
+
 interface User {
   id: number;
   username: string;
   email: string;
-  role: { id: number; name: string } | string;
+  roles: Role[]; // o Role si es uno solo
   is_2fa_enabled: boolean;
   [key: string]: any;
 }

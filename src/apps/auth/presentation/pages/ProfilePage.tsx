@@ -17,7 +17,7 @@ const Disable2FAConfirmModal = ({ isOpen, onClose, onConfirm, loading }: {
   loading: boolean;
 }) => {
   if (!isOpen) return null;
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
@@ -32,7 +32,7 @@ const Disable2FAConfirmModal = ({ isOpen, onClose, onConfirm, loading }: {
               Desactivar Autenticación de Dos Factores
             </h3>
           </div>
-          
+
           <div className="mb-6">
             <p className="text-gray-600 dark:text-gray-400 mb-3">
               ¿Estás seguro de que deseas desactivar la autenticación de dos factores?
@@ -104,7 +104,8 @@ export default function ProfilePage() {
     email: user?.email || "",
     first_name: user?.first_name || "",
     last_name: user?.last_name || "",
-    role: typeof user?.role === "string" ? user.role : user?.role?.name || "",
+    roles: Array.isArray(user?.roles) ? user.roles : [],
+
     profile_picture: user?.profile_picture || null,
   });
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(user?.profile_picture || null);
@@ -136,7 +137,7 @@ export default function ProfilePage() {
           email: profile.email,
           first_name: profile.first_name || "",
           last_name: profile.last_name || "",
-          role: typeof profile.role === "string" ? profile.role : profile.role?.name || "",
+          roles: Array.isArray(profile.roles) ? profile.roles : [],
           profile_picture: profile.profile_picture || null,
         });
         setProfilePicPreview(profile.profile_picture || null);
@@ -327,7 +328,15 @@ export default function ProfilePage() {
                 <Input label="Apellido" value={values.last_name} onChange={e => setValues({ ...values, last_name: e.target.value })} disabled={!isEditing || loadingProfile} />
                 <Input label="Nombre de usuario" value={values.username} onChange={e => setValues({ ...values, username: e.target.value })} disabled={!isEditing || loadingProfile} />
                 <Input label="Correo electrónico" type="email" value={values.email} onChange={e => setValues({ ...values, email: e.target.value })} disabled={!isEditing || loadingProfile} />
-                <Input label="Rol" value={values.role} disabled />
+                <Input
+                  label="Roles"
+                  value={
+                    Array.isArray(values.roles)
+                      ? values.roles.map(r => `${r.name} (${r.app?.name})`).join(', ')
+                      : ""
+                  }
+                  disabled
+                />
               </div>
               {isEditing && (
                 <div className="flex gap-4 pt-2">
