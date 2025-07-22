@@ -24,7 +24,7 @@ export default function ProveedoresPage() {
       title: "Gestión de Terceros",
       description: "Administra la información de personas naturales y jurídicas",
       icon: <HiUsers className="w-8 h-8" />,
-      path: "/proveedores/terceros",
+      path: "/terceros",
       color: "bg-blue-500",
       hoverColor: "hover:bg-blue-600"
     },
@@ -32,7 +32,7 @@ export default function ProveedoresPage() {
       title: "Proveedores",
       description: "Gestión específica de proveedores y sus contratos",
       icon: <HiBuildingOffice2 className="w-8 h-8" />,
-      path: "/proveedores/proveedores",
+      path: "/proveedores",
       color: "bg-green-500",
       hoverColor: "hover:bg-green-600",
       disabled: true
@@ -41,7 +41,7 @@ export default function ProveedoresPage() {
       title: "Contratos",
       description: "Administración de contratos y acuerdos comerciales",
       icon: <HiDocumentText className="w-8 h-8" />,
-      path: "/proveedores/contratos",
+      path: "/contratos",
       color: "bg-purple-500",
       hoverColor: "hover:bg-purple-600",
       disabled: true
@@ -50,7 +50,7 @@ export default function ProveedoresPage() {
       title: "Reportes",
       description: "Generación de reportes y análisis de proveedores",
       icon: <HiChartBarSquare className="w-8 h-8" />,
-      path: "/proveedores/reportes",
+      path: "/reportes",
       color: "bg-orange-500",
       hoverColor: "hover:bg-orange-600",
       disabled: true
