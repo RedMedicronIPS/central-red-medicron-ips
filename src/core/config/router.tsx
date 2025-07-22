@@ -18,27 +18,17 @@ import FelicitacionesPage from "../../apps/menu/presentation/pages/Felicitacione
 import DashboardPage from "../../apps/indicadores/presentation/pages/DashboardPage";
 import IndicadoresPage from "../../apps/indicadores/presentation/pages/IndicadoresPage";
 import ResultadosPage from "../../apps/indicadores/presentation/pages/ResultadosPage";
+import About from "../../core/presentation/pages/About";
 
 export default function AppRouter() {
-  const { isAuthenticated, roles } = useAuthContext();
+  const { isAuthenticated} = useAuthContext();
 
   const routes = useRoutes([
     {
       path: "/auth/*",
       element: <AuthRoutes />,
     },
-    {
-      path: "/proveedores/*",
-      element: (
-        <AuthGuard isAuthenticated={isAuthenticated} redirectTo="/auth/login">
-          {roles.includes("contabilidad") || roles.includes("admin") ? (
-            <ProveedoresRoutes />
-          ) : (
-            <Navigate to="/menu" replace />
-          )}
-        </AuthGuard>
-      ),
-    },
+    
     {
       path: "/",
       element: (
@@ -61,8 +51,7 @@ export default function AppRouter() {
         { path: "felicitaciones", element: <FelicitacionesPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "auditorias", element: <AuditoriasPage /> },
-        
-        // 🔧 CORREGIR: Rutas de indicadores sin duplicados
+
         { path: "dashboard", element: <DashboardPage /> },
         { path: "indicators", element: <IndicadoresPage /> },
         { path: "results", element: <ResultadosPage /> },
@@ -70,6 +59,7 @@ export default function AppRouter() {
         { path: "procesos", element: <ProcesosPage /> },
         { path: "proveedores", element: <ProveedoresPage /> },
         { path: "administracion", element: <AdministracionPage /> },
+        { path: "acerca_de", element: <About /> },
       ],
     },
     {

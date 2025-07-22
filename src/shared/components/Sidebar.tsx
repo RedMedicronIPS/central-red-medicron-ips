@@ -18,7 +18,8 @@ import {
   HiStar,
   HiGift,
   HiTableCells,
-  HiPresentationChartBar // 👈 AGREGAR: nuevo icono para dashboard
+  HiPresentationChartBar,
+  HiInformationCircle
 } from "react-icons/hi2";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 import { getProfilePicUrl } from "../utils/profile";
@@ -99,6 +100,10 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
   const handleLogout = () => {
     logout();
     navigate("/auth/login");
+  };
+
+  const handleAbout = () => {
+    navigate("/acerca_de");
   };
 
   const handleNavClick = () => {
@@ -265,7 +270,16 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
         </nav>
 
         {/* Botón de cerrar sesión */}
+        
         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <button
+            onClick={handleAbout}
+            className="flex items-center gap-3 px-3 py-2.5 w-full text-left text-gray-900 dark:text-gray-100 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
+          >
+            <HiInformationCircle className="w-5 h-5" />
+            <span>Acerca de</span>
+          </button>
+          
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 w-full text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg transition-colors text-sm font-medium"
