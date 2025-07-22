@@ -9,6 +9,7 @@ export interface DocumentFilters {
   selectedProceso: string;
 }
 
+
 export const useDocumentFilters = (documents: Document[], permissions: DocumentPermissions) => {
   const [filters, setFilters] = useState<DocumentFilters>({
     searchTerm: '',
@@ -21,7 +22,7 @@ export const useDocumentFilters = (documents: Document[], permissions: DocumentP
     return documents.filter(doc => {
       // Filtro básico por búsqueda, tipo y proceso
       const matchesBasicFilters = (
-        doc.nombre_documento.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        doc.nombre_documento.toLowerCase().includes(filters.searchTerm.toLowerCase()) || 
         doc.codigo_documento.toLowerCase().includes(filters.searchTerm.toLowerCase())
       ) &&
         (filters.selectedTipo === "" || doc.tipo_documento === filters.selectedTipo) &&

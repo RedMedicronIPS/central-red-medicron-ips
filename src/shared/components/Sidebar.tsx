@@ -14,7 +14,15 @@ import {
   HiNewspaper,
   HiChevronDown,
   HiChevronRight,
+  HiUsers,
+  HiStar,
+  HiGift,
+  HiTableCells,
+  HiPresentationChartBar,
+  HiInformationCircle
+
   HiDocument,
+
 } from "react-icons/hi2";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 import { getProfilePicUrl } from "../utils/profile";
@@ -24,6 +32,9 @@ interface SidebarProps {
   onToggle?: () => void;
 }
 
+function hasAppAccess(roles: any[], appName: string) {
+  return roles.some(r => r.app?.name?.toLowerCase() === appName.toLowerCase());
+}
 export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
   const { user, logout, roles } = useAuthContext();
   const location = useLocation();
@@ -37,65 +48,74 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
       icon: <HiHome className="w-5 h-5" />,
       hasSubmenu: true,
       submenu: [
-        {
-          to: "/eventos",
-          label: "Eventos",
-          icon: <HiCalendarDays className="w-4 h-4" />,
-        },
-        {
-          to: "/noticias",
-          label: "Noticias",
-          icon: <HiNewspaper className="w-4 h-4" />,
-        },
-      ],
+        { to: "/eventos", label: "Eventos", icon: <HiCalendarDays className="w-4 h-4" /> },
+        { to: "/noticias", label: "Noticias", icon: <HiNewspaper className="w-4 h-4" /> },
+        { to: "/funcionarios", label: "Funcionarios", icon: <HiUsers className="w-4 h-4" /> },
+        { to: "/reconocimientos", label: "Reconocimientos", icon: <HiStar className="w-4 h-4" /> },
+        { to: "/felicitaciones", label: "Felicitaciones", icon: <HiGift className="w-4 h-4" /> }
+        // Reconocimientos y Felicitaciones: cualquier rol en "menu"
+        //...(hasAppAccess(roles, "menu")
+        //  ? [
+        //      { to: "/reconocimientos", label: "Reconocimientos", icon: <HiStar className="w-4 h-4" /> },
+        //      { to: "/felicitaciones", label: "Felicitaciones", icon: <HiGift className="w-4 h-4" /> }
+        //    ]
+        //  : []
+        //)
+      ]
     },
+    // Auditorías: cualquier rol en "auditorias"
+    ...(hasAppAccess(roles, "auditorias")
+      ? [{ to: "/auditorias", label: "Auditorías", icon: <HiClipboardDocumentList className="w-5 h-5" /> }]
+      : []),
     {
-      to: "/auditorias",
-      label: "Auditorías",
-      icon: <HiClipboardDocumentList className="w-5 h-5" />,
-    },
-    {
-      to: "/indicadores",
+      to: "/dashboard",
       label: "Indicadores",
       icon: <HiChartBar className="w-5 h-5" />,
-    },
-    {
-      to: "/procesos",
-      label: "Procesos",
-      icon: <HiDocumentText className="w-5 h-5" />,
-    },
-    {
-      to: "/proveedores",
-      label: "Proveedores",
-      icon: <HiBuildingOffice2 className="w-5 h-5" />,
       hasSubmenu: true,
+      submenu: [
+        { to: "/dashboard", label: "Dashboard", icon: <HiPresentationChartBar className="w-4 h-4" /> },
+        ...(hasAppAccess(roles, "indicadores")
+          ? [
+            { to: "/indicators", label: "Indicadores", icon: <HiChartBar className="w-4 h-4" /> },
+            { to: "/results", label: "Resultados", icon: <HiTableCells className="w-4 h-4" /> }
+          ]
+          : []
+        )
+      ]
+    },
+    // Procesos: cualquier rol en "procesos"
+    ...(hasAppAccess(roles, "procesos")
+      ? [{ to: "/procesos", label: "Procesos", icon: <HiDocumentText className="w-5 h-5" /> }]
+      : []),
+    // Proveedores: cualquier rol en "proveedores"
+    ...(hasAppAccess(roles, "proveedores")
+      ? [{ to: "/proveedores", label: "Proveedores", icon: <HiBuildingOffice2 className="w-5 h-5" />,
+        hasSubmenu: true,
       submenu: [
         {
           to: "/facturas",
           label: "Facturas",
           icon: <HiDocument className="w-4 h-4" />,
         },
-      ],
-    },
-    {
-      to: "/profile",
-      label: "Mi perfil",
-      icon: <HiUser className="w-5 h-5" />,
-    },
-    ...(roles.includes("admin")
-      ? [
-          {
-            to: "/administracion",
-            label: "Administración",
-            icon: <HiCog className="w-5 h-5" />,
-          },
-        ]
+      ],}]
+      : []),
+    { to: "/profile", label: "Mi perfil", icon: <HiUser className="w-5 h-5" /> },
+    // Administración: cualquier rol en "administracion"
+    ...(hasAppAccess(roles, "administracion")
+      ? [{ to: "/administracion", label: "Administración", icon: <HiCog className="w-5 h-5" /> }]
+
       : []),
   ];
+
+
 
   const handleLogout = () => {
     logout();
     navigate("/auth/login");
+  };
+
+  const handleAbout = () => {
+    navigate("/acerca_de");
   };
 
   const handleNavClick = () => {
@@ -105,9 +125,9 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
   };
 
   const toggleSubmenu = (itemTo: string) => {
-    setExpandedMenus((prev) =>
+    setExpandedMenus(prev =>
       prev.includes(itemTo)
-        ? prev.filter((item) => item !== itemTo)
+        ? prev.filter(item => item !== itemTo)
         : [...prev, itemTo]
     );
   };
@@ -214,6 +234,7 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
                     <span className="truncate">{item.label}</span>
                   </Link>
 
+                  {/* Botón para expandir/contraer submenú */}
                   {item.hasSubmenu && (
                     <button
                       onClick={() => toggleSubmenu(item.to)}
@@ -282,7 +303,17 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
           })}
         </nav>
 
+        {/* Botón de cerrar sesión */}
+        
         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <button
+            onClick={handleAbout}
+            className="flex items-center gap-3 px-3 py-2.5 w-full text-left text-gray-900 dark:text-gray-100 hover:bg-red-50 dark:hover:bg-blue-900/50 rounded-lg transition-colors text-sm font-medium"
+          >
+            <HiInformationCircle className="w-5 h-5" />
+            <span>Acerca de</span>
+          </button>
+          
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 w-full text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg transition-colors text-sm font-medium"

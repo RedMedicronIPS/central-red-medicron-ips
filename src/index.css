@@ -68,3 +68,43 @@ html {
 .dark-mode-transition {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
+
+/* 🔧 Custom toast styling */
+.toast-container {
+  z-index: 9999;
+}
+
+.toast-item {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.toast-body {
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .Toastify__toast {
+    background-color: #374151;
+    color: #f3f4f6;
+  }
+  
+  .Toastify__toast--success {
+    background-color: #065f46;
+  }
+  
+  .Toastify__toast--error {
+    background-color: #7f1d1d;
+  }
+  
+  .Toastify__toast--warning {
+    background-color: #78350f;
+  }
+  
+  .Toastify__toast--info {
+    background-color: #1e3a8a;
+  }
+}

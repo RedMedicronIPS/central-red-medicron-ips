@@ -293,7 +293,7 @@ console.log('Estado inicial del formulario:', {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Documento Padre (Opcional)
+                Version Controlado (Opcional)
               </label>
               <select
                 name="documento_padre"
@@ -301,7 +301,7 @@ console.log('Estado inicial del formulario:', {
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
               >
-                <option value="">Sin documento padre</option>
+                <option value="">Sin documento controlado</option>
                 {getDocumentosDisponiblesComoPadre().map(documento => (
                   <option key={documento.id} value={documento.id}>
                     {documento.codigo_documento} v{documento.version} - {documento.nombre_documento}
@@ -309,7 +309,7 @@ console.log('Estado inicial del formulario:', {
                 ))}
               </select>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Seleccione un documento padre si esta es una nueva versión
+                Seleccione un documento version controlada si esta es una nueva versión
               </p>
             </div>
 
