@@ -20,6 +20,9 @@ import {
   HiTableCells,
   HiPresentationChartBar,
   HiInformationCircle
+
+  HiDocument,
+
 } from "react-icons/hi2";
 import { useAuthContext } from "../../apps/auth/presentation/context/AuthContext";
 import { getProfilePicUrl } from "../utils/profile";
@@ -36,7 +39,7 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
   const { user, logout, roles } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['menu']); // 'menu' expandido por defecto
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(["menu"]);
 
   const navItems = [
     {
@@ -86,12 +89,21 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
       : []),
     // Proveedores: cualquier rol en "proveedores"
     ...(hasAppAccess(roles, "proveedores")
-      ? [{ to: "/proveedores", label: "Proveedores", icon: <HiBuildingOffice2 className="w-5 h-5" /> }]
+      ? [{ to: "/proveedores", label: "Proveedores", icon: <HiBuildingOffice2 className="w-5 h-5" />,
+        hasSubmenu: true,
+      submenu: [
+        {
+          to: "/facturas",
+          label: "Facturas",
+          icon: <HiDocument className="w-4 h-4" />,
+        },
+      ],}]
       : []),
     { to: "/profile", label: "Mi perfil", icon: <HiUser className="w-5 h-5" /> },
     // Administración: cualquier rol en "administracion"
     ...(hasAppAccess(roles, "administracion")
       ? [{ to: "/administracion", label: "Administración", icon: <HiCog className="w-5 h-5" /> }]
+
       : []),
   ];
 
@@ -107,7 +119,6 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
   };
 
   const handleNavClick = () => {
-    // Cerrar el sidebar en móviles cuando se hace click en un enlace
     if (onToggle && window.innerWidth < 1024) {
       onToggle();
     }
@@ -122,15 +133,16 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
   };
 
   const isSubmenuActive = (submenu: any[]) => {
-    return submenu.some(item => location.pathname === item.to);
+    return submenu.some((item) => location.pathname === item.to);
   };
 
-  const username = typeof user?.username === "string" ? user.username : "Usuario";
-  const role = typeof user?.role === "string" ? user.role : user?.role?.name || "usuario";
+  const username =
+    typeof user?.username === "string" ? user.username : "Usuario";
+  const role =
+    typeof user?.role === "string" ? user.role : user?.role?.name || "usuario";
 
   return (
     <>
-      {/* Overlay para móviles */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -138,21 +150,22 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-64 xl:w-72
-        transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
-        transition-transform duration-300 ease-in-out
-        h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col
-      `}>
-        {/* Header con logo y botón cerrar (móvil) */}
+      <div
+        className={`
+          fixed lg:static inset-y-0 left-0 z-50 w-64 xl:w-72
+          transform ${
+            isOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0
+          transition-transform duration-300 ease-in-out
+          h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col
+        `}
+      >
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
           <img
             src="/logo.png"
             alt="Red Medicron IPS"
             className="h-10 sm:h-12 w-auto"
           />
-          {/* Botón cerrar solo en móviles */}
           <button
             onClick={onToggle}
             className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white transition-colors"
@@ -162,14 +175,15 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
           </button>
         </div>
 
-        {/* Información del usuario */}
         <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <img
               src={
                 user?.profile_picture
                   ? getProfilePicUrl(user.profile_picture) ?? undefined
-                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0369a1&color=ffffff`
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      username
+                    )}&background=0369a1&color=ffffff`
               }
               alt="avatar"
               className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
@@ -185,29 +199,36 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
           </div>
         </div>
 
-        {/* Navegación */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
             const isSubmenuExpanded = expandedMenus.includes(item.to);
-            const hasActiveSubmenu = item.submenu ? isSubmenuActive(item.submenu) : false;
+            const hasActiveSubmenu = item.submenu
+              ? isSubmenuActive(item.submenu)
+              : false;
 
             return (
               <div key={item.to}>
-                {/* Item principal */}
                 <div className="flex items-center">
                   <Link
                     to={item.to}
                     onClick={item.hasSubmenu ? undefined : handleNavClick}
                     className={`
                       flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                      ${isActive || hasActiveSubmenu
-                        ? "bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+                      ${
+                        isActive || hasActiveSubmenu
+                          ? "bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
                       }
                     `}
                   >
-                    <span className={isActive || hasActiveSubmenu ? "text-blue-600 dark:text-blue-400" : ""}>
+                    <span
+                      className={
+                        isActive || hasActiveSubmenu
+                          ? "text-blue-600 dark:text-blue-400"
+                          : ""
+                      }
+                    >
                       {item.icon}
                     </span>
                     <span className="truncate">{item.label}</span>
@@ -219,9 +240,10 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
                       onClick={() => toggleSubmenu(item.to)}
                       className={`
                         p-2 rounded-lg text-sm transition-all duration-200 ml-1
-                        ${isActive || hasActiveSubmenu
-                          ? "text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/50"
-                          : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ${
+                          isActive || hasActiveSubmenu
+                            ? "text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/50"
+                            : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                         }
                       `}
                     >
@@ -234,12 +256,17 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
                   )}
                 </div>
 
-                {/* Submenú */}
                 {item.hasSubmenu && item.submenu && (
-                  <div className={`
-                    ml-6 mt-1 space-y-1 overflow-hidden transition-all duration-300 ease-in-out
-                    ${isSubmenuExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
-                  `}>
+                  <div
+                    className={`
+                      ml-6 mt-1 space-y-1 overflow-hidden transition-all duration-300 ease-in-out
+                      ${
+                        isSubmenuExpanded
+                          ? "max-h-96 opacity-100"
+                          : "max-h-0 opacity-0"
+                      }
+                    `}
+                  >
                     {item.submenu.map((subItem) => {
                       const isSubActive = location.pathname === subItem.to;
                       return (
@@ -249,13 +276,20 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
                           onClick={handleNavClick}
                           className={`
                             flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-l-2
-                            ${isSubActive
-                              ? "bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400"
-                              : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 border-gray-200 dark:border-gray-700"
+                            ${
+                              isSubActive
+                                ? "bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400"
+                                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 border-gray-200 dark:border-gray-700"
                             }
                           `}
                         >
-                          <span className={isSubActive ? "text-blue-600 dark:text-blue-400" : ""}>
+                          <span
+                            className={
+                              isSubActive
+                                ? "text-blue-600 dark:text-blue-400"
+                                : ""
+                            }
+                          >
                             {subItem.icon}
                           </span>
                           <span className="truncate">{subItem.label}</span>

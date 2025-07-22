@@ -8,6 +8,7 @@ import MenuPage from "../../apps/menu/presentation/pages/MenuPage";
 import ProfilePage from "../../apps/auth/presentation/pages/ProfilePage";
 import AuditoriasPage from "../../apps/auditorias/presentation/pages/AuditoriasPage";
 import ProcesosPage from "../../apps/procesos/presentation/pages/ProcesosPage";
+import FacturasPage from "../../apps/proveedores/presentation/pages//FacturasPage";
 import ProveedoresPage from "../../apps/proveedores/presentation/pages/ProveedoresPage";
 import TercerosPage from "../../apps/proveedores/presentation/pages/TercerosPage";
 import AdministracionPage from "../../apps/administracion/presentation/pages/AdministracionPage";
@@ -52,14 +53,16 @@ export default function AppRouter() {
         { path: "felicitaciones", element: <FelicitacionesPage /> },
         { path: "profile", element: <ProfilePage /> },
         { path: "auditorias", element: <AuditoriasPage /> },
-
         { path: "dashboard", element: <DashboardPage /> },
         { path: "indicators", element: <IndicadoresPage /> },
         { path: "results", element: <ResultadosPage /> },
         
         { path: "procesos", element: <ProcesosPage /> },
         { path: "proveedores", element: <ProveedoresPage /> },
+
         { path: "terceros", element: <TercerosPage /> },
+        { path: "facturas", element: <FacturasPage /> },
+
         { path: "administracion", element: <AdministracionPage /> },
         { path: "acerca_de", element: <About /> },
       ],
