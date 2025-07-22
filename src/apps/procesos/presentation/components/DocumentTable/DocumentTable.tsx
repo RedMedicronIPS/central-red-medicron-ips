@@ -1,18 +1,22 @@
-import React from 'react';
-import { FaFileAlt } from 'react-icons/fa';
-import type { Document } from '../../../domain/entities/Document';
-import type { Process } from '../../../domain/entities/Process';
-import type { DocumentPermissions } from '../../../application/services/PermissionService';
-import { PermissionService } from '../../../application/services/PermissionService';
-import DocumentRow from './DocumentRow';
+import React from "react";
+import { FaFileAlt } from "react-icons/fa";
+import type { Document } from "../../../domain/entities/Document";
+import type { Process } from "../../../domain/entities/Process";
+import type { DocumentPermissions } from "../../../application/services/PermissionService";
+import { PermissionService } from "../../../application/services/PermissionService";
+import DocumentRow from "./DocumentRow";
 
 interface DocumentTableProps {
   documents: Document[];
   processes: Process[];
   permissions: DocumentPermissions;
   onView: (doc: Document) => void;
-  onViewDocument: (doc: Document, type: 'oficial' | 'editable') => void;
-  onDownload: (doc: Document, type: 'oficial' | 'editable', name: string) => void;
+  onViewDocument: (doc: Document, type: "oficial" | "editable") => void;
+  onDownload: (
+    doc: Document,
+    type: "oficial" | "editable",
+    name: string
+  ) => void;
   onEdit: (doc: Document) => void;
   onDelete: (doc: Document) => void;
   loadingExcel: boolean;
@@ -32,14 +36,16 @@ export default function DocumentTable({
   loadingExcel,
 }: DocumentTableProps) {
   const getEmptyMessage = () => {
-    const role = permissions.isAdmin ? 'admin' : permissions.isGestor ? 'gestor' : 'user';
-    return PermissionService.getPermissionMessage(role, 'emptyState');
+    const role = permissions.isAdmin
+      ? "admin"
+      : permissions.isGestor
+      ? "gestor"
+      : "user";
+    return PermissionService.getPermissionMessage(role, "emptyState");
   };
-
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-      
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900">
