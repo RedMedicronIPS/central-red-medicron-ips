@@ -24,7 +24,7 @@ const containerVariants = {
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: ["easeOut"] } },
 };
 
 const cardVariants = {
@@ -54,7 +54,7 @@ const About: React.FC = () => {
     visible: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
+      transition: { duration: 0.5, ease: ["easeInOut"] },
     },
   };
 
