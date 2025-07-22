@@ -274,7 +274,7 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
           <button
             onClick={handleAbout}
-            className="flex items-center gap-3 px-3 py-2.5 w-full text-left text-gray-900 dark:text-gray-100 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
+            className="flex items-center gap-3 px-3 py-2.5 w-full text-left text-gray-900 dark:text-gray-100 hover:bg-red-50 dark:hover:bg-blue-900/50 rounded-lg transition-colors text-sm font-medium"
           >
             <HiInformationCircle className="w-5 h-5" />
             <span>Acerca de</span>

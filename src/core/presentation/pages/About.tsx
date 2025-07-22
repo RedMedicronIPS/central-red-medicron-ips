@@ -227,7 +227,7 @@ const About: React.FC = () => {
             <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
               <strong>Edison Stiven Narvaez</strong><br />
               Ingeniero de Software<br />
-              <span className="text-xs text-gray-500 dark:text-gray-400">Guía y responsable principal del desarrollo</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Lider del proyecto y responsable principal del desarrollo</span>
               <br /><br />
               <strong>Andrea Benavides</strong><br />
               Pasante SENA<br />
