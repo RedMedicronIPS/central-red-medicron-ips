@@ -72,11 +72,11 @@ export class TerceroService {
     const tiposDoc = {
       'CC': 'Cédula de Ciudadanía',
       'TI': 'Tarjeta de Identidad',
-      'NIT': 'Número de Identificación Tributaria',
       'CE': 'Cédula de Extranjería',
       'PA': 'Pasaporte',
       'RC': 'Registro Civil',
-      'NI': 'Nit',
+      'NIT': 'Número de Identificación Tributaria',
+      'OTRO': 'Otro',
     };
     return tiposDoc[tipo as keyof typeof tiposDoc] || tipo;
   }
@@ -90,6 +90,6 @@ export class TerceroService {
   }
 
   esPersonaJuridica(tipoDocumento: string): boolean {
-    return ['NIT', 'NI'].includes(tipoDocumento);
+    return ['NIT', 'OTRO'].includes(tipoDocumento);
   }
 }

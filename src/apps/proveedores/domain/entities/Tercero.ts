@@ -67,9 +67,9 @@ export interface TipoTercero {
 export const TIPOS_DOCUMENTO = [
   { value: 'CC', label: 'Cédula de Ciudadanía' },
   { value: 'TI', label: 'Tarjeta de Identidad' },
-  { value: 'NIT', label: 'Número de Identificación Tributaria' },
   { value: 'CE', label: 'Cédula de Extranjería' },
   { value: 'PA', label: 'Pasaporte' },
   { value: 'RC', label: 'Registro Civil' },
-  { value: 'NI', label: 'Nit' },
+  { value: 'NIT', label: 'Número de Identificación Tributaria' },
+  { value: 'OTRO', label: 'Otro' },
 ] as const;
