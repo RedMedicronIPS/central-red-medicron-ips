@@ -1,13 +1,11 @@
-import { Route, Routes, Navigate } from "react-router-dom";
-
-// Aquí deberías importar tus páginas reales de proveedores
-// import ProveedoresDashboard from "./presentation/pages/ProveedoresDashboard";
+import { Route, Routes } from "react-router-dom";
+import TercerosPage from "./presentation/pages/TercerosPage";
 
 const ProveedoresRoutes = () => (
   <Routes>
-    {/* Ejemplo de ruta protegida */}
-    {/* <Route path="dashboard" element={<ProveedoresDashboard />} /> */}
-    <Route path="*" element={<div>Bienvenido al módulo de Proveedores</div>} />
+    <Route path="/" element={<TercerosPage />} />
+    <Route path="/terceros" element={<TercerosPage />} />
+    <Route path="*" element={<div>Módulo de Terceros - Red Medicron IPS</div>} />
   </Routes>
 );
 

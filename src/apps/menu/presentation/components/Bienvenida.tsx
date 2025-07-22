@@ -25,16 +25,7 @@ export default function Bienvenida() {
         <p className="text-blue-100 text-base italic mb-2">
           “Juntos cuidamos vidas con calidad y humanidad.”
         </p>
-        <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
-          <a
-            href="https://drive.google.com/file/d/1cQNXCgqIVhfINusXTFOAlRnSSEZPwY23/view?usp=sharing"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-full text-sm font-semibold transition"
-          >
-            Reglamento Interno de Trabajo
-          </a>
-        </div>
+        
       </div>
       <div className="flex flex-col items-center">
         {user?.profile_picture ? (

@@ -1,10 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
+interface Role {
+  id: number;
+  name: string;
+  app: { id: number; name: string };
+}
+
 interface User {
   id: number;
   username: string;
   email: string;
-  role: { id: number; name: string } | string;
+  roles: Role[]; // o Role si es uno solo
   is_2fa_enabled: boolean;
   [key: string]: any;
 }
@@ -12,7 +18,7 @@ interface User {
 interface AuthContextProps {
   user: User | null;
   isAuthenticated: boolean;
-  roles: string[];
+  roles: Role[];
   setUser: (user: User | null) => void;
   logout: () => void;
 }
@@ -27,11 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  const roles = user
-    ? typeof user.role === "string"
-      ? [user.role]
-      : [user.role?.name]
-    : [];
+  const roles = user?.roles ?? [];
 
   const logout = () => {
     localStorage.removeItem("access_token");
