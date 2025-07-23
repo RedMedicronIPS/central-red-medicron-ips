@@ -19,8 +19,7 @@ import {
   HiGift,
   HiTableCells,
   HiPresentationChartBar,
-  HiInformationCircle
-
+  HiInformationCircle,
   HiDocument,
 
 } from "react-icons/hi2";
