@@ -5,16 +5,10 @@ import type { EstadoFactura } from "../../domain/entities/EstadoFactura";
 import { FacturaDetalleRepository } from "../../infrastructure/repositories/FacturaDetalleRepository";
 
 type DetalleFactura = {
-  descripcionFactura: string;
-  observacionesGestion: string;
-  observacionesInconsistencias: string;
-  observacionesConformidad: string;
-  observacionesPago: string;
-  observacionesContabilidad: string;
-  observacionesRevision: string;
-  observacionesImpuestos: string;
-  observacionesContraloria: string;
-  estado: string;
+  id?: number;
+  observacionesGestion: string | null;
+  factura?: number;
+  [key: string]: any;
 };
 
 type Props = {
@@ -32,16 +26,7 @@ const EditarFacturaModal: React.FC<Props> = ({
 }) => {
   const [form, setForm] = useState<Partial<RegistroFactura>>({});
   const [detalle, setDetalle] = useState<DetalleFactura>({
-    descripcionFactura: "",
     observacionesGestion: "",
-    observacionesInconsistencias: "",
-    observacionesConformidad: "",
-    observacionesPago: "",
-    observacionesContabilidad: "",
-    observacionesRevision: "",
-    observacionesImpuestos: "",
-    observacionesContraloria: "",
-    estado: "Pendiente",
   });
   const [centrosOperaciones, setCentrosOperaciones] = useState([]);
   const [estadosFactura, setEstadosFactura] = useState<EstadoFactura[]>([]);
@@ -49,11 +34,19 @@ const EditarFacturaModal: React.FC<Props> = ({
 
   useEffect(() => {
     if (open && factura?.factura_id) {
-      setForm(factura); // ← carga inicial del formulario
+      setForm(factura);
 
       axiosInstance
         .get("/gestionProveedores/centro_operaciones/")
-        .then((res) => setCentrosOperaciones(res.data));
+        .then((res) => {
+          setCentrosOperaciones(res.data);
+          if (!factura.factura_centro_operaciones && res.data.length > 0) {
+            setForm((prev) => ({
+              ...prev,
+              factura_centro_operaciones: res.data[0].operaciones_id,
+            }));
+          }
+        });
 
       axiosInstance
         .get("/gestionProveedores/estado_facturas/")
@@ -61,16 +54,26 @@ const EditarFacturaModal: React.FC<Props> = ({
 
       axiosInstance
         .get("/gestionProveedores/causales_devolucion/")
-        .then((res) => setCausales(res.data));
+        .then((res) => {
+          setCausales(res.data);
+          if (!factura.causal_anulacion && res.data.length > 0) {
+            setForm((prev) => ({
+              ...prev,
+              causal_anulacion: res.data[0].causalid,
+            }));
+          }
+        });
 
-      axiosInstance
-        .get(`/gestionProveedores/factura_detalle/${factura.factura_id}/`)
-        .then((res) =>
-          setDetalle((prev) => ({
-            ...prev,
-            ...res.data,
-          }))
-        )
+      const detalleRepo = new FacturaDetalleRepository();
+      detalleRepo
+        .getByFacturaId(factura.factura_id)
+        .then((res) => {
+          const correcto = res.find(
+            (d: any) => d.factura === factura.factura_id
+          );
+          if (correcto) setDetalle(correcto);
+          else setDetalle({ observacionesGestion: "" });
+        })
         .catch((err) => console.error("Error cargando detalle:", err));
     }
   }, [open, factura?.factura_id]);
@@ -82,9 +85,7 @@ const EditarFacturaModal: React.FC<Props> = ({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleDetalleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleDetalleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setDetalle((prev) => ({ ...prev, [name]: value }));
   };
@@ -104,14 +105,19 @@ const EditarFacturaModal: React.FC<Props> = ({
         payload
       );
 
+      const detalleRepo = new FacturaDetalleRepository();
       const detalleData = new FormData();
-      Object.entries(detalle).forEach(([key, val]) =>
-        detalleData.append(key, val)
+      detalleData.append(
+        "observacionesGestion",
+        detalle.observacionesGestion ?? ""
       );
       detalleData.append("factura", String(factura.factura_id));
 
-      const detalleRepo = new FacturaDetalleRepository();
-      await detalleRepo.update(factura.factura_id, detalleData);
+      if (detalle.id && detalle.factura === factura.factura_id) { 
+        await detalleRepo.update(detalle.id, detalleData); // ✅
+      } else {
+        await detalleRepo.create(detalleData);
+      }
 
       onUpdated();
       onClose();
@@ -124,69 +130,12 @@ const EditarFacturaModal: React.FC<Props> = ({
   if (!open) return null;
 
   return (
-    <div className="w-full h-full px-6 py-4 bg-white dark:bg-[#1e293b] border border-blue-200 dark:border-blue-800 overflow-y-auto">
-      <h2 className="text-lg font-semibold mb-2 text-blue-700 dark:text-blue-300">
-        Factura Electrónica, Editar registro [ID: {factura.factura_id}]
+    <div className="w-full h-full px-6 py-4 bg-white dark:bg-[#1e293b] border border-blue-200 dark:border-blue-800 overflow-y-auto text-black dark:text-white">
+      <h2 className="text-lg font-semibold mb-4 text-blue-700 dark:text-blue-300">
+        Editar Factura [ID: {factura.factura_id}]
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <input
-          name="factura_id_factura_electronica"
-          value={form.factura_id_factura_electronica || ""}
-          onChange={handleChange}
-          placeholder="ID factura electrónica"
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        />
-        <input
-          name="factura_etapa"
-          value={form.factura_etapa || ""}
-          onChange={handleChange}
-          placeholder="Etapa"
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        />
-        <input
-          name="factura_fecha"
-          type="date"
-          value={form.factura_fecha || ""}
-          onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        />
-        <input
-          name="factura_numero_autorizacion"
-          value={form.factura_numero_autorizacion || ""}
-          onChange={handleChange}
-          placeholder="Nro Autorización"
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        />
-        <input
-          name="factura_concepto"
-          value={form.factura_concepto || ""}
-          onChange={handleChange}
-          placeholder="Concepto"
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        />
-        <input
-          name="factura_razon_social_proveedor"
-          value={form.factura_razon_social_proveedor || ""}
-          onChange={handleChange}
-          placeholder="Razón Social Proveedor"
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        />
-        <input
-          name="factura_razon_social_adquiriente"
-          value={form.factura_razon_social_adquiriente || ""}
-          onChange={handleChange}
-          placeholder="Razón Social Adquiriente"
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        />
-        <input
-          name="factura_valor"
-          value={form.factura_valor || ""}
-          onChange={handleChange}
-          placeholder="Valor"
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        />
-
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Estado de la Factura
@@ -195,7 +144,7 @@ const EditarFacturaModal: React.FC<Props> = ({
             {estadosFactura.map((estado) => (
               <label
                 key={estado.estado_id}
-                className="flex items-center gap-2 text-sm"
+                className="flex items-center gap-2 text-sm text-black dark:text-white"
               >
                 <input
                   type="radio"
@@ -219,50 +168,54 @@ const EditarFacturaModal: React.FC<Props> = ({
           </div>
         </div>
 
-        <select
-          name="factura_centro_operaciones"
-          value={form.factura_centro_operaciones || ""}
-          onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        >
-          <option value="">Seleccione centro operaciones</option>
-          {centrosOperaciones.map((c: any) => (
-            <option key={c.operaciones_id} value={c.operaciones_id}>
-              {c.operaciones_nombre}
-            </option>
-          ))}
-        </select>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Centro de Operaciones
+          </label>
+          <select
+            name="factura_centro_operaciones"
+            value={form.factura_centro_operaciones || ""}
+            onChange={handleChange}
+            className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+          >
+            <option value="">Seleccione centro operaciones</option>
+            {centrosOperaciones.map((c: any) => (
+              <option key={c.operaciones_id} value={c.operaciones_id}>
+                {c.operaciones_nombre}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <select
-          name="causal_anulacion"
-          value={form.causal_anulacion || ""}
-          onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
-        >
-          <option value="">Causal Anulación</option>
-          {causales.map((c: any) => (
-            <option key={c.causalid} value={c.causalid}>
-              {c.causal_nombre}
-            </option>
-          ))}
-        </select>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Causal de Devolución y/o Anulación
+          </label>
+          <select
+            name="causal_anulacion"
+            value={form.causal_anulacion || ""}
+            onChange={handleChange}
+            className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+          >
+            <option value="">Seleccione causal</option>
+            {causales.map((c: any) => (
+              <option key={c.causalid} value={c.causalid}>
+                {c.causal_nombre}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <div className="col-span-2 border-t pt-4">
-          <h3 className="text-lg font-semibold mb-2 text-blue-700 dark:text-blue-300">
-            Detalle de la Factura
-          </h3>
-          {Object.entries(detalle).map(([key, val]) =>
-            key !== "estado" ? (
-              <textarea
-                key={key}
-                name={key}
-                value={val}
-                placeholder={key}
-                onChange={handleDetalleChange}
-                className="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700"
-              />
-            ) : null
-          )}
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Observaciones de Gestión
+          </label>
+          <textarea
+            name="observacionesGestion"
+            value={detalle.observacionesGestion ?? ""}
+            onChange={handleDetalleChange}
+            className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
+          />
         </div>
       </div>
 
