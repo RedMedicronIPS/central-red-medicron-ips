@@ -91,63 +91,61 @@ const CrearFacturaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
   if (!open) return null;
 
   return (
-    <div className="w-full max-h-[80vh] overflow-y-auto px-6 py-4 pb-20 bg-white dark:bg-[#1e293b] border border-blue-200 dark:border-blue-800">
+    <div className="w-full max-h-[80vh] overflow-y-auto px-6 py-4 pb-20 bg-white dark:bg-[#1e293b] border border-blue-200 dark:border-blue-800 text-black dark:text-white">
       <h2 className="text-lg font-semibold mb-2 text-blue-700 dark:text-blue-300">
         Nueva Factura
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Campos de factura */}
         <input
           name="factura_id_factura_electronica"
           placeholder="ID factura electrónica"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         />
         <input
           name="factura_etapa"
           placeholder="Etapa"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         />
         <input
           name="factura_fecha"
           type="date"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         />
         <input
           name="factura_numero_autorizacion"
           placeholder="Nro Autorización"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         />
         <input
           name="factura_concepto"
           placeholder="Concepto"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         />
         <input
           name="factura_razon_social_proveedor"
           placeholder="Razón Social Proveedor"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         />
         <input
           name="factura_razon_social_adquiriente"
           placeholder="Razón Social Adquiriente"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         />
         <input
           name="factura_valor"
           placeholder="Valor"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         />
 
-        {/* Estado Factura */}
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Estado de la Factura
@@ -156,7 +154,7 @@ const CrearFacturaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
             {estadosFactura.map((estado: any) => (
               <label
                 key={estado.estado_id}
-                className="flex items-center gap-2 text-sm"
+                className="flex items-center gap-2 text-sm text-black dark:text-white"
               >
                 <input
                   type="radio"
@@ -168,7 +166,6 @@ const CrearFacturaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
                   onChange={handleChange}
                   className="form-radio h-5 w-5 text-blue-600"
                 />
-
                 <span>{estado.nombre}</span>
               </label>
             ))}
@@ -178,7 +175,7 @@ const CrearFacturaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         <select
           name="factura_centro_operaciones"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         >
           <option value="">Seleccione centro operaciones</option>
           {centrosOperaciones.map((c: any) => (
@@ -191,7 +188,7 @@ const CrearFacturaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
         <select
           name="causal_anulacion"
           onChange={handleChange}
-          className="p-2 border rounded bg-white dark:bg-gray-700"
+          className="p-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
         >
           <option value="">Causal Anulación</option>
           {causales.map((c: any) => (
@@ -210,10 +207,10 @@ const CrearFacturaModal: React.FC<Props> = ({ open, onClose, onCreated }) => {
               <textarea
                 key={key}
                 name={key}
-                value={val}
+                value={val ?? ""}
                 placeholder={key}
                 onChange={handleDetalleChange}
-                className="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700"
+                className="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 text-black dark:text-white"
               />
             ) : null
           )}

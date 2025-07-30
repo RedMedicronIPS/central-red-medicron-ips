@@ -111,6 +111,7 @@ export default function FacturasPage() {
           onUpdated={fetchFacturas}
         />
       ) : null}
+
       {modals.isViewOpen && registroFactura && (
         <VerRegistroFacturaModal
           open={true}
