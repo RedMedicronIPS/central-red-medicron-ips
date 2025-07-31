@@ -1,25 +1,14 @@
+import { useMemo } from 'react';
 import { useAuthContext } from "../../../auth/presentation/context/AuthContext";
+import { MenuPermissionService } from '../../application/services/MenuPermissionService';
 
-export const useMenuPermissions = () => {
-  const { roles, user } = useAuthContext();
+export const useMenuPermissions = (appName: string = "menu") => {
+  const { roles } = useAuthContext();
 
-  const canManageMenu = roles.includes("admin") || roles.includes("adminMenu");
-  const canCreateContent = canManageMenu;
-  const canEditContent = canManageMenu;
-  const canDeleteContent = canManageMenu;
-  const canManageFuncionarios = canManageMenu;
-  const canManageEventos = canManageMenu;
-  const canManageReconocimientos = canManageMenu;
-
-  return {
-    canManageMenu,
-    canCreateContent,
-    canEditContent,
-    canDeleteContent,
-    canManageFuncionarios,
-    canManageEventos,
-    canManageReconocimientos,
-    isAdmin: roles.includes("admin"),
-    isMenuAdmin: roles.includes("adminMenu")
-  };
+  return useMemo(() => {
+    const normalizedRoles = roles.map(role =>
+      typeof role === 'string' ? { name: role } : role
+    );
+    return MenuPermissionService.getPermissions(normalizedRoles, appName);
+  }, [roles, appName]);
 };

@@ -45,7 +45,7 @@ export default function EventosPage() {
 
   const eventoService = new EventoService();
   const eventoCrudService = new EventoCrudService();
-  const { isAdmin } = useMenuPermissions();
+  const permissions = useMenuPermissions("menu");
 
   useEffect(() => {
     if (id) {
@@ -426,7 +426,7 @@ export default function EventosPage() {
               </div>
             </div>
             
-            {isAdmin && (
+            {permissions.canCreate && (
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -658,7 +658,7 @@ export default function EventosPage() {
                             <HiArrowRight className="w-3 h-3 group-hover/link:translate-x-1 transition-transform duration-300" />
                           </Link>
                           
-                          {isAdmin && (
+                          {permissions.canEdit && (
                             <div className="flex gap-2">
                               <button
                                 onClick={() => openEditModal(evento)}
@@ -667,13 +667,15 @@ export default function EventosPage() {
                                 <HiPencil className="w-4 h-4" />
                                 Editar
                               </button>
-                              <button
-                                onClick={() => openDeleteModal(evento)}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors text-sm"
-                              >
-                                <HiTrash className="w-4 h-4" />
-                                Eliminar
-                              </button>
+                              {permissions.canDelete && (
+                                <button
+                                  onClick={() => openDeleteModal(evento)}
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors text-sm"
+                                >
+                                  <HiTrash className="w-4 h-4" />
+                                  Eliminar
+                                </button>
+                              )}
                             </div>
                           )}
                           

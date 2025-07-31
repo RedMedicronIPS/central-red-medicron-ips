@@ -118,13 +118,57 @@ export class MenuApiService {
 
   // ================ CRUD CONTENIDOS ================
   static async createContenido(data: CreateContenidoRequest): Promise<ContenidoInformativo> {
-    const response = await axiosInstance.post("/main/contenidos/", data);
+    const formData = new FormData();
+    
+    const appendSafeField = (key: string, value: any) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, value.toString());
+        }
+      }
+    };
+    
+    appendSafeField('titulo', data.titulo);
+    appendSafeField('fecha', data.fecha);
+    appendSafeField('contenido', data.contenido);
+    appendSafeField('enlace', data.enlace);
+    appendSafeField('urgente', data.urgente);
+    appendSafeField('tipo', data.tipo);
+    appendSafeField('imagen', data.imagen);
+
+    const response = await axiosInstance.post("/main/contenidos/", formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
   }
 
   static async updateContenido(data: UpdateContenidoRequest): Promise<ContenidoInformativo> {
     const { id, ...updateData } = data;
-    const response = await axiosInstance.patch(`/main/contenidos/${id}/`, updateData);
+    const formData = new FormData();
+    
+    const appendSafeField = (key: string, value: any) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, value.toString());
+        }
+      }
+    };
+    
+    appendSafeField('titulo', updateData.titulo);
+    appendSafeField('fecha', updateData.fecha);
+    appendSafeField('contenido', updateData.contenido);
+    appendSafeField('enlace', updateData.enlace);
+    appendSafeField('urgente', updateData.urgente);
+    appendSafeField('tipo', updateData.tipo);
+    appendSafeField('imagen', updateData.imagen);
+
+    const response = await axiosInstance.patch(`/main/contenidos/${id}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
   }
 

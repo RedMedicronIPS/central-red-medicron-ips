@@ -24,6 +24,7 @@ export interface ContenidoInformativo extends TimeStampedModel {
   enlace?: string;
   urgente: boolean;
   tipo: 'noticia' | 'comunicado';
+  imagen?: string; // 👈 NUEVO: campo para la imagen
 }
 
 export interface Evento extends TimeStampedModel {
@@ -90,6 +91,7 @@ export interface CreateContenidoRequest {
   enlace?: string;
   urgente: boolean;
   tipo: 'noticia' | 'comunicado';
+  imagen?: File; // 👈 NUEVO: campo para la imagen en la creación
 }
 
 export interface UpdateContenidoRequest extends Partial<CreateContenidoRequest> {

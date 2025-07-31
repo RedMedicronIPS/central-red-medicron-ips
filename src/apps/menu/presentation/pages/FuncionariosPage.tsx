@@ -51,7 +51,7 @@ export default function FuncionariosPage() {
   const funcionarioCrudService = new FuncionarioCrudService();
   const reconocimientoCrudService = new ReconocimientoCrudService();
   const felicitacionCrudService = new FelicitacionCrudService();
-  const { canManageFuncionarios, canManageReconocimientos } = useMenuPermissions();
+  const permissions = useMenuPermissions("menu");
 
   useEffect(() => {
     const loadData = async () => {
@@ -416,7 +416,7 @@ export default function FuncionariosPage() {
                 </div>
 
                 <div className="flex gap-3">
-                  {canManageReconocimientos && (
+                  {permissions.canCreate && (
                     <button
                       onClick={() => setShowCreateReconocimientoModal(true)}
                       className="group/btn relative overflow-hidden flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -426,7 +426,7 @@ export default function FuncionariosPage() {
                       <span className="relative z-10">Reconocimiento</span>
                     </button>
                   )}
-                  {canManageFuncionarios && (
+                  {permissions.canCreate && (
                     <button
                       onClick={() => setShowCreateModal(true)}
                       className="group/btn relative overflow-hidden flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -628,29 +628,33 @@ export default function FuncionariosPage() {
                       </div>
 
                       {/* Botones de acción compactos */}
-                      {canManageFuncionarios && (
+                      {(permissions.canEdit || permissions.canDelete) && (
                         <div className="flex gap-1 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-                          <button
-                            onClick={() => openEditModal(funcionario)}
-                            className="group/edit flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
-                            title="Editar funcionario"
-                          >
-                            <HiPencil className="w-3 h-3 group-hover/edit:rotate-12 transition-transform duration-300" />
-                            <span className="text-xs">Editar</span>
-                          </button>
+                          {permissions.canEdit && (
+                            <button
+                              onClick={() => openEditModal(funcionario)}
+                              className="group/edit flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
+                              title="Editar funcionario"
+                            >
+                              <HiPencil className="w-3 h-3 group-hover/edit:rotate-12 transition-transform duration-300" />
+                              <span className="text-xs">Editar</span>
+                            </button>
+                          )}
                           
-                          <button
-                            onClick={() => openDeleteModal(funcionario)}
-                            className="group/delete flex items-center justify-center px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
-                            title="Eliminar funcionario"
-                          >
-                            <HiTrash className="w-3 h-3 group-hover/delete:scale-110 transition-transform duration-300" />
-                          </button>
+                          {permissions.canDelete && (
+                            <button
+                              onClick={() => openDeleteModal(funcionario)}
+                              className="group/delete flex items-center justify-center px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
+                              title="Eliminar funcionario"
+                            >
+                              <HiTrash className="w-3 h-3 group-hover/delete:scale-110 transition-transform duration-300" />
+                            </button>
+                          )}
                         </div>
                       )}
 
                       {/* Botones de reconocimiento y felicitación */}
-                      {canManageReconocimientos && (
+                      {permissions.canCreate && (
                         <div className="flex gap-1 mt-2">
                           <button
                             onClick={() => openCreateReconocimientoModal(funcionario)}

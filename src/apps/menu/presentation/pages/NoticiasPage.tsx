@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { HiMagnifyingGlass, HiPlus, HiPencil, HiTrash, HiCalendar, HiEye, HiBolt, HiSparkles, HiNewspaper, HiArrowLeft } from "react-icons/hi2";
 import { HiSpeakerphone } from "react-icons/hi";
@@ -32,7 +32,7 @@ export default function NoticiasPage() {
 
   const contenidoService = new ContenidoService();
   const contenidoCrudService = new ContenidoCrudService();
-  const { canManageMenu } = useMenuPermissions();
+  const permissions = useMenuPermissions("menu");
 
   useEffect(() => {
     if (id) {
@@ -152,13 +152,6 @@ export default function NoticiasPage() {
 
   const getTipoIcon = (tipo: string) => {
     return tipo === 'comunicado' ? HiSpeakerphone : HiNewspaper;
-  };
-
-  const getTipoColor = (tipo: string, urgente: boolean) => {
-    if (urgente) return 'text-red-500';
-    return tipo === 'comunicado' 
-      ? 'text-blue-500' 
-      : 'text-emerald-500';
   };
 
   const getTipoBgColor = (tipo: string, urgente: boolean) => {
@@ -351,6 +344,27 @@ export default function NoticiasPage() {
                   </div>
                 </div>
 
+                {/* Imagen del contenido */}
+                {contenidoDetalle.imagen && (
+                  <div className="mb-8">
+                    <div className={`
+                      relative rounded-2xl overflow-hidden shadow-lg border-2
+                      ${isUrgent 
+                        ? 'border-red-200 dark:border-red-700/50' 
+                        : 'border-gray-200/50 dark:border-gray-600/50'
+                      }
+                    `}>
+                      <img
+                        src={contenidoDetalle.imagen}
+                        alt={contenidoDetalle.titulo}
+                        className="w-full h-auto object-cover transition-transform duration-300 hover:scale-105"
+                        style={{ maxHeight: '500px' }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Enlaces externos */}
                 {contenidoDetalle.enlace && (
                   <div className="text-center mb-8">
@@ -443,7 +457,7 @@ export default function NoticiasPage() {
                   </div>
                 </div>
 
-                {canManageMenu && (
+                {permissions.canCreate && (
                   <button
                     onClick={() => setShowCreateModal(true)}
                     className="group/btn relative overflow-hidden flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -636,6 +650,15 @@ export default function NoticiasPage() {
                               </span>
                             )}
                             
+                            {contenido.imagen && (
+                              <span className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-full shadow-md">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                                </svg>
+                                Con imagen
+                              </span>
+                            )}
+                            
                             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                               <HiCalendar className="w-4 h-4" />
                               {formatFecha(contenido.fecha)}
@@ -699,29 +722,33 @@ export default function NoticiasPage() {
                             </div>
                             
                             {/* Botones CRUD */}
-                            {canManageMenu && (
+                            {(permissions.canEdit || permissions.canDelete) && (
                               <div className="flex gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openEditModal(contenido);
-                                  }}
-                                  className="group/edit flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                                >
-                                  <HiPencil className="w-4 h-4 group-hover/edit:rotate-12 transition-transform duration-300" />
-                                  Editar
-                                </button>
+                                {permissions.canEdit && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openEditModal(contenido);
+                                    }}
+                                    className="group/edit flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                  >
+                                    <HiPencil className="w-4 h-4 group-hover/edit:rotate-12 transition-transform duration-300" />
+                                    Editar
+                                  </button>
+                                )}
                                 
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDeleteModal(contenido);
-                                  }}
-                                  className="group/delete flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                                >
-                                  <HiTrash className="w-4 h-4 group-hover/delete:scale-110 transition-transform duration-300" />
-                                  Eliminar
-                                </button>
+                                {permissions.canDelete && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openDeleteModal(contenido);
+                                    }}
+                                    className="group/delete flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                  >
+                                    <HiTrash className="w-4 h-4 group-hover/delete:scale-110 transition-transform duration-300" />
+                                    Eliminar
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>

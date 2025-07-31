@@ -28,7 +28,7 @@ export default function FelicitacionesPage() {
     const menuRepository = new MenuRepository();
     const felicitacionCrudService = new FelicitacionCrudService();
     const funcionarioService = new FuncionarioService();
-    const { canManageReconocimientos } = useMenuPermissions();
+    const permissions = useMenuPermissions("menu");
 
     useEffect(() => {
         fetchData();
@@ -231,7 +231,7 @@ export default function FelicitacionesPage() {
                                     </div>
                                 </div>
 
-                                {canManageReconocimientos && (
+                                {permissions.canCreate && (
                                     <button
                                         onClick={() => setShowCreateModal(true)}
                                         className="group/btn relative overflow-hidden flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -457,22 +457,26 @@ export default function FelicitacionesPage() {
                                                     </div>
 
                                                     {/* Botones de acción mejorados */}
-                                                    {canManageReconocimientos && (
+                                                    {(permissions.canEdit || permissions.canDelete) && (
                                                         <div className="flex gap-3">
-                                                            <button
-                                                                onClick={() => openEditModal(felicitacion)}
-                                                                className="group/edit flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                                                            >
-                                                                <HiPencil className="w-4 h-4 group-hover/edit:rotate-12 transition-transform duration-300" />
-                                                                Editar
-                                                            </button>
-                                                            <button
-                                                                onClick={() => openDeleteModal(felicitacion)}
-                                                                className="group/delete flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                                                            >
-                                                                <HiTrash className="w-4 h-4 group-hover/delete:scale-110 transition-transform duration-300" />
-                                                                Eliminar
-                                                            </button>
+                                                            {permissions.canEdit && (
+                                                                <button
+                                                                    onClick={() => openEditModal(felicitacion)}
+                                                                    className="group/edit flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                                                >
+                                                                    <HiPencil className="w-4 h-4 group-hover/edit:rotate-12 transition-transform duration-300" />
+                                                                    Editar
+                                                                </button>
+                                                            )}
+                                                            {permissions.canDelete && (
+                                                                <button
+                                                                    onClick={() => openDeleteModal(felicitacion)}
+                                                                    className="group/delete flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                                                >
+                                                                    <HiTrash className="w-4 h-4 group-hover/delete:scale-110 transition-transform duration-300" />
+                                                                    Eliminar
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
