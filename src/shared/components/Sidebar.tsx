@@ -93,6 +93,9 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
           },
         ]
       : []),
+    // Indicadores: cualquier rol en "auditorias" o "indicadores"
+    ...(hasAppAccess(roles, "auditorias")
+      ? [
     {
       to: "/dashboard",
       label: "Indicadores",
@@ -106,6 +109,7 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
         },
         ...(hasAppAccess(roles, "indicadores")
           ? [
+            
               {
                 to: "/indicators",
                 label: "Indicadores",
@@ -119,7 +123,8 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
             ]
           : []),
       ],
-    },
+    },]
+      : []),
     // Procesos: cualquier rol en "procesos"
     ...(hasAppAccess(roles, "procesos")
       ? [

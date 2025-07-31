@@ -1,18 +1,23 @@
 import type { Document } from '../../domain/entities/Document';
 import type { Process } from '../../domain/entities/Process';
+import type { ProcessType } from '../../domain/entities/ProcessType';
 import { DocumentRepository } from '../../infrastructure/repositories/DocumentRepository';
 import { ProcessRepository } from '../../infrastructure/repositories/ProcessRepository';
+import { ProcessTypeRepository } from '../../infrastructure/repositories/ProcessTypeRepository';
 
 export class DocumentService {
     private documentRepository: DocumentRepository;
     private processRepository?: ProcessRepository;
+    private processTypeRepository?: ProcessTypeRepository;
 
     constructor(
         documentRepository: DocumentRepository,
-        processRepository?: ProcessRepository
+        processRepository?: ProcessRepository,
+        processTypeRepository?: ProcessTypeRepository
     ) {
         this.documentRepository = documentRepository;
         this.processRepository = processRepository;
+        this.processTypeRepository = processTypeRepository;
     }
 
     async getDocuments(): Promise<Document[]> {
@@ -24,6 +29,13 @@ export class DocumentService {
             throw new Error('ProcessRepository not provided');
         }
         return this.processRepository.getAll();
+    }
+
+    async getProcessTypes(): Promise<ProcessType[]> {
+        if (!this.processTypeRepository) {
+            throw new Error('ProcessTypeRepository not provided');
+        }
+        return this.processTypeRepository.getAll();
     }
 
     async createDocument(data: FormData): Promise<Document> {
@@ -49,6 +61,10 @@ export class DocumentService {
     // Métodos auxiliares para la UI
     getProcessName(processes: Process[], processId: number): string {
         return processes.find(p => p.id === processId)?.name || 'N/A';
+    }
+
+    getProcessTypeName(processTypes: ProcessType[], processTypeId: number): string {
+        return processTypes.find(pt => pt.id === processTypeId)?.name || 'N/A';
     }
 
     getDocumentPadreName(documents: Document[], documentoId: number | null): string {

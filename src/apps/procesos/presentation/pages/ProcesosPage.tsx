@@ -26,6 +26,7 @@ export default function ProcesosPage() {
   const {
     documents,
     processes,
+    processTypes,
     loading,
     error: crudError, // Renombrar para evitar conflicto
     createDocument,
@@ -33,10 +34,11 @@ export default function ProcesosPage() {
     deleteDocument,
     documentService,
     fetchDocuments,
-    fetchProcesses
+    fetchProcesses,
+    fetchProcessTypes
   } = useDocumentCRUD();
 
-  const { filters, filteredDocuments, updateFilter, clearFilters } = useDocumentFilters(documents, permissions);
+  const { filters, filteredDocuments, updateFilter, clearFilters } = useDocumentFilters(documents, processes, processTypes, permissions);
   const { handleDownload, handlePreview, processExcelFile } = useFileHandling();
 
   // Estados para modales
@@ -316,6 +318,7 @@ export default function ProcesosPage() {
       <DocumentFilters
         filters={filters}
         processes={processes}
+        processTypes={processTypes}
         permissions={permissions}
         onUpdateFilter={updateFilter}
         onClearFilters={clearFilters}
