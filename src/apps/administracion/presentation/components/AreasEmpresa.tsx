@@ -186,6 +186,7 @@ export default function AreasEmpresa() {
 
   return (
     <div className="p-4 sm:p-8">
+      <div className="flex justify-between items-center mb-6">
       <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Áreas</h2>
       <button
         className="mb-4 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md"
@@ -193,6 +194,7 @@ export default function AreasEmpresa() {
       >
         Agregar Área
       </button>
+      </div>
       {mensaje && <div className="mb-4 text-green-600 dark:text-green-400">{mensaje}</div>}
       {isModalOpen && (
         <div className="fixed z-50 inset-0 overflow-y-auto bg-black bg-opacity-60 flex items-center justify-center p-4">
