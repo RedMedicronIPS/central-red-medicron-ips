@@ -42,7 +42,7 @@ export default function Verify2FA() {
       setUser(data.user); // <-- ACTUALIZA EL CONTEXTO CON EL USUARIO AUTENTICADO
 
       notify.success("Verificación exitosa");
-      navigate("/dashboard");
+      navigate("/menu");
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || "Error en la verificación";
       notify.error(errorMessage);
