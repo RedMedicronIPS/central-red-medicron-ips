@@ -16,10 +16,10 @@ const DOCUMENTOS = [
   },
   {
     id: 2,
-    nombre: "Acta de reunión",
+    nombre: "FR-DIR-002",
     url: "https://docs.google.com/document/d/1kJRzSf_MpBlPYoc4qiRA3eAPPilQuKvB/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
     tipo: "formato",
-    descripcion: "FR-DIR-002",
+    descripcion: "Acta de reunión",
     actualizado: "2025-01-30",
     tamano: "133 KB",
     popular: false,
@@ -27,10 +27,10 @@ const DOCUMENTOS = [
   },
   {
     id: 3,
-    nombre: "Acciones  de mejoramiento",
+    nombre: "FR-GDC-003",
     url: "https://docs.google.com/spreadsheets/d/14fHbHb1sEFDzg4yCZkGl0V8CfMf35Pdo/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
     tipo: "formato",
-    descripcion: "FR-GDC-003",
+    descripcion: "Acciones  de mejoramiento",
     actualizado: "2025-02-06",
     tamano: "70 KB",
     popular: false,
@@ -38,10 +38,10 @@ const DOCUMENTOS = [
   },
   {
     id: 4,
-    nombre: " Solicitud de viáticos individuales  y/o gastos aprobados a contratistas",
+    nombre: "FR-GFR-001",
     url: "https://docs.google.com/spreadsheets/d/17MliM0wD4LsxKM-pgq3hRKnIXe_VezmS/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
     tipo: "formato",
-    descripcion: "FR-GFR-001",
+    descripcion: "Solicitud de viáticos individuales  y/o gastos aprobados a contratistas",
     actualizado: "2025-03-05",
     tamano: "149 KB",
     popular: false,
@@ -49,10 +49,10 @@ const DOCUMENTOS = [
   },
   {
     id: 5,
-    nombre: "Legalización de viáticos y/o gastos aprobados a contratistas",
+    nombre: "FR-GFR-002",
     url: "https://docs.google.com/spreadsheets/d/1bNQxt3kIv9ZlEOCrdbMpknr-jNLznp0Y/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
     tipo: "formato",
-    descripcion: "FR-GFR-002",
+    descripcion: "Legalización de viáticos y/o gastos aprobados a contratistas",
     actualizado: "2025-03-06",
     tamano: "64 KB",
     popular: false,
@@ -60,10 +60,10 @@ const DOCUMENTOS = [
   },
   {
     id: 6,
-    nombre: "Lista de asistencia ",
+    nombre: "FR-GTH-002",
     url: "https://docs.google.com/document/d/1gjGvnGs31KB7DLoA6mcf6f6hDn-rIXUl/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
     tipo: "formato",
-    descripcion: "FR-GTH-002",
+    descripcion: "Lista de asistencia",
     actualizado: "2025-01-30",
     tamano: "137 KB",
     popular: false,
@@ -252,7 +252,7 @@ export default function DocumentosRecursosRapidos() {
         </div>
 
         {/* Grid de documentos mejorado */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4  gap-4">
           {filteredDocuments.map((doc) => (
             <div
               key={doc.id}

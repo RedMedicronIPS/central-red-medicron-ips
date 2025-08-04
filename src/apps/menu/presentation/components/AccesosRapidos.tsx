@@ -16,7 +16,7 @@ const ACCESOS = [
 	},
 	{
 		nombre: "Salud IPS (Historia Clínica)",
-		url: "http://152.200.161.234/SaludIPS/",
+		url: "http://186.115.218.10/SaludIPS/",
 		icono: <HiDocumentText className="w-10 h-10 text-green-600 group-hover:scale-110 transition-transform" />,
 		color: "bg-gradient-to-br from-green-100/80 to-green-200/60 dark:from-green-900/60 dark:to-green-800/40",
 	},
@@ -41,7 +41,7 @@ export default function AccesosRapidos() {
 			<h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center tracking-tight">
 				Accesos Rápidos
 			</h2>
-			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 gap-8">
 				{ACCESOS.map((acceso) => (
 					<a
 						key={acceso.nombre}
