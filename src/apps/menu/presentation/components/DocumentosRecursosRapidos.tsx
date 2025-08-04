@@ -192,7 +192,7 @@ export default function DocumentosRecursosRapidos() {
   });
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700 relative overflow-hidden">
       {/* Fondo decorativo suave */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 rounded-3xl"></div>
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-300/5 to-purple-300/5 rounded-full blur-3xl"></div>
@@ -200,22 +200,13 @@ export default function DocumentosRecursosRapidos() {
       
       <div className="relative bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-8">
         {/* Header suave */}
+        
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-br from-slate-500 to-slate-600 rounded-2xl shadow-lg">
-              <HiFolder className="w-8 h-8 text-white" />
-            </div>
-            <div className="relative">
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-              <HiSparkles className="w-6 h-6 text-yellow-400" />
-            </div>
-          </div>
+          
           <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-700 via-gray-700 to-slate-600 dark:from-slate-200 dark:via-gray-200 dark:to-slate-300 bg-clip-text text-transparent mb-2">
             Documentos y Recursos Rapidos
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
-            Accede rápidamente a todos los documentos importantes de la institución
-          </p>
+          
         </div>
 
         {/* Barra de búsqueda y filtros */}
