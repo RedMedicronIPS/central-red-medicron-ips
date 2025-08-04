@@ -9,65 +9,87 @@ const DOCUMENTOS = [
     url: "https://drive.google.com/file/d/1cQNXCgqIVhfINusXTFOAlRnSSEZPwY23/view?usp=sharing",
     tipo: "reglamento",
     descripcion: "Normas y políticas internas de la institución para el correcto funcionamiento laboral.",
-    actualizado: "2024-06-01",
-    tamano: "2.5 MB",
-    popular: true,
+    actualizado: "2025-05-29",
+    tamano: "752 KB",
+    popular: false,
     categoria: "Legal"
   },
   {
     id: 2,
-    nombre: "Manual de Convivencia",
-    url: "#",
-    tipo: "manual",
-    descripcion: "Guía completa para la sana convivencia laboral y resolución de conflictos.",
-    actualizado: "2024-05-15",
-    tamano: "1.8 MB",
+    nombre: "Acta de reunión",
+    url: "https://docs.google.com/document/d/1kJRzSf_MpBlPYoc4qiRA3eAPPilQuKvB/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
+    tipo: "formato",
+    descripcion: "FR-DIR-002",
+    actualizado: "2025-01-30",
+    tamano: "133 KB",
     popular: false,
-    categoria: "Recursos Humanos"
+    categoria: "Calidad"
   },
   {
     id: 3,
-    nombre: "Formato de Permiso",
-    url: "#",
+    nombre: "Acciones  de mejoramiento",
+    url: "https://docs.google.com/spreadsheets/d/14fHbHb1sEFDzg4yCZkGl0V8CfMf35Pdo/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
     tipo: "formato",
-    descripcion: "Solicitud oficial de permisos laborales y procedimientos administrativos.",
-    actualizado: "2024-04-10",
-    tamano: "245 KB",
-    popular: true,
-    categoria: "Formularios"
+    descripcion: "FR-GDC-003",
+    actualizado: "2025-02-06",
+    tamano: "70 KB",
+    popular: false,
+    categoria: "Calidad"
   },
   {
     id: 4,
-    nombre: "Protocolo de Seguridad",
-    url: "#",
-    tipo: "protocolo",
-    descripcion: "Procedimientos de seguridad y salud ocupacional en el trabajo.",
-    actualizado: "2024-07-01",
-    tamano: "3.2 MB",
+    nombre: " Solicitud de viáticos individuales  y/o gastos aprobados a contratistas",
+    url: "https://docs.google.com/spreadsheets/d/17MliM0wD4LsxKM-pgq3hRKnIXe_VezmS/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
+    tipo: "formato",
+    descripcion: "FR-GFR-001",
+    actualizado: "2025-03-05",
+    tamano: "149 KB",
     popular: false,
-    categoria: "Seguridad"
+    categoria: "Financiera"
   },
   {
     id: 5,
-    nombre: "Código de Ética",
-    url: "#",
-    tipo: "codigo",
-    descripcion: "Principios éticos y conducta profesional en la institución.",
-    actualizado: "2024-03-20",
-    tamano: "1.1 MB",
-    popular: true,
-    categoria: "Ética"
+    nombre: "Legalización de viáticos y/o gastos aprobados a contratistas",
+    url: "https://docs.google.com/spreadsheets/d/1bNQxt3kIv9ZlEOCrdbMpknr-jNLznp0Y/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
+    tipo: "formato",
+    descripcion: "FR-GFR-002",
+    actualizado: "2025-03-06",
+    tamano: "64 KB",
+    popular: false,
+    categoria: "Financiera"
   },
   {
     id: 6,
-    nombre: "Manual de Procedimientos",
-    url: "#",
-    tipo: "manual",
-    descripcion: "Guía detallada de todos los procedimientos operativos internos.",
-    actualizado: "2024-06-25",
-    tamano: "4.7 MB",
+    nombre: "Lista de asistencia ",
+    url: "https://docs.google.com/document/d/1gjGvnGs31KB7DLoA6mcf6f6hDn-rIXUl/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
+    tipo: "formato",
+    descripcion: "FR-GTH-002",
+    actualizado: "2025-01-30",
+    tamano: "137 KB",
     popular: false,
-    categoria: "Operaciones"
+    categoria: "Gestión Humana"
+  },
+  {
+    id: 7,
+    nombre: "Pié de página por proceso",
+    url: "https://docs.google.com/document/d/1D0OsBAhLiDTkTY6uLZl01mzY3kPFnN7Z/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
+    tipo: "plantilla",
+    descripcion: "Pié de página por cada proceso",
+    actualizado: "2025-04-29",
+    tamano: "431 KB",
+    popular: false,
+    categoria: "Calidad"
+  },
+  {
+    id: 8,
+    nombre: "Plantilla presentación",
+    url: "https://docs.google.com/presentation/d/1304BmzHLidi5mLEoYtw_x0zlTga6L2nL/edit?usp=sharing&ouid=118103443850975241050&rtpof=true&sd=true",
+    tipo: "plantilla",
+    descripcion: "Plantilla presentación edición editable",
+    actualizado: "2025-04-29",
+    tamano: "2.03 MB",
+    popular: false,
+    categoria: "Calidad"
   }
 ];
 
@@ -82,7 +104,7 @@ function getIcon(tipo: string, popular: boolean = false) {
   switch (tipo) {
     case "reglamento":
       return <HiOutlineClipboard className={`${iconClass} text-white`} />;
-    case "manual":
+    case "plantilla":
       return <HiOutlineDocumentText className={`${iconClass} text-white`} />;
     case "formato":
       return <HiDocumentText className={`${iconClass} text-white`} />;
@@ -99,7 +121,7 @@ function getTipoColor(tipo: string) {
   switch (tipo) {
     case "reglamento":
       return "from-blue-400 to-blue-500";
-    case "manual":
+    case "plantilla":
       return "from-green-400 to-green-500";
     case "formato":
       return "from-amber-400 to-amber-500";
@@ -116,7 +138,7 @@ function getTipoBgColor(tipo: string) {
   switch (tipo) {
     case "reglamento":
       return "from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/25 border-blue-200 dark:border-blue-700";
-    case "manual":
+    case "plantilla":
       return "from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/25 border-green-200 dark:border-green-700";
     case "formato":
       return "from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/25 border-amber-200 dark:border-amber-700";
@@ -133,7 +155,7 @@ function getTipoTextColor(tipo: string) {
   switch (tipo) {
     case "reglamento":
       return "text-blue-700 dark:text-blue-300";
-    case "manual":
+    case "plantilla":
       return "text-green-700 dark:text-green-300";
     case "formato":
       return "text-amber-700 dark:text-amber-300";
@@ -144,6 +166,16 @@ function getTipoTextColor(tipo: string) {
     default:
       return "text-gray-700 dark:text-gray-300";
   }
+}
+
+function formatDisplayDate(dateString: string, options?: Intl.DateTimeFormatOptions) {
+  return new Date(dateString).toLocaleDateString("es-CO", {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    ...options,
+  });
 }
 
 export default function DocumentosRecursosRapidos() {
@@ -158,14 +190,6 @@ export default function DocumentosRecursosRapidos() {
     const matchesCategory = selectedCategory === "Todos" || doc.categoria === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-CO", {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
 
   return (
     <div className="relative overflow-hidden">
@@ -228,88 +252,69 @@ export default function DocumentosRecursosRapidos() {
         </div>
 
         {/* Grid de documentos mejorado */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredDocuments.map((doc) => (
             <div
               key={doc.id}
               className={`
-                group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer
-                bg-gradient-to-br ${getTipoBgColor(doc.tipo)} shadow-md
+                group relative overflow-hidden rounded-xl border transition-all duration-300 hover:shadow-lg hover:scale-[1.01] cursor-pointer
+                bg-gradient-to-br ${getTipoBgColor(doc.tipo)} shadow
+                min-h-[180px] max-h-[220px] flex flex-col
               `}
             >
-              {/* Efecto de brillo en hover más sutil */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -skew-x-12"></div>
-              
               {/* Badge de popular */}
               {doc.popular && (
-                <div className="absolute top-3 right-3 z-10">
-                  <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-semibold rounded-full shadow-sm animate-pulse">
+                <div className="absolute top-2 right-2 z-10">
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-semibold rounded-full shadow-sm animate-pulse">
                     <HiSparkles className="w-3 h-3" />
                     Popular
                   </div>
                 </div>
               )}
 
-              {/* Línea de acento superior más suave */}
-              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${getTipoColor(doc.tipo)} opacity-80`}></div>
+              {/* Línea de acento superior */}
+              <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${getTipoColor(doc.tipo)} opacity-80`}></div>
 
-              <div className="relative p-6">
+              <div className="relative p-4 flex-1 flex flex-col">
                 {/* Icono y categoría */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-xl shadow-md bg-gradient-to-br ${getTipoColor(doc.tipo)} transition-transform duration-300 group-hover:scale-105`}>
-                      {getIcon(doc.tipo, doc.popular)}
-                    </div>
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full bg-gradient-to-r ${getTipoColor(doc.tipo)} text-white shadow-sm`}>
-                      {doc.categoria}
-                    </span>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`p-2 rounded-lg shadow bg-gradient-to-br ${getTipoColor(doc.tipo)}`}>
+                    {getIcon(doc.tipo, doc.popular)}
                   </div>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r ${getTipoColor(doc.tipo)} text-white shadow-sm`}>
+                    {doc.categoria}
+                  </span>
                 </div>
 
                 {/* Título */}
-                <h3 className={`text-lg font-bold mb-2 group-hover:text-slate-600 dark:group-hover:text-slate-400 transition-colors duration-300 line-clamp-2 ${getTipoTextColor(doc.tipo)}`}>
+                <h3 className={`text-base font-bold mb-1 group-hover:text-slate-600 dark:group-hover:text-slate-400 transition-colors duration-300 line-clamp-1 ${getTipoTextColor(doc.tipo)}`}>
                   {doc.nombre}
                 </h3>
 
                 {/* Descripción */}
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3 leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-400 text-xs mb-2 line-clamp-2 leading-snug">
                   {doc.descripcion}
                 </p>
 
                 {/* Información adicional */}
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <HiCalendarDays className="w-4 h-4" />
-                    <span className="font-medium">Actualizado: {formatDate(doc.actualizado)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <HiDocumentText className="w-4 h-4" />
-                    <span className="font-medium">Tamaño: {doc.tamano}</span>
-                  </div>
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <span><HiCalendarDays className="inline w-4 h-4 mr-1" />{formatDisplayDate(doc.actualizado)}</span>
+                  <span><HiDocumentText className="inline w-4 h-4 mr-1" />{doc.tamano}</span>
                 </div>
 
-                {/* Botones de acción */}
-                <div className="flex gap-3">
+                {/* Botón de acción */}
+                <div className="flex gap-2 mt-auto">
                   <a
                     href={doc.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`
-                      group/btn flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg
-                      bg-gradient-to-r ${getTipoColor(doc.tipo)} text-white hover:opacity-90
+                      flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 shadow hover:shadow-md
+                      bg-gradient-to-r ${getTipoColor(doc.tipo)} text-white hover:opacity-90 text-xs
                     `}
                   >
-                    <HiEye className="w-4 h-4 group-hover/btn:scale-110 transition-transform duration-300" />
-                    <span>Ver</span>
-                  </a>
-                  
-                  <a
-                    href={doc.url}
-                    download
-                    className="flex items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
-                    title="Descargar"
-                  >
-                    <HiDownload className="w-4 h-4" />
+                    <HiEye className="w-4 h-4" />
+                    Ver
                   </a>
                 </div>
               </div>
