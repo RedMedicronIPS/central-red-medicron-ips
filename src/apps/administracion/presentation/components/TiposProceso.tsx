@@ -46,7 +46,7 @@ export default function TiposProceso() {
         const fetchProcessTypes = async () => {
             try {
                 const response = await axiosInstance.get("/companies/process_types/");
-                console.log("Process types response:", response.data);
+                //console.log("Process types response:", response.data);
                 setProcessTypes(Array.isArray(response.data) ? response.data : []);
                 setLoading(false);
             } catch (err: any) {
@@ -60,7 +60,7 @@ export default function TiposProceso() {
         const fetchCompanies = async () => {
             try {
                 const response = await axiosInstance.get("/companies/companies/");
-                console.log("Companies response:", response.data);
+                //console.log("Companies response:", response.data);
                 setCompanies(Array.isArray(response.data) ? response.data : []);
             } catch (err: any) {
                 console.error("Error fetching companies:", err);

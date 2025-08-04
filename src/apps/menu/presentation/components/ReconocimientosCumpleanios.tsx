@@ -15,15 +15,15 @@ export default function ReconocimientosCumpleanios() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        console.log('🔄 Cargando felicitaciones y reconocimientos...');
+        //console.log('🔄 Cargando felicitaciones y reconocimientos...');
 
         const [felicitacionesData, reconocimientosData] = await Promise.all([
           MenuApiService.getFelicitacionesMes(),
           MenuApiService.getReconocimientosPublicados()
         ]);
 
-        console.log('📝 Felicitaciones obtenidas:', felicitacionesData);
-        console.log('🏆 Reconocimientos obtenidos:', reconocimientosData);
+        //console.log('📝 Felicitaciones obtenidas:', felicitacionesData);
+        //console.log('🏆 Reconocimientos obtenidos:', reconocimientosData);
 
         setFelicitaciones(felicitacionesData);
         // Tomar solo los 3 reconocimientos más recientes

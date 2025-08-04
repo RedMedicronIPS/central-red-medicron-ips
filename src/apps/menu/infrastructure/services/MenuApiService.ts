@@ -194,7 +194,7 @@ export class MenuApiService {
 
   // ================ CRUD RECONOCIMIENTOS ================
   static async createReconocimiento(data: CreateReconocimientoRequest): Promise<Reconocimiento> {
-    console.log('MenuApiService - Enviando reconocimiento:', data);
+    //console.log('MenuApiService - Enviando reconocimiento:', data);
     
     // 👈 SOLUCIÓN: Mapear funcionario a funcionario_id
     const requestData = {
@@ -206,11 +206,11 @@ export class MenuApiService {
       publicar: data.publicar
     };
     
-    console.log('MenuApiService - Datos mapeados:', requestData);
+    //console.log('MenuApiService - Datos mapeados:', requestData);
     
     const response = await axiosInstance.post("/main/reconocimientos/", requestData);
     
-    console.log('MenuApiService - Respuesta del servidor:', response.data);
+    //console.log('MenuApiService - Respuesta del servidor:', response.data);
     
     return response.data;
   }
@@ -222,12 +222,12 @@ export class MenuApiService {
       ? { funcionario_id: funcionario, ...otherData }
       : otherData;
     
-    console.log('MenuApiService - Actualizando reconocimiento:', { id, updateData });
+    //console.log('MenuApiService - Actualizando reconocimiento:', { id, updateData });
     
     // 👈 CAMBIAR: usar PUT en lugar de PATCH si también da error 405
     const response = await axiosInstance.put(`/main/reconocimientos/${id}/`, updateData);
     
-    console.log('MenuApiService - Respuesta del servidor:', response.data);
+    //console.log('MenuApiService - Respuesta del servidor:', response.data);
     
     return response.data;
   }
@@ -238,14 +238,14 @@ export class MenuApiService {
 
   // ================ CRUD FELICITACIONES ================
   static async createFelicitacion(data: CreateFelicitacionRequest): Promise<FelicitacionCumpleanios> {
-    console.log('MenuApiService - Enviando felicitación:', data);
+    //console.log('MenuApiService - Enviando felicitación:', data);
     
     const requestData = {
       funcionario_id: data.funcionario,
       mensaje: data.mensaje
     };
     
-    console.log('MenuApiService - Datos mapeados:', requestData);
+    //console.log('MenuApiService - Datos mapeados:', requestData);
     
     const response = await axiosInstance.post("/main/felicitaciones/", requestData);
     return response.data;
@@ -259,12 +259,12 @@ export class MenuApiService {
       ? { funcionario_id: funcionario, ...otherData }
       : otherData;
     
-    console.log('MenuApiService - Actualizando felicitación:', { id, updateData });
+    //console.log('MenuApiService - Actualizando felicitación:', { id, updateData });
     
     // 👈 CAMBIAR: usar PUT en lugar de PATCH
     const response = await axiosInstance.put(`/main/felicitaciones/${id}/`, updateData);
     
-    console.log('MenuApiService - Respuesta del servidor:', response.data);
+    //console.log('MenuApiService - Respuesta del servidor:', response.data);
     
     return response.data;
   }

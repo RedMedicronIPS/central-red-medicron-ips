@@ -60,7 +60,7 @@ export default function Procesos() {
         const fetchProcesses = async () => {
             try {
                 const response = await axiosInstance.get("/companies/processes/");
-                console.log("Processes response:", response.data);
+                //.log("Processes response:", response.data);
                 setProcesses(Array.isArray(response.data) ? response.data : []);
                 setLoading(false);
             } catch (err: any) {
@@ -74,7 +74,7 @@ export default function Procesos() {
         const fetchProcessTypes = async () => {
             try {
                 const response = await axiosInstance.get("/companies/process_types/");
-                console.log("Process types response:", response.data);
+                //console.log("Process types response:", response.data);
                 setProcessTypes(Array.isArray(response.data) ? response.data : []);
             } catch (err: any) {
                 console.error("Error fetching process types:", err);
@@ -86,7 +86,7 @@ export default function Procesos() {
         const fetchDepartments = async () => {
             try {
                 const response = await axiosInstance.get("/companies/departments/");
-                console.log("Departments response:", response.data);
+                //console.log("Departments response:", response.data);
                 setDepartments(Array.isArray(response.data) ? response.data : []);
             } catch (err: any) {
                 console.error("Error fetching departments:", err);

@@ -108,12 +108,12 @@ export default function Configure2FA() {
     setError("");
 
     try {
-      console.log('🔐 Habilitando 2FA...');
+      //console.log('🔐 Habilitando 2FA...');
       
       const response = await enable2FA();
       const data = response as TwoFactorResponse;
       
-      console.log('📥 Respuesta del servidor:', data);
+      //console.log('📥 Respuesta del servidor:', data);
       
       if (data.otp_uri && data.secret) {
         setOtpUri(data.otp_uri);
@@ -144,7 +144,7 @@ export default function Configure2FA() {
     setError("");
 
     try {
-      console.log('🔐 Deshabilitando 2FA...');
+      //console.log('🔐 Deshabilitando 2FA...');
       
       await disable2FA();
       

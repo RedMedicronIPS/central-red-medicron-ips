@@ -63,7 +63,7 @@ export default function SedesEmpresa() {
       try {
         // Verificar la URL correcta del endpoint
         const response = await axiosInstance.get("/companies/companies/"); // O la URL correcta
-        console.log("Companies response:", response.data); // Para debuggear
+        //console.log("Companies response:", response.data); // Para debuggear
         
         // Verificar que response.data sea un array
         if (Array.isArray(response.data)) {

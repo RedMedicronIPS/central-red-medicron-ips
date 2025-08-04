@@ -81,14 +81,14 @@ export default function ReconocimientoForm({
         if (!validateForm()) return;
 
         // 👈 DEBUG: Ver datos antes de enviar
-        console.log('Datos del formulario de reconocimiento:', formData);
+        //console.log('Datos del formulario de reconocimiento:', formData);
 
         const submitData = reconocimiento
             ? { id: reconocimiento.id, ...formData } as UpdateReconocimientoRequest
             : formData as CreateReconocimientoRequest;
 
         // 👈 DEBUG: Ver datos finales a enviar
-        console.log('Datos finales a enviar:', submitData);
+        //console.log('Datos finales a enviar:', submitData);
 
         await onSubmit(submitData);
     };
