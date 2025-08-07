@@ -18,8 +18,8 @@ export default function MenuPage() {
       <Bienvenida />
       <MisionVisionValores />
       <AccesosRapidos />
-      <NoticiasComunicados />
-      <CalendarioEventos />
+      {/*<NoticiasComunicados />
+      <CalendarioEventos />*/}
       <EstructuraOrganizacional />
       <DocumentosRecursosRapidos />
       <ReconocimientosCumpleanios />

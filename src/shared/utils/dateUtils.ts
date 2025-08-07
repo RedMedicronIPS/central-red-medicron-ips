@@ -34,7 +34,7 @@ export const formatDisplayDate = (dateString: string, options?: Intl.DateTimeFor
   const date = parseLocalDate(dateString);
   
   const defaultOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
+    //year: 'numeric',
     month: 'long',
     day: '2-digit',
     timeZone: 'America/Bogota' // 👈 Especificar zona horaria de Colombia
@@ -44,12 +44,12 @@ export const formatDisplayDate = (dateString: string, options?: Intl.DateTimeFor
 };
 
 /**
- * Formatea fecha corta para cumpleaños
+ * Formatea fecha corta para cumpleaños (solo día y mes, sin año)
  */
 export const formatBirthdayDate = (dateString: string): string => {
   return formatDisplayDate(dateString, {
     day: '2-digit',
-    month: 'short'
+    month: 'long' // Mes completo (enero, febrero, etc.)
   });
 };
 

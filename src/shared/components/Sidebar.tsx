@@ -48,16 +48,16 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
       icon: <HiHome className="w-5 h-5" />,
       hasSubmenu: true,
       submenu: [
-        {
-          to: "/eventos",
-          label: "Eventos",
-          icon: <HiCalendarDays className="w-4 h-4" />,
-        },
-        {
-          to: "/noticias",
-          label: "Noticias",
-          icon: <HiNewspaper className="w-4 h-4" />,
-        },
+        //{
+        //  to: "/eventos",
+        //  label: "Eventos",
+        //  icon: <HiCalendarDays className="w-4 h-4" />,
+        //},
+        //{
+        //  to: "/noticias",
+        //  label: "Noticias",
+        //  icon: <HiNewspaper className="w-4 h-4" />,
+        //},
         {
           to: "/funcionarios",
           label: "Funcionarios",
