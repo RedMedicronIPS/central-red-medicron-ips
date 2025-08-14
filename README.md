@@ -2,10 +2,6 @@
 
 npm install
 
-# libreria de iconos SVG para react
-
-npm install lucide-react
-
 # se corre el proyecto
 
 npm run dev
