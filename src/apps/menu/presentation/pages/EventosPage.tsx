@@ -257,7 +257,7 @@ export default function EventosPage() {
               to="/eventos"
               className="group inline-flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 mb-6 font-medium transition-colors"
             >
-              <HiArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300" />
+              <HiArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-3" />
               Volver a eventos
             </Link>
 
