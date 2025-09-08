@@ -46,33 +46,33 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
       to: "/menu",
       label: "Inicio",
       icon: <HiHome className="w-5 h-5" />,
-      hasSubmenu: true,
-      submenu: [
-        {
-          to: "/eventos",
-          label: "Eventos",
-          icon: <HiCalendarDays className="w-4 h-4" />,
-        },
-        {
-          to: "/noticias",
-          label: "Noticias",
-          icon: <HiNewspaper className="w-4 h-4" />,
-        },
-        {
-          to: "/funcionarios",
-          label: "Funcionarios",
-          icon: <HiUsers className="w-4 h-4" />,
-        },
-        {
-          to: "/reconocimientos",
-          label: "Reconocimientos",
-          icon: <HiStar className="w-4 h-4" />,
-        },
-        {
-          to: "/felicitaciones",
-          label: "Felicitaciones",
-          icon: <HiGift className="w-4 h-4" />,
-        },
+      hasSubmenu: false,
+      // submenu: [
+      //   {
+      //     to: "/eventos",
+      //     label: "Eventos",
+      //     icon: <HiCalendarDays className="w-4 h-4" />,
+      //   },
+      //   {
+      //     to: "/noticias",
+      //     label: "Noticias",
+      //     icon: <HiNewspaper className="w-4 h-4" />,
+      //   },
+      //   {
+      //     to: "/funcionarios",
+      //     label: "Funcionarios",
+      //     icon: <HiUsers className="w-4 h-4" />,
+      //   },
+      //   {
+      //     to: "/reconocimientos",
+      //     label: "Reconocimientos",
+      //     icon: <HiStar className="w-4 h-4" />,
+      //   },
+      //   {
+      //     to: "/felicitaciones",
+      //     label: "Felicitaciones",
+      //     icon: <HiGift className="w-4 h-4" />,
+      //   },
         // Reconocimientos y Felicitaciones: cualquier rol en "menu"
         //...(hasAppAccess(roles, "menu")
         //  ? [
@@ -81,7 +81,7 @@ export default function Sidebar({ isOpen = false, onToggle }: SidebarProps) {
         //    ]
         //  : []
         //)
-      ],
+      //],
     },
     // Auditorías: cualquier rol en "auditorias"
     ...(hasAppAccess(roles, "auditorias")
