@@ -119,7 +119,7 @@ export default function FelicitacionesPage() {
     const getProfilePicUrl = (foto: string) => {
         if (!foto) return null;
         if (foto.startsWith('http')) return foto;
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000' || 'http://152.200.161.234:8081/' ;
         return `${baseUrl}${foto}`;
     };
 
