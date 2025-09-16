@@ -9,6 +9,7 @@ import CrearFacturaModal from "../components/CrearFacturaModal";
 import { useFacturaCRUD } from "../hooks/useFacturaCRUD";
 import type { Factura } from "../../domain/types";
 import type { RegistroFactura } from "../components/VerRegistroFacturaModal";
+import axiosInstance from "../../infrastructure/repositories/axiosInstance";
 
 export default function FacturasPage() {
   const { facturas, fetchFacturas, loading, error } = useFacturaCRUD();
@@ -33,18 +34,17 @@ export default function FacturasPage() {
     if (!facturaAEliminar) return;
 
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/gestionProveedores/factura/${facturaAEliminar.factura_id}/`,
+      const response = await axiosInstance.patch(
+        `/gestionProveedores/factura/${facturaAEliminar.factura_id}/`,
+        { factura_estado: false },
         {
-          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ factura_estado: false }),
         }
       );
 
-      if (!response.ok) throw new Error("Error al desactivar la factura");
+      if (response.status !== 200) throw new Error("Error al desactivar la factura");
 
       setFacturaAEliminar(null);
       await fetchFacturas();
@@ -71,10 +71,10 @@ export default function FacturasPage() {
           facturas={facturas}
           onEdit={async (factura) => {
             try {
-              const res = await fetch(
-                `http://localhost:8000/api/gestionProveedores/factura/${factura.factura_id}/`
+              const res = await axiosInstance.get(
+                `/gestionProveedores/factura/${factura.factura_id}/`
               );
-              const data = await res.json();
+              const data = res.data;
               setRegistroFactura(data);
               openModal("isEditOpen");
             } catch (err) {
@@ -83,10 +83,10 @@ export default function FacturasPage() {
           }}
           onView={async (factura) => {
             try {
-              const res = await fetch(
-                `http://localhost:8000/api/gestionProveedores/factura/${factura.factura_id}/`
+              const res = await axiosInstance.get(
+                `/gestionProveedores/factura/${factura.factura_id}/`
               );
-              const data = await res.json();
+              const data = res.data;
               setRegistroFactura(data);
               openModal("isViewOpen");
             } catch (err) {
