@@ -6,6 +6,7 @@ import FacturaRow from "./FacturaRow";
 import { EstadoFacturaRepository } from "../../infrastructure/repositories/EstadoFacturaRepository";
 import type { EstadoFactura } from "../../domain/entities/EstadoFactura";
 import { HiOutlineDocumentText } from "react-icons/hi";
+import axiosInstance from "../../infrastructure/repositories/axiosInstance";
 
 interface TablaFacturasProps {
   facturas: Factura[];
@@ -45,11 +46,10 @@ export default function TablaFacturas({
   useEffect(() => {
     const fetchCentros = async () => {
       try {
-        const res = await fetch(
-          "http://localhost:8000/api/gestionProveedores/centro_operaciones/"
+        const res = await axiosInstance.get(
+          "/gestionProveedores/centro_operaciones/"
         );
-        const data = await res.json();
-        setCentrosDeOperaciones(data);
+        setCentrosDeOperaciones(res.data);
       } catch (error) {
         console.error("Error cargando centros:", error);
       }
