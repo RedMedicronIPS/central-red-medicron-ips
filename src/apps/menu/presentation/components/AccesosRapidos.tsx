@@ -28,7 +28,7 @@ const ACCESOS = [
 	},
 	{
 		nombre: "Gestión Humana",
-		url: "https://gestionhumana.redmedicronips.com.co",
+		url: "http://192.168.59.207:8080/gestionhumana2/",
 		icono: <HiUserGroup className="w-10 h-10 text-pink-600 group-hover:scale-110 transition-transform" />,
 		color: "bg-gradient-to-br from-pink-100/80 to-pink-200/60 dark:from-pink-900/60 dark:to-pink-800/40",
 	},

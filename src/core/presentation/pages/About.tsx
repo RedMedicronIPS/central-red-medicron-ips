@@ -287,7 +287,7 @@ const About: React.FC = () => {
               Ingeniero de Software
               <br />
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Lider del proyecto y responsable principal del desarrollo
+                Lider del proyecto
               </span>
               <br />
               
