@@ -282,7 +282,7 @@ const About: React.FC = () => {
               </h3>
             </div>
             <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
-              <strong>Edison Stiven Narvaez</strong>
+              <strong><a href="https://portafolio-tau-flax.vercel.app/">Edison Stiven Narvaez </a></strong>
               <br />
               Ingeniero de Software
               <br />
@@ -292,14 +292,6 @@ const About: React.FC = () => {
               <br />
               <br />
               <strong>Andrea Benavides</strong>
-              <br />
-              Pasante SENA
-              <br />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Colaboración en backend y frontend del componente de proveedores
-              </span>
-              <br />
-              <br />
               <strong>Camila Cárdenas</strong>
               <br />
               Pasante SENA
