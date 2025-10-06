@@ -281,36 +281,19 @@ const About: React.FC = () => {
                 Equipo de desarrollo
               </h3>
             </div>
-            <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
-              <strong>Edison Stiven Narvaez</strong>
+            <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200"><a href="https://portafolio-tau-flax.vercel.app/"target="_blank" rel="noopener noreferrer">
+              <strong>Edison Stiven Narvaez </strong>
               <br />
               Ingeniero de Software
               <br />
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                Lider del proyecto y responsable principal del desarrollo
+                Lider del proyecto
               </span>
               <br />
-              <br />
-              <strong>Andrea Benavides</strong>
-              <br />
-              Pasante SENA
-              <br />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Colaboración en backend y frontend del componente de proveedores
-              </span>
-              <br />
-              <br />
-              <strong>Camila Cárdenas</strong>
-              <br />
-              Pasante SENA
-              <br />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Colaboración en backend y frontend del componente de proveedores
-              </span>
-              <br />
+              
               <span className="block mt-2 text-xs text-gray-400 dark:text-gray-500">
                 Año: 2025
-              </span>
+              </span></a>
             </p>
           </motion.div>
 

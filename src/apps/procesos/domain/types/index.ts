@@ -9,6 +9,7 @@ export const TIPOS_DOCUMENTO = [
     { value: 'IN', label: 'Instructivo' },
     { value: 'FR', label: 'Formato' },
     { value: 'DE', label: 'Documento externo' },
+    { value: 'RG', label: 'Registro' },
 ] as const;
 
 export const ESTADOS = [
